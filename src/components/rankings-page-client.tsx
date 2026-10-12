@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { RankingHistoryControls } from "@/components/ranking-history-controls";
-import { RankingShareControls } from "@/components/ranking-share-controls";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -127,6 +126,7 @@ export function RankingsPageClient() {
         active="rankings"
         status={`Week ${view.week} · ${isSample ? "Sample model" : view.season}`}
         modelVersion={modelVersion}
+        shareImagePath={shareImage?.path}
       />
 
       <section className="rankings-section rankings-page" id="rankings">
@@ -137,19 +137,14 @@ export function RankingsPageClient() {
             <p>All FBS teams through Week {view.week}</p>
           </div>
           {!isSample && (
-            <div className="rankings-actions">
-              <RankingHistoryControls
-                seasons={manifests}
-                selectedSeason={view.season}
-                selectedWeek={view.week}
-                modelVersion={modelVersion}
-                previous={previousRanking}
-                next={nextRanking}
-              />
-              {shareImage && (
-                <RankingShareControls imagePath={shareImage.path} />
-              )}
-            </div>
+            <RankingHistoryControls
+              seasons={manifests}
+              selectedSeason={view.season}
+              selectedWeek={view.week}
+              modelVersion={modelVersion}
+              previous={previousRanking}
+              next={nextRanking}
+            />
           )}
         </div>
 
