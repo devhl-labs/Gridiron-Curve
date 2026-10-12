@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run generate && next dev",
+    "fixture:cache": "tsx test/fixtures/cfbd-cache/install.ts",
     "generate": "tsx scripts/static/generate-publication.ts",
     "build": "npm run generate && next build",
     "start": "npx serve out",

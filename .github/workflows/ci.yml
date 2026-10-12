@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install synthetic CFBD fixture
+        run: npm run fixture:cache
+
       - name: Lint
         run: npm run lint
 
@@ -38,4 +41,23 @@ jobs:
         run: npm test
 
       - name: Build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /Gridiron-Curve
+          PUBLIC_SITE_HOST: devhl-labs.github.io/Gridiron-Curve
         run: npm run build
+
+      - name: Verify static export
+        run: |
+          test -f out/index.html
+          test -f out/generated/v1/manifest.json
+          test -f out/generated/v1/images/2099/week-02/v0.11.jpg
+          node - <<'NODE'
+          const manifest = require("./out/generated/v1/manifest.json");
+          const seasons = manifest.seasons.map(({ season }) => season);
+          if (seasons.join(",") !== "2098,2099") {
+            throw new Error(`Unexpected fixture seasons: ${seasons.join(",")}`);
+          }
+          if (manifest.modelVersions.length !== 5) {
+            throw new Error("The fixture build did not publish all five models.");
+          }
+          NODE

@@ -22,6 +22,9 @@ export type CfbdCacheManifest = {
 };
 
 export function getCfbdCacheRoot(cwd = process.cwd()) {
+  if (process.env.CFBD_CACHE_ROOT) {
+    return path.resolve(cwd, process.env.CFBD_CACHE_ROOT);
+  }
   return path.join(cwd, ".cache", "cfbd", CFBD_CACHE_NAMESPACE);
 }
 

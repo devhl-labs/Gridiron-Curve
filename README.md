@@ -229,6 +229,11 @@ The repository secrets `CFBD_CONTAINER_SAS_URL` and
 read-and-list-only SAS token for GitHub Actions; keep create and write
 permissions only in the local `.env` used for cache uploads.
 
+Pull requests never receive those credentials. The PR Gate installs the
+wholly invented two-season fixture in `test/fixtures/cfbd-cache/`, builds all
+five models, and verifies the static manifest and latest JPEG. No fixture
+value was copied from CollegeFootballData.
+
 ## Commands
 
 ```bash
