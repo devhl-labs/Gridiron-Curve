@@ -77,6 +77,36 @@ export function SiteHeader({
           >
             About
           </Link>
+          <a
+            className="external-link"
+            href="https://github.com/devhl-labs/Gridiron-Curve"
+            rel="noreferrer"
+            style={{
+              alignItems: "center",
+              display: "inline-flex",
+              flexShrink: 0,
+              gap: "5px",
+              whiteSpace: "nowrap",
+            }}
+            target="_blank"
+            onClick={() => setMenuOpen(false)}
+          >
+            GitHub
+            <svg
+              aria-hidden="true"
+              fill="none"
+              height="13"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.6"
+              viewBox="0 0 16 16"
+              width="13"
+            >
+              <path d="M9.5 2.5h4v4m0-4-6 6" />
+              <path d="M7 4H3.5a1 1 0 0 0-1 1v7.5a1 1 0 0 0 1 1H11a1 1 0 0 0 1-1V9" />
+            </svg>
+          </a>
         </nav>
         <div className="header-utilities">
           {shareImagePath && (
