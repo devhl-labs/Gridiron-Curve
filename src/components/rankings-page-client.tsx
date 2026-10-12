@@ -83,9 +83,9 @@ export function RankingsPageClient() {
 
   if (!publication) {
     return (
-      <main>
+      <main className="publication-loading-page">
         <SiteHeader active="rankings" status="Published rankings" />
-        <section className="info-hero">
+        <section className="publication-loading">
           <span className="kicker">{error ? "PUBLICATION ERROR" : "LOADING"}</span>
           <h1>{error ?? "Loading rankings…"}</h1>
         </section>

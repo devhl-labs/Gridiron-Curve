@@ -114,9 +114,9 @@ export function TeamPageClient() {
 
   if (!publication) {
     return (
-      <main>
+      <main className="publication-loading-page">
         <SiteHeader active="rankings" status="Published team" />
-        <section className="info-hero">
+        <section className="publication-loading">
           <span className="kicker">{error ? "PUBLICATION ERROR" : "LOADING"}</span>
           <h1>{error ?? "Loading team…"}</h1>
         </section>
@@ -128,9 +128,9 @@ export function TeamPageClient() {
   const ranking = view.rankings.find(({ team }) => team === teamName);
   if (!ranking) {
     return (
-      <main>
+      <main className="publication-loading-page">
         <SiteHeader active="rankings" status="Team unavailable" />
-        <section className="info-hero">
+        <section className="publication-loading">
           <span className="kicker">NOT FOUND</span>
           <h1>{teamName} is not in this published ranking.</h1>
         </section>

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   DEFAULT_MODEL_VERSION,
   MODEL_VERSIONS,
@@ -15,7 +15,6 @@ export function ModelVersionSelect({
   selectedVersion,
 }: ModelVersionSelectProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   function selectVersion(version: ModelVersion) {
@@ -26,7 +25,11 @@ export function ModelVersionSelect({
       next.set("model", version);
     }
     const query = next.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    window.history.pushState(
+      null,
+      "",
+      query ? `${pathname}?${query}` : pathname,
+    );
   }
 
   return (

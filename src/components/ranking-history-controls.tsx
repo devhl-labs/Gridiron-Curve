@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   DEFAULT_MODEL_VERSION,
   type ModelVersion,
@@ -39,7 +38,6 @@ export function RankingHistoryControls({
   previous,
   next,
 }: RankingHistoryControlsProps) {
-  const router = useRouter();
   const selectedSeasonWeeks =
     seasons.find(({ season }) => season === selectedSeason)?.throughWeek ??
     selectedWeek;
@@ -64,7 +62,9 @@ export function RankingHistoryControls({
         <select
           value={selectedSeason}
           onChange={(event) =>
-            router.push(
+            window.history.pushState(
+              null,
+              "",
               rankingHref(
                 {
                   season: Number(event.target.value),
@@ -91,7 +91,9 @@ export function RankingHistoryControls({
         <select
           value={selectedWeek}
           onChange={(event) =>
-            router.push(
+            window.history.pushState(
+              null,
+              "",
               rankingHref(
                 {
                   season: selectedSeason,

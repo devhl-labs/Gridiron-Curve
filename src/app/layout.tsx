@@ -24,6 +24,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${manrope.variable} ${plexMono.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
+      style={{ backgroundColor: "#17221c" }}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
