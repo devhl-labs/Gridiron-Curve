@@ -23,6 +23,9 @@
 # local provider data cache
 /.cache/
 
+# generated static publication
+/public/generated/
+
 # misc
 .DS_Store
 *.pem

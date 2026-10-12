@@ -76,23 +76,22 @@ new engine without changing historical model behavior.
 
 Until CFBD inputs are cached, the landing page uses a small, clearly labeled
 illustrative dataset. The sync command retrieves the FBS season and caches
-normalized provider inputs locally. Rankings are calculated in memory and are
-never written as a generated view.
+normalized provider inputs locally. The publication build calculates every
+season, week, and model into versioned static JSON.
 
 ## Ranking share images
 
-Every cached season and week has an on-demand 1080x1350 Top 25 JPEG. The
-rankings page can copy its image URL or download the file. The endpoint is:
+The latest cached week receives a build-generated 1080x1350 Top 25 JPEG for
+every model. The rankings page can copy its stable image URL or download the
+file:
 
 ```text
-/api/rankings-image?season=2026&week=6&model=v0.11
+/generated/v1/images/2026/week-06/v0.11.jpg
 ```
 
-The `model` parameter accepts any supported prerelease version and defaults to
-`v0.11`.
-
-Add `&download=1` to return the image as an attachment. Share images use the
-same historical prior chain and active ranking model as the visible table.
+Share images use the same historical prior chain and active ranking model as
+the visible table. Historical rankings remain available, but their images are
+not retained in the static publication.
 
 ## Data source
 
@@ -158,43 +157,83 @@ merging or normalization:
 The entire `.cache/` directory is ignored by Git. The `v1` namespace matches
 the manifest format version, preventing a future cache schema from reading or
 overwriting incompatible responses. `latest.json` is replaced atomically only
-after every raw response file has been written. The site loads the selected
-raw files, normalizes and joins them in memory, and calculates the ranking view
-for each request. CFBD requests are restricted to the regular season;
+after every raw response file has been written. The publication build loads
+the selected raw files, normalizes and joins them, and writes static ranking
+views. CFBD requests are restricted to the regular season;
 postseason games are not cached or ranked.
 
 CFBD requires game-level team statistics to be requested one week at a time.
 A sync therefore uses `week + 3` API calls: one each for games, polls, and team
 metadata, plus one box-score request for every week through the snapshot.
 
-## Always-on server
+### Azure Blob cache storage
 
-Build once when application code changes, then keep the production server
-running:
+Set `CFBD_CONTAINER_SAS_URL` and `CFBD_CONTAINER_SAS_TOKEN` in the private
+`.env` file. The SAS credentials must allow Blob create, write, and list
+operations. Upload and verify the complete versioned cache with:
 
 ```bash
-npm install
-npm run build
-npm run start
+npm run upload:cache
 ```
 
-Refreshing football data does not require a build or restart:
+Restore and verify the remote cache with read and list credentials:
+
+```bash
+npm run download:cache
+```
+
+The command preserves the cache namespace as `v1/<season>/...` inside the
+configured container. Uploads and downloads run concurrently and fail when
+remote operations or verification fail. Credentials and raw cache data remain
+ignored by Git.
+
+## Static publication
+
+Gridiron Curve is published as a static site. `npm run build` first reads the
+versioned local CFBD cache and writes immutable publication data under
+`public/generated/v1/`, then Next.js exports the site to `out/`.
+
+Published ranking JSON is generated for every cached season, week, and model.
+Season schedule data is generated for team pages. The latest week receives
+pre-generated share JPEGs for every model. The generated directory is ignored
+by Git because it is a build artifact.
+
+Refresh the local source cache, then rebuild to publish a new week:
 
 ```bash
 npm run sync -- 2025 15
+npm run build
 ```
 
-The next request sees the new cache. For unattended operation, schedule the
-sync command with cron, systemd timers, or the host operating system's task
-scheduler. Keep `.env` readable only by the service account.
+The deployed site never receives the CFBD API key, reads the raw cache, runs
+ranking calculations, or generates images at request time.
 
-When deploying new application code without downtime, build in a separate
-release directory and switch the running service after the build succeeds.
+## GitHub Pages publication
+
+GitHub Pages hosts the exported site at
+`https://devhl-labs.github.io/Gridiron-Curve/`. The scheduled workflow in
+`.github/workflows/pages.yml` runs at 12:00 UTC every Sunday from August
+through December. Scheduled August runs before August 20 exit without
+publishing. The workflow can also be started manually at any time.
+
+Each publication:
+
+1. Restores `v1/` from the private Azure Blob container.
+2. Builds every static ranking and latest-week share image.
+3. Exports the site with the `/Gridiron-Curve` repository base path.
+4. Uploads `out/` as a GitHub Pages artifact.
+5. Deploys the artifact without committing generated files.
+
+The repository secrets `CFBD_CONTAINER_SAS_URL` and
+`CFBD_CONTAINER_SAS_TOKEN` provide read access to the build. Prefer a separate
+read-and-list-only SAS token for GitHub Actions; keep create and write
+permissions only in the local `.env` used for cache uploads.
 
 ## Commands
 
 ```bash
 npm run dev
+npm run generate
 npm run test
 npm run lint
 npm run build

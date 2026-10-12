@@ -1,26 +1,27 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { connection } from "next/server";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import {
-  listCfbdCacheManifests,
-  readCfbdSourceCache,
-} from "@/lib/cfbd/cache";
 import {
   DEFAULT_MODEL_VERSION,
   parseModelVersion,
 } from "@/lib/ranking";
 import { createTeamSchedule } from "@/lib/ranking/team-view";
-import { createRankingView } from "@/lib/ranking/view";
-
-export const instant = false;
-
-type TeamPageProps = {
-  params: Promise<{ team: string }>;
-  searchParams: Promise<{ season?: string; model?: string }>;
-};
+import {
+  fetchPublicationManifest,
+  fetchPublishedJson,
+  type PublicationManifest,
+  type PublishedSeason,
+  type RankingView,
+} from "@/lib/publication/client";
+import {
+  rankingDataPath,
+  seasonDataPath,
+} from "@/lib/publication/types";
 
 function parseSelection(value: string | undefined) {
   const parsed = Number(value);
@@ -51,43 +52,97 @@ function formatKickoff(startDate: string | null) {
   return `${date} · ${time}`;
 }
 
-export default async function TeamPage({
-  params,
-  searchParams,
-}: TeamPageProps) {
-  await connection();
-  const [{ team: encodedTeamName }, query] = await Promise.all([
-    params,
-    searchParams,
-  ]);
-  const teamName = decodeURIComponent(encodedTeamName);
-  const modelVersion = parseModelVersion(query.model);
-  const manifests = listCfbdCacheManifests();
-  const requestedSeason = parseSelection(query.season);
-  const manifest =
-    manifests.find(({ season }) => season === requestedSeason) ?? manifests[0];
-  if (!manifest) notFound();
+type TeamState = {
+  manifest: PublicationManifest;
+  source: PublishedSeason;
+  view: RankingView;
+};
 
-  const source = readCfbdSourceCache(manifest.season);
-  if (!source) notFound();
-  const historicalSources = manifests
-    .filter(({ season }) => season < manifest.season)
-    .toSorted((a, b) => a.season - b.season)
-    .map(({ season }) => readCfbdSourceCache(season))
-    .filter((candidate) => candidate !== null);
+export function TeamPageClient() {
+  const searchParams = useSearchParams();
+  const teamName = searchParams.get("team") ?? "";
+  const modelVersion = parseModelVersion(searchParams.get("model"));
+  const [publication, setPublication] = useState<TeamState | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const ranking = createRankingView(
-    source,
-    historicalSources,
-    modelVersion,
-  ).rankings.find(({ team }) => team === teamName);
-  if (!ranking) notFound();
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadTeam() {
+      try {
+        setError(null);
+        if (!teamName) throw new Error("A team is required.");
+        const manifest = await fetchPublicationManifest(controller.signal);
+        const requestedSeason = parseSelection(
+          searchParams.get("season") ?? undefined,
+        );
+        const selectedSeason =
+          manifest.seasons.find(({ season }) => season === requestedSeason) ??
+          manifest.seasons.at(-1);
+        if (!selectedSeason) throw new Error("No published season is available.");
+        const requestedWeek = parseSelection(
+          searchParams.get("week") ?? undefined,
+        );
+        const week = Math.min(
+          requestedWeek ?? selectedSeason.throughWeek,
+          selectedSeason.throughWeek,
+        );
+        const [source, view] = await Promise.all([
+          fetchPublishedJson<PublishedSeason>(
+            seasonDataPath(selectedSeason.season),
+            controller.signal,
+          ),
+          fetchPublishedJson<RankingView>(
+            rankingDataPath(selectedSeason.season, week, modelVersion),
+            controller.signal,
+          ),
+        ]);
+        setPublication({ manifest, source, view });
+      } catch (loadError) {
+        if (loadError instanceof DOMException && loadError.name === "AbortError") {
+          return;
+        }
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load the published team.",
+        );
+      }
+    }
+    void loadTeam();
+    return () => controller.abort();
+  }, [modelVersion, searchParams, teamName]);
+
+  if (!publication) {
+    return (
+      <main>
+        <SiteHeader active="rankings" status="Published team" />
+        <section className="info-hero">
+          <span className="kicker">{error ? "PUBLICATION ERROR" : "LOADING"}</span>
+          <h1>{error ?? "Loading team…"}</h1>
+        </section>
+      </main>
+    );
+  }
+
+  const { source, view } = publication;
+  const ranking = view.rankings.find(({ team }) => team === teamName);
+  if (!ranking) {
+    return (
+      <main>
+        <SiteHeader active="rankings" status="Team unavailable" />
+        <section className="info-hero">
+          <span className="kicker">NOT FOUND</span>
+          <h1>{teamName} is not in this published ranking.</h1>
+        </section>
+      </main>
+    );
+  }
 
   const games = createTeamSchedule(source.games, teamName);
   const teamsBySchool = new Map(
     source.teams.map((team) => [team.school, team]),
   );
-  const rankingsHref = `/?season=${source.season}${
+  const rankingsHref = `/?season=${source.season}&week=${view.week}${
     modelVersion === DEFAULT_MODEL_VERSION ? "" : `&model=${modelVersion}`
   }`;
 
@@ -95,7 +150,7 @@ export default async function TeamPage({
     <main>
       <SiteHeader
         active="rankings"
-        status={`Week ${source.throughWeek} · ${source.season}`}
+        status={`Week ${view.week} · ${source.season}`}
         modelVersion={modelVersion}
       />
 
@@ -122,7 +177,7 @@ export default async function TeamPage({
           </div>
           <div>
             <span className="kicker">
-              {source.season} Season · Metrics through Week {source.throughWeek}
+              {source.season} Season · Metrics through Week {view.week}
             </span>
             <h1>{ranking.team}</h1>
           </div>

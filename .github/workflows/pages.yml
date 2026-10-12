@@ -1,0 +1,95 @@
+name: Publish GitHub Pages
+
+on:
+  schedule:
+    - cron: "0 12 * 8-12 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build publication
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      publish: ${{ steps.window.outputs.publish }}
+
+    steps:
+      - name: Check publication window
+        id: window
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          month="$(date -u +%m)"
+          day="$(date -u +%d)"
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" || "${month}" != "08" || $((10#${day})) -ge 20 ]]; then
+            echo "publish=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+            echo "Skipping publication before August 20."
+          fi
+
+      - name: Check out repository
+        if: steps.window.outputs.publish == 'true'
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        if: steps.window.outputs.publish == 'true'
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          static_site_generator: next
+
+      - name: Set up Node.js
+        if: steps.window.outputs.publish == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.window.outputs.publish == 'true'
+        run: npm ci
+
+      - name: Download CFBD cache
+        if: steps.window.outputs.publish == 'true'
+        env:
+          CFBD_CONTAINER_SAS_URL: ${{ secrets.CFBD_CONTAINER_SAS_URL }}
+          CFBD_CONTAINER_SAS_TOKEN: ${{ secrets.CFBD_CONTAINER_SAS_TOKEN }}
+        run: npm run download:cache
+
+      - name: Build static publication
+        if: steps.window.outputs.publish == 'true'
+        env:
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          PUBLIC_SITE_HOST: devhl-labs.github.io/Gridiron-Curve
+        run: npm run build
+
+      - name: Upload Pages artifact
+        if: steps.window.outputs.publish == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./out
+
+  deploy:
+    name: Deploy publication
+    if: needs.build.outputs.publish == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

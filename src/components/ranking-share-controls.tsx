@@ -1,21 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { ModelVersion } from "@/lib/ranking";
-
 type RankingShareControlsProps = {
-  season: number;
-  week: number;
-  modelVersion: ModelVersion;
+  imagePath: string;
 };
 
 export function RankingShareControls({
-  season,
-  week,
-  modelVersion,
+  imagePath,
 }: RankingShareControlsProps) {
   const [message, setMessage] = useState("");
-  const imagePath = `/api/rankings-image?season=${season}&week=${week}&model=${modelVersion}&v=4`;
 
   async function copyImageLink() {
     try {
@@ -33,7 +26,7 @@ export function RankingShareControls({
       <button type="button" onClick={copyImageLink}>
         Copy image link
       </button>
-      <a href={`${imagePath}&download=1`}>Download JPG</a>
+      <a href={imagePath} download>Download JPG</a>
       <span aria-live="polite">{message}</span>
     </div>
   );

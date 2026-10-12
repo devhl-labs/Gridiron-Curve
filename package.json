@@ -4,13 +4,16 @@
   "license": "GPL-3.0-only",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "npm run generate && next dev",
+    "generate": "tsx scripts/static/generate-publication.ts",
+    "build": "npm run generate && next build",
+    "start": "npx serve out",
     "lint": "eslint",
     "test": "vitest run",
     "sync": "tsx --env-file-if-exists=.env scripts/cfbd/sync-season.ts",
-    "sync:history": "tsx --env-file-if-exists=.env scripts/cfbd/sync-history.ts"
+    "sync:history": "tsx --env-file-if-exists=.env scripts/cfbd/sync-history.ts",
+    "download:cache": "tsx --env-file-if-exists=.env scripts/cfbd/download-cache.ts",
+    "upload:cache": "tsx --env-file-if-exists=.env scripts/cfbd/upload-cache.ts"
   },
   "dependencies": {
     "next": "16.4.0",
