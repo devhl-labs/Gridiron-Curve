@@ -79,7 +79,7 @@ export function RankingHistoryControls({
             )
           }
         >
-          {seasons.map(({ season }) => (
+          {seasons.toReversed().map(({ season }) => (
             <option key={season} value={season}>
               {season}
             </option>
@@ -105,7 +105,7 @@ export function RankingHistoryControls({
           {Array.from(
             { length: selectedSeasonWeeks },
             (_, index) => index + 1,
-          ).map((week) => (
+          ).toReversed().map((week) => (
             <option key={week} value={week}>
               {week}
             </option>
