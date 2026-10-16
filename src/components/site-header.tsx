@@ -4,32 +4,34 @@ import Link from "next/link";
 import { useState } from "react";
 import { RankingShareControls } from "@/components/ranking-share-controls";
 import {
-  DEFAULT_MODEL_VERSION,
-  type ModelVersion,
+  DEFAULT_RANKING_SYSTEM_ID,
+  type RankingSystemId,
 } from "@/lib/ranking";
 
 type SiteHeaderProps = {
   active: "rankings" | "methodology" | "case-studies" | "about";
   status?: string;
-  modelVersion?: ModelVersion;
+  rankingSystemId?: RankingSystemId;
   shareImagePath?: string;
 };
 
 export function SiteHeader({
   active,
   status,
-  modelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
   shareImagePath,
 }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const modelQuery =
-    modelVersion === DEFAULT_MODEL_VERSION ? "" : `?model=${modelVersion}`;
+  const rankingQuery =
+    rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
+      ? ""
+      : `?ranking=${rankingSystemId}`;
 
   return (
     <header className="site-header">
       <Link
         className="brand"
-        href={`/${modelQuery}`}
+        href={`/${rankingQuery}`}
         onClick={() => setMenuOpen(false)}
       >
         <span className="brand-mark">G</span>
@@ -51,21 +53,21 @@ export function SiteHeader({
         <nav aria-label="Main navigation">
           <Link
             className={active === "rankings" ? "active" : ""}
-            href={`/${modelQuery}`}
+            href={`/${rankingQuery}`}
             onClick={() => setMenuOpen(false)}
           >
             Rankings
           </Link>
           <Link
             className={active === "methodology" ? "active" : ""}
-            href={`/methodology${modelQuery}`}
+            href={`/methodology${rankingQuery}`}
             onClick={() => setMenuOpen(false)}
           >
             Methodology
           </Link>
           <Link
             className={active === "case-studies" ? "active" : ""}
-            href={`/case-studies${modelQuery}`}
+            href={`/case-studies${rankingQuery}`}
             onClick={() => setMenuOpen(false)}
           >
             Case Studies

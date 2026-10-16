@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import {
-  DEFAULT_MODEL_VERSION,
-  type ModelVersion,
+  DEFAULT_RANKING_SYSTEM_ID,
+  type RankingSystemId,
 } from "@/lib/ranking";
-import { ModelVersionSelect } from "./model-version-select";
+import { RankingSystemSelect } from "./ranking-system-select";
 
 type RankingSelection = {
   season: number;
@@ -16,25 +16,27 @@ type RankingHistoryControlsProps = {
   seasons: Array<{ season: number; throughWeek: number }>;
   selectedSeason: number;
   selectedWeek: number;
-  modelVersion: ModelVersion;
+  rankingSystemId: RankingSystemId;
   previous?: RankingSelection;
   next?: RankingSelection;
 };
 
 function rankingHref(
   { season, week }: RankingSelection,
-  modelVersion: ModelVersion,
+  rankingSystemId: RankingSystemId,
 ) {
-  const model =
-    modelVersion === DEFAULT_MODEL_VERSION ? "" : `&model=${modelVersion}`;
-  return `/?season=${season}&week=${week}${model}`;
+  const ranking =
+    rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
+      ? ""
+      : `&ranking=${rankingSystemId}`;
+  return `/?season=${season}&week=${week}${ranking}`;
 }
 
 export function RankingHistoryControls({
   seasons,
   selectedSeason,
   selectedWeek,
-  modelVersion,
+  rankingSystemId,
   previous,
   next,
 }: RankingHistoryControlsProps) {
@@ -47,7 +49,7 @@ export function RankingHistoryControls({
       {previous ? (
         <Link
           className="history-step"
-          href={rankingHref(previous, modelVersion)}
+          href={rankingHref(previous, rankingSystemId)}
           aria-label={`Previous ranking: ${previous.season} Week ${previous.week}`}
         >
           ←
@@ -74,7 +76,7 @@ export function RankingHistoryControls({
                         season === Number(event.target.value),
                     )?.throughWeek ?? 1,
                 },
-                modelVersion,
+                rankingSystemId,
               ),
             )
           }
@@ -99,7 +101,7 @@ export function RankingHistoryControls({
                   season: selectedSeason,
                   week: Number(event.target.value),
                 },
-                modelVersion,
+                rankingSystemId,
               ),
             )
           }
@@ -114,11 +116,11 @@ export function RankingHistoryControls({
           ))}
         </select>
       </label>
-      <ModelVersionSelect selectedVersion={modelVersion} />
+      <RankingSystemSelect selectedSystemId={rankingSystemId} />
       {next ? (
         <Link
           className="history-step"
-          href={rankingHref(next, modelVersion)}
+          href={rankingHref(next, rankingSystemId)}
           aria-label={`Next ranking: ${next.season} Week ${next.week}`}
         >
           →

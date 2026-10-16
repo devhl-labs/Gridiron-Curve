@@ -1,67 +1,11 @@
-import {
-  DEFAULT_MODEL_VERSION,
-  RANKING_MODELS,
-  type ModelVersion,
-  type RankingModel,
-} from "../../models";
-
-export {
-  DEFAULT_MODEL_VERSION,
-  MODEL_VERSIONS,
-  isModelVersion,
-  parseModelVersion,
-  type ModelVersion,
-} from "../../models";
-
-export type TeamBoxScore = {
-  totalYards: number;
-  rushingAttempts: number;
-  passingAttempts: number;
-  turnovers: number;
-};
-
-export type Game = {
-  id: number;
-  week: number;
-  startDate?: string | null;
-  seasonType?: string;
-  completed: boolean;
-  neutralSite: boolean;
-  homeTeam: string;
-  homePoints: number | null;
-  awayTeam: string;
-  awayPoints: number | null;
-  homeClassification?: string | null;
-  awayClassification?: string | null;
-  homeStats?: TeamBoxScore | null;
-  awayStats?: TeamBoxScore | null;
-};
-
-export type RatingPrior = Record<string, number>;
-
-export type Poll = {
-  poll: string;
-  ranks: Array<{ rank: number; school: string }>;
-};
-
-export type TeamRanking = {
-  team: string;
-  rank: number;
-  rating: number;
-  record: string;
-  wins: number;
-  losses: number;
-  gamesPlayed: number;
-  strengthOfSchedule: number;
-  bestWin: string | null;
-  networkRating: number;
-  networkPercentile: number;
-  networkScore: number;
-  achievementPoints: number;
-  achievementAverage: number;
-  achievementScore: number;
-  qualityOfWins: number;
-};
+import type {
+  Game,
+  Poll,
+  RankingModel,
+  RatingPrior,
+  TeamBoxScore,
+  TeamRanking,
+} from "../../../types";
 
 type TeamRecord = {
   wins: number;
@@ -132,15 +76,14 @@ function priorWeight(completedWeeks: number, model: RankingModel) {
 function calculateNetworkRatings(
   games: Game[],
   throughWeek: number,
-  prior: RatingPrior = {},
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  prior: RatingPrior,
+  model: RankingModel,
 ): {
   teams: string[];
   records: Map<string, TeamRecord>;
   ratings: Map<string, number>;
   expectationRatings: Map<string, number>;
 } {
-  const model = RANKING_MODELS[modelVersion];
   const fbsTeams = getFbsTeams(games);
   if (fbsTeams.size === 0) {
     return {
@@ -271,14 +214,14 @@ function calculateNetworkRatings(
 export function calculateExpectedStrengthRatings(
   games: Game[],
   throughWeek: number,
-  prior: RatingPrior = {},
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  prior: RatingPrior,
+  model: RankingModel,
 ) {
   return calculateNetworkRatings(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    model,
   ).expectationRatings;
 }
 
@@ -327,8 +270,8 @@ function achievementValue(
 export function calculateAchievementPoints(
   games: Game[],
   throughWeek: number,
-  prior: RatingPrior = {},
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  prior: RatingPrior,
+  model: RankingModel,
 ) {
   const fbsTeams = getFbsTeams(games);
   const points = new Map([...fbsTeams].map((team) => [team, 0]));
@@ -336,7 +279,7 @@ export function calculateAchievementPoints(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    model,
   );
 
   for (const game of games) {
@@ -386,13 +329,13 @@ function createWeeklyRatings(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior,
-  modelVersion: ModelVersion,
+  model: RankingModel,
 ) {
   const ratings = new Map<number, Map<string, number>>();
   for (let week = 0; week < throughWeek; week += 1) {
     ratings.set(
       week,
-      calculateNetworkRatings(games, week, prior, modelVersion).ratings,
+      calculateNetworkRatings(games, week, prior, model).ratings,
     );
   }
   return ratings;
@@ -425,7 +368,7 @@ function calculateQualityOfWins(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior,
-  modelVersion: ModelVersion,
+  model: RankingModel,
 ) {
   const fbsTeams = getFbsTeams(games);
   const defeatedOpponents = new Map(
@@ -435,7 +378,7 @@ function calculateQualityOfWins(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    model,
   );
   const weeklyPercentiles = new Map(
     [...weeklyRatings].map(([week, ratings]) => [
@@ -444,7 +387,7 @@ function calculateQualityOfWins(
     ]),
   );
   const preseasonPercentiles = createPercentiles(
-    calculateNetworkRatings(games, 0, prior, modelVersion).ratings,
+    calculateNetworkRatings(games, 0, prior, model).ratings,
   );
   const priorFbsGames = new Map<number, Map<string, number>>();
   for (let week = 0; week < throughWeek; week += 1) {
@@ -506,22 +449,21 @@ function calculateQualityOfWins(
 export function calculateRankings(
   games: Game[],
   throughWeek: number,
-  prior: RatingPrior = {},
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  prior: RatingPrior,
+  model: RankingModel,
 ): TeamRanking[] {
   const { teams, records, ratings } = calculateNetworkRatings(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    model,
   );
   if (teams.length === 0) return [];
-  const model = RANKING_MODELS[modelVersion];
   const achievementPoints = calculateAchievementPoints(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    model,
   );
   const achievementAverages = new Map(
     teams.map((team) => {
@@ -544,7 +486,7 @@ export function calculateRankings(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    model,
   );
   const networkPercentiles = createPercentiles(ratings);
   const networkScores = new Map(

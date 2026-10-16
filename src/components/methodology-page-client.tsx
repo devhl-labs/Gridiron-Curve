@@ -1,29 +1,33 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { ModelVersionSelect } from "@/components/model-version-select";
+import { RankingSystemSelect } from "@/components/ranking-system-select";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { parseModelVersion } from "@/lib/ranking";
+import {
+  parseRankingSystemId,
+  rankingSystemDisplayName,
+} from "@/lib/ranking";
 
 export function MethodologyPageClient() {
   const searchParams = useSearchParams();
-  const modelVersion = parseModelVersion(searchParams.get("model"));
-  const priorFades = modelVersion !== "v0.7";
+  const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
+  const rankingSystemName = rankingSystemDisplayName(rankingSystemId);
+  const priorFades = rankingSystemId !== "Test.0.7";
   const separateExpectation =
-    modelVersion === "v0.9" ||
-    modelVersion === "v0.10" ||
-    modelVersion === "v0.11";
-  const magnitudeNetwork = modelVersion === "v0.10";
-  const hybridNetwork = modelVersion === "v0.11";
+    rankingSystemId === "Test.0.9" ||
+    rankingSystemId === "Test.0.10" ||
+    rankingSystemId === "Test.0.11";
+  const magnitudeNetwork = rankingSystemId === "Test.0.10";
+  const hybridNetwork = rankingSystemId === "Test.0.11";
   const ratingBasedNetwork = magnitudeNetwork || hybridNetwork;
 
   return (
     <main>
       <SiteHeader
         active="methodology"
-        status={`Methodology · ${modelVersion}`}
-        modelVersion={modelVersion}
+        status={`Methodology · ${rankingSystemName}`}
+        rankingSystemId={rankingSystemId}
       />
       <section className="info-hero">
         <span className="kicker">HOW IT WORKS</span>
@@ -31,10 +35,10 @@ export function MethodologyPageClient() {
         <p>
           Gridiron Curve blends a connected win-loss network with transparent
           achievement points for exceeding expectations. This page documents
-          {` ${modelVersion}`}.
+          {` ${rankingSystemName}`}.
         </p>
         <div className="case-model-control">
-          <ModelVersionSelect selectedVersion={modelVersion} />
+          <RankingSystemSelect selectedSystemId={rankingSystemId} />
         </div>
       </section>
       <section className="method-grid info-grid">
@@ -93,7 +97,7 @@ export function MethodologyPageClient() {
               <code>Xₜ = Rₜ</code>
               <span>
                 Expected strength and the published résumé use the same
-                rating in {modelVersion}.
+                rating in {rankingSystemName}.
               </span>
             </div>
           )}
@@ -114,7 +118,7 @@ export function MethodologyPageClient() {
             expectation. A 400-point advantage corresponds to roughly a 91%
             expectation. {separateExpectation
               ? "This strength calculation is separate from the faded rating used to publish the résumé ranking."
-              : `The same rating also determines the published résumé in ${modelVersion}.`}
+              : `The same rating also determines the published résumé in ${rankingSystemName}.`}
           </p>
           <div className="formula-block">
             <code>Eₐ = 1 ÷ (1 + 10^((Xᵦ − Xₐ) ÷ 400))</code>
@@ -295,9 +299,10 @@ export function MethodologyPageClient() {
           <span className="kicker">PRERELEASE VERSIONS</span>
           <h2>Reproduce each model iteration</h2>
           <p>
-            The rankings and case studies can be recalculated with v0.7 through
-            v0.11. Every selection rebuilds the full historical chain with the
-            same version, including each previous season&apos;s final order.
+            The rankings and case studies can be recalculated with Test.0.7
+            through Test.0.11. Every selection rebuilds the full historical
+            chain with the same version, including each previous season&apos;s
+            final order.
           </p>
           <div className="method-table-wrap">
             <table className="method-table">
@@ -311,31 +316,31 @@ export function MethodologyPageClient() {
               </thead>
               <tbody>
                 <tr>
-                  <td>v0.7</td>
+                  <td>{rankingSystemDisplayName("Test.0.7")}</td>
                   <td>100%</td>
                   <td>100%</td>
                   <td>Percentile</td>
                 </tr>
                 <tr>
-                  <td>v0.8</td>
+                  <td>{rankingSystemDisplayName("Test.0.8")}</td>
                   <td>Fades to 25%</td>
                   <td>Fades to 25%</td>
                   <td>Percentile</td>
                 </tr>
                 <tr>
-                  <td>v0.9</td>
+                  <td>{rankingSystemDisplayName("Test.0.9")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Percentile</td>
                 </tr>
                 <tr>
-                  <td>v0.10</td>
+                  <td>{rankingSystemDisplayName("Test.0.10")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Rating magnitude</td>
                 </tr>
                 <tr>
-                  <td>v0.11</td>
+                  <td>{rankingSystemDisplayName("Test.0.11")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>25% percentile + 75% magnitude</td>
@@ -345,8 +350,8 @@ export function MethodologyPageClient() {
           </div>
           <p className="method-note">
             These labels identify prerelease versions of the same model, not
-            separately named ranking systems. v0.11 is the default when a URL
-            does not specify a model.
+            separately named ranking systems. Test.0.11 is the default when a
+            URL does not specify a model.
           </p>
         </div>
 
@@ -387,7 +392,7 @@ export function MethodologyPageClient() {
           </p>
         </div>
       </section>
-      <SiteFooter modelVersion={modelVersion} />
+      <SiteFooter rankingSystemId={rankingSystemId} />
     </main>
   );
 }

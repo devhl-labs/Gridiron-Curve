@@ -3,9 +3,9 @@ import {
   buildFullPreseasonPrior,
   buildPollPrior,
   calculateRankings,
-  DEFAULT_MODEL_VERSION,
+  DEFAULT_RANKING_SYSTEM_ID,
   hasUsableBoxScore,
-  type ModelVersion,
+  type RankingSystemId,
   type RatingPrior,
   type TeamRanking,
 } from ".";
@@ -13,7 +13,7 @@ import {
 export type RankingView = {
   season: number;
   week: number;
-  modelVersion: ModelVersion;
+  rankingSystemId: RankingSystemId;
   source: "cfbd" | "sample";
   generatedAt: string | null;
   gamesIncluded: number;
@@ -110,7 +110,7 @@ function buildSeasonPrior(
   source: CfbdSourceCache,
   previousSeason: number | null,
   previousOrder: string[] | null,
-  modelVersion: ModelVersion,
+  rankingSystemId: RankingSystemId,
 ): { prior: RatingPrior; description: string } {
   const preseason = selectPreseasonPoll(source);
   if (previousOrder && previousSeason === source.season - 1) {
@@ -118,7 +118,7 @@ function buildSeasonPrior(
       source.games,
       0,
       {},
-      modelVersion,
+      rankingSystemId,
     ).map(
       ({ team }) => team,
     );
@@ -127,7 +127,7 @@ function buildSeasonPrior(
         preseason?.polls ?? [],
         currentTeams,
         previousOrder,
-        modelVersion,
+        rankingSystemId,
       ),
       description: `${source.season} preseason polls plus ${previousSeason} final Gridiron Curve ranking`,
     };
@@ -136,7 +136,7 @@ function buildSeasonPrior(
     .map(({ poll }) => poll)
     .filter((poll) => poll === "AP Top 25" || poll === "Coaches Poll");
   return {
-    prior: buildPollPrior(preseason?.polls ?? [], modelVersion),
+    prior: buildPollPrior(preseason?.polls ?? [], rankingSystemId),
     description: pollNames.length > 0
       ? `${source.season} preseason ${pollNames.join(" and ")}`
       : "Neutral starting ratings",
@@ -146,7 +146,7 @@ function buildSeasonPrior(
 export function createChainedStartingPrior(
   source: CfbdSourceCache,
   historicalSources: CfbdSourceCache[] = [],
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ) {
   const sourcesBySeason = new Map(
     historicalSources
@@ -158,7 +158,7 @@ export function createChainedStartingPrior(
   );
   let previousSeason: number | null = null;
   let previousOrder: string[] | null = null;
-  let chainKey: string = modelVersion;
+  let chainKey: string = rankingSystemId;
 
   for (const historicalSource of orderedHistory) {
     if (
@@ -167,13 +167,13 @@ export function createChainedStartingPrior(
     ) {
       previousSeason = null;
       previousOrder = null;
-      chainKey = modelVersion;
+      chainKey = rankingSystemId;
     }
     const starting = buildSeasonPrior(
       historicalSource,
       previousSeason,
       previousOrder,
-      modelVersion,
+      rankingSystemId,
     );
     chainKey = `${chainKey}|${historicalSource.season}:${historicalSource.fetchedAt}`;
     const cachedOrder = finalOrderCache.get(chainKey);
@@ -183,7 +183,7 @@ export function createChainedStartingPrior(
         historicalSource.games,
         historicalSource.throughWeek,
         starting.prior,
-        modelVersion,
+        rankingSystemId,
       ).map(({ team }) => team);
     if (!cachedOrder) finalOrderCache.set(chainKey, previousOrder);
     previousSeason = historicalSource.season;
@@ -193,7 +193,7 @@ export function createChainedStartingPrior(
     source,
     previousSeason,
     previousOrder,
-    modelVersion,
+    rankingSystemId,
   );
 }
 
@@ -252,12 +252,12 @@ function getLastResult(
 export function createRankingView(
   source: CfbdSourceCache,
   historicalSources: CfbdSourceCache[] = [],
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ): RankingView {
   const startingPrior = createChainedStartingPrior(
     source,
     historicalSources,
-    modelVersion,
+    rankingSystemId,
   );
   const completedGames = source.games.filter(
     ({ completed, week, seasonType }) =>
@@ -276,7 +276,7 @@ export function createRankingView(
             source.games,
             previousWeek,
             startingPrior.prior,
-            modelVersion,
+            rankingSystemId,
           ).map(({ team, rank }) => [team, rank]),
         )
       : createPriorRankMap(startingPrior.prior);
@@ -284,7 +284,7 @@ export function createRankingView(
     source.games,
     source.throughWeek,
     startingPrior.prior,
-    modelVersion,
+    rankingSystemId,
   );
   const scheduleRanks = createScheduleRankMap(currentRankings);
   const upcomingScheduleRanks = createUpcomingScheduleRankMap(
@@ -295,7 +295,7 @@ export function createRankingView(
   return {
     season: source.season,
     week: source.throughWeek,
-    modelVersion,
+    rankingSystemId,
     source: "cfbd",
     generatedAt: source.fetchedAt,
     gamesIncluded: completedGames.length,

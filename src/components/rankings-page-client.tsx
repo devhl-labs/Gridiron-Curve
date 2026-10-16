@@ -8,8 +8,8 @@ import { RankingHistoryControls } from "@/components/ranking-history-controls";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
-  DEFAULT_MODEL_VERSION,
-  parseModelVersion,
+  DEFAULT_RANKING_SYSTEM_ID,
+  parseRankingSystemId,
 } from "@/lib/ranking";
 import {
   fetchPublicationManifest,
@@ -33,7 +33,7 @@ export function RankingsPageClient() {
   const searchParams = useSearchParams();
   const [publication, setPublication] = useState<PublicationState | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const modelVersion = parseModelVersion(searchParams.get("model"));
+  const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -61,7 +61,7 @@ export function RankingsPageClient() {
           selectedSeason.throughWeek,
         );
         const view = await fetchPublishedJson<RankingView>(
-          rankingDataPath(selectedSeason.season, week, modelVersion),
+          rankingDataPath(selectedSeason.season, week, rankingSystemId),
           controller.signal,
         );
         setPublication({ manifest, view });
@@ -78,7 +78,7 @@ export function RankingsPageClient() {
     }
     void loadPublication();
     return () => controller.abort();
-  }, [modelVersion, searchParams]);
+  }, [rankingSystemId, searchParams]);
 
   if (!publication) {
     return (
@@ -117,7 +117,7 @@ export function RankingsPageClient() {
     (candidate) =>
       candidate.season === view.season &&
       candidate.week === view.week &&
-      candidate.modelVersion === modelVersion,
+      candidate.rankingSystemId === rankingSystemId,
   );
 
   return (
@@ -125,7 +125,7 @@ export function RankingsPageClient() {
       <SiteHeader
         active="rankings"
         status={`Week ${view.week} · ${isSample ? "Sample model" : view.season}`}
-        modelVersion={modelVersion}
+        rankingSystemId={rankingSystemId}
         shareImagePath={shareImage?.path}
       />
 
@@ -141,7 +141,7 @@ export function RankingsPageClient() {
               seasons={manifests}
               selectedSeason={view.season}
               selectedWeek={view.week}
-              modelVersion={modelVersion}
+              rankingSystemId={rankingSystemId}
               previous={previousRanking}
               next={nextRanking}
             />
@@ -226,9 +226,9 @@ export function RankingsPageClient() {
                 <Link
                   className="team team-link"
                   href={`/team?team=${encodeURIComponent(team.team)}&season=${view.season}&week=${view.week}${
-                    modelVersion === DEFAULT_MODEL_VERSION
+                    rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
                       ? ""
-                      : `&model=${modelVersion}`
+                      : `&ranking=${rankingSystemId}`
                   }`}
                 >
                   <div
@@ -274,7 +274,7 @@ export function RankingsPageClient() {
         </div>
       </section>
 
-      <SiteFooter modelVersion={modelVersion} />
+      <SiteFooter rankingSystemId={rankingSystemId} />
     </main>
   );
 }

@@ -7,8 +7,8 @@ import {
   type CfbdSourceCache,
 } from "../../src/lib/cfbd/cache";
 import {
-  DEFAULT_MODEL_VERSION,
-  MODEL_VERSIONS,
+  DEFAULT_RANKING_SYSTEM_ID,
+  RANKING_SYSTEM_IDS,
 } from "../../src/lib/ranking";
 import { sampleView } from "../../src/lib/ranking/sample-data";
 import {
@@ -28,10 +28,13 @@ import {
 } from "../../src/lib/publication/types";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-const outputRoot = path.join(
+const generatedRoot = path.join(
   repositoryRoot,
   "public",
   "generated",
+);
+const outputRoot = path.join(
+  generatedRoot,
   `v${PUBLICATION_FORMAT_VERSION}`,
 );
 const logoPromises = new Map<string, Promise<string | null>>();
@@ -165,7 +168,7 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
   await Promise.all(sources.map(writeSource));
   const shareImages: PublicationManifest["shareImages"] = [];
 
-  for (const modelVersion of MODEL_VERSIONS) {
+  for (const rankingSystemId of RANKING_SYSTEM_IDS) {
     for (const source of sources) {
       const historicalSources = sources.filter(
         ({ season }) => season < source.season,
@@ -174,11 +177,11 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
         const view = createRankingView(
           { ...source, throughWeek: week },
           historicalSources,
-          modelVersion,
+          rankingSystemId,
         );
         await writeJson(
           outputRelativePath(
-            rankingDataPath(source.season, week, modelVersion),
+            rankingDataPath(source.season, week, rankingSystemId),
           ),
           createPublishedView(view),
         );
@@ -190,7 +193,7 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
           const imagePath = shareImagePath(
             source.season,
             week,
-            modelVersion,
+            rankingSystemId,
           );
           const outputPath = path.join(
             outputRoot,
@@ -201,7 +204,7 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
           shareImages.push({
             season: source.season,
             week,
-            modelVersion,
+            rankingSystemId,
             path: imagePath,
           });
         }
@@ -224,16 +227,16 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
 
 async function generateSamplePublication() {
   await Promise.all(
-    MODEL_VERSIONS.map((modelVersion) =>
+    RANKING_SYSTEM_IDS.map((rankingSystemId) =>
       writeJson(
         outputRelativePath(
           rankingDataPath(
             sampleView.season,
             sampleView.week,
-            modelVersion,
+            rankingSystemId,
           ),
         ),
-        { ...sampleView, modelVersion },
+        { ...sampleView, rankingSystemId },
       ),
     ),
   );
@@ -245,7 +248,7 @@ async function generateSamplePublication() {
 }
 
 async function main() {
-  await rm(outputRoot, { recursive: true, force: true });
+  await rm(generatedRoot, { recursive: true, force: true });
   await mkdir(outputRoot, { recursive: true });
 
   const sources = loadSources();
@@ -256,8 +259,8 @@ async function main() {
   const manifest: PublicationManifest = {
     formatVersion: PUBLICATION_FORMAT_VERSION,
     generatedAt: new Date().toISOString(),
-    defaultModelVersion: DEFAULT_MODEL_VERSION,
-    modelVersions: [...MODEL_VERSIONS],
+    defaultRankingSystemId: DEFAULT_RANKING_SYSTEM_ID,
+    rankingSystemIds: [...RANKING_SYSTEM_IDS],
     ...publication,
   };
   await writeJson("manifest.json", manifest);

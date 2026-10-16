@@ -1,8 +1,8 @@
 import type { CfbdSourceCache } from "../cfbd/cache";
-import type { ModelVersion } from "../ranking";
+import type { RankingSystemId } from "../ranking";
 import type { RankingView as SourceRankingView } from "../ranking/view";
 
-export const PUBLICATION_FORMAT_VERSION = 1 as const;
+export const PUBLICATION_FORMAT_VERSION = 2 as const;
 export const PUBLICATION_BASE_PATH = `${
   process.env.NEXT_PUBLIC_BASE_PATH ?? ""
 }/generated/v${PUBLICATION_FORMAT_VERSION}`;
@@ -36,14 +36,14 @@ export type RankingView = Omit<SourceRankingView, "rankings"> & {
 export type PublicationManifest = {
   formatVersion: typeof PUBLICATION_FORMAT_VERSION;
   generatedAt: string;
-  defaultModelVersion: ModelVersion;
-  modelVersions: ModelVersion[];
+  defaultRankingSystemId: RankingSystemId;
+  rankingSystemIds: RankingSystemId[];
   seasons: Array<{ season: number; throughWeek: number }>;
   latest: { season: number; week: number };
   shareImages: Array<{
     season: number;
     week: number;
-    modelVersion: ModelVersion;
+    rankingSystemId: RankingSystemId;
     path: string;
   }>;
 };
@@ -51,9 +51,9 @@ export type PublicationManifest = {
 export function rankingDataPath(
   season: number,
   week: number,
-  modelVersion: ModelVersion,
+  rankingSystemId: RankingSystemId,
 ) {
-  return `${PUBLICATION_BASE_PATH}/rankings/${season}/week-${String(week).padStart(2, "0")}/${modelVersion}.json`;
+  return `${PUBLICATION_BASE_PATH}/rankings/${season}/week-${String(week).padStart(2, "0")}/${rankingSystemId}.json`;
 }
 
 export function seasonDataPath(season: number) {
@@ -63,7 +63,7 @@ export function seasonDataPath(season: number) {
 export function shareImagePath(
   season: number,
   week: number,
-  modelVersion: ModelVersion,
+  rankingSystemId: RankingSystemId,
 ) {
-  return `${PUBLICATION_BASE_PATH}/images/${season}/week-${String(week).padStart(2, "0")}/${modelVersion}.jpg`;
+  return `${PUBLICATION_BASE_PATH}/images/${season}/week-${String(week).padStart(2, "0")}/${rankingSystemId}.jpg`;
 }

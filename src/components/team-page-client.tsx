@@ -7,8 +7,8 @@ import { useEffect, useState } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
-  DEFAULT_MODEL_VERSION,
-  parseModelVersion,
+  DEFAULT_RANKING_SYSTEM_ID,
+  parseRankingSystemId,
 } from "@/lib/ranking";
 import { createTeamSchedule } from "@/lib/ranking/team-view";
 import {
@@ -61,7 +61,7 @@ type TeamState = {
 export function TeamPageClient() {
   const searchParams = useSearchParams();
   const teamName = searchParams.get("team") ?? "";
-  const modelVersion = parseModelVersion(searchParams.get("model"));
+  const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
   const [publication, setPublication] = useState<TeamState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,7 +92,7 @@ export function TeamPageClient() {
             controller.signal,
           ),
           fetchPublishedJson<RankingView>(
-            rankingDataPath(selectedSeason.season, week, modelVersion),
+            rankingDataPath(selectedSeason.season, week, rankingSystemId),
             controller.signal,
           ),
         ]);
@@ -110,7 +110,7 @@ export function TeamPageClient() {
     }
     void loadTeam();
     return () => controller.abort();
-  }, [modelVersion, searchParams, teamName]);
+  }, [rankingSystemId, searchParams, teamName]);
 
   if (!publication) {
     return (
@@ -143,7 +143,9 @@ export function TeamPageClient() {
     source.teams.map((team) => [team.school, team]),
   );
   const rankingsHref = `/?season=${source.season}&week=${view.week}${
-    modelVersion === DEFAULT_MODEL_VERSION ? "" : `&model=${modelVersion}`
+    rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
+      ? ""
+      : `&ranking=${rankingSystemId}`
   }`;
 
   return (
@@ -151,7 +153,7 @@ export function TeamPageClient() {
       <SiteHeader
         active="rankings"
         status={`Week ${view.week} · ${source.season}`}
-        modelVersion={modelVersion}
+        rankingSystemId={rankingSystemId}
       />
 
       <section className="team-page">
@@ -266,7 +268,7 @@ export function TeamPageClient() {
         </section>
       </section>
 
-      <SiteFooter modelVersion={modelVersion} />
+      <SiteFooter rankingSystemId={rankingSystemId} />
     </main>
   );
 }

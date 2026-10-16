@@ -60,7 +60,7 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .rankings-masthead { align-items: end; display: flex; gap: 50px; justify-content: space-between; margin: 0 auto 34px; max-width: 1180px; }
 .rankings-masthead h1, .info-hero h1 { font-family: Georgia, serif; font-size: clamp(46px, 5vw, 72px); font-weight: 400; letter-spacing: -.045em; line-height: 1; margin: 12px 0 10px; }
 .rankings-masthead p { color: #929c94; font-family: var(--font-plex-mono), monospace; font-size: 11px; letter-spacing: .08em; margin: 0; text-transform: uppercase; }
-.history-controls { align-items: end; display: grid; flex: 0 0 min(540px, 100%); gap: 8px; grid-template-columns: 44px minmax(108px, 1fr) minmax(98px, .8fr) minmax(86px, .7fr) 44px; width: min(540px, 100%); }
+.history-controls { align-items: end; display: grid; flex: 0 0 min(540px, 100%); gap: 8px; grid-template-columns: 44px minmax(108px, 1fr) minmax(98px, .8fr) minmax(86px, .9fr) 44px; width: min(540px, 100%); }
 .history-step { align-items: center; border: 1px solid #465149; color: var(--paper); display: flex; font-size: 19px; height: 43px; justify-content: center; transition: .15s; }
 .history-step:hover { background: #243229; border-color: #869188; }
 .history-step.disabled { color: #526057; }

@@ -1,4 +1,5 @@
 import type { RankingView } from "./view";
+import { rankingSystemDisplayName } from "./registry";
 
 export const RANKING_IMAGE_WIDTH = 1080;
 export const RANKING_IMAGE_HEIGHT = 1350;
@@ -99,7 +100,7 @@ export function createRankingShareSvg(
       <text x="56" y="69" fill="#fff" font-family="Georgia, serif" font-size="35" font-weight="700" text-anchor="middle">G</text>
       <text x="101" y="66" fill="#f4f0e7" font-family="Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="4">GRIDIRON CURVE</text>
       <text x="30" y="126" fill="#f4f0e7" font-family="Arial, sans-serif" font-size="30" font-weight="800">TOP 25</text>
-      <text x="1050" y="124" fill="#9aa69e" font-family="monospace" font-size="16" font-weight="600" text-anchor="end">${view.season} SEASON · WEEK ${view.week} · ${view.modelVersion.toUpperCase()}</text>
+      <text x="1050" y="124" fill="#9aa69e" font-family="monospace" font-size="16" font-weight="600" text-anchor="end">${view.season} SEASON · WEEK ${view.week} · ${rankingSystemDisplayName(view.rankingSystemId)}</text>
       <line x1="30" y1="148" x2="1050" y2="148" stroke="#dc5f31" stroke-width="3"/>
       ${cards}
       <text x="540" y="1322" fill="#8d9a90" font-family="monospace" font-size="15" letter-spacing="1" text-anchor="middle">${escapeXml(rankingUrl)}</text>

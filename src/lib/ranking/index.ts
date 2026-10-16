@@ -1,54 +1,51 @@
-import * as engineV1 from "./engines/v1/ranking";
 import {
-  DEFAULT_MODEL_VERSION,
-  RANKING_MODELS,
-  type ModelVersion,
-} from "./models";
+  DEFAULT_RANKING_SYSTEM_ID,
+  RANKING_SYSTEMS,
+} from "./registry";
 import type {
   Game,
   Poll,
+  RankingSystemId,
   RatingPrior,
   TeamRanking,
-} from "./engines/v1/ranking";
+} from "./types";
 
 export type {
   Game,
   Poll,
+  RankingSystemId,
   RatingPrior,
   TeamBoxScore,
   TeamRanking,
-} from "./engines/v1/ranking";
+} from "./types";
 export {
-  DEFAULT_MODEL_VERSION,
-  MODEL_VERSIONS,
-  isModelVersion,
-  parseModelVersion,
-  type ModelVersion,
-} from "./models";
-export { hasUsableBoxScore } from "./engines/v1/ranking";
+  DEFAULT_RANKING_SYSTEM_ID,
+  RANKING_SYSTEM_IDS,
+  compareRankingSystems,
+  isRankingSystemId,
+  parseRankingSystemId,
+  rankingSystemDisplayName,
+} from "./registry";
+export { hasUsableBoxScore } from "./systems/test/0/engine";
 
-const RANKING_ENGINES = {
-  v1: engineV1,
-};
-
-function engineFor(modelVersion: ModelVersion) {
-  return RANKING_ENGINES[RANKING_MODELS[modelVersion].engine];
+function systemFor(rankingSystemId: RankingSystemId) {
+  return RANKING_SYSTEMS[rankingSystemId];
 }
 
 export function buildPollPrior(
   polls: Poll[],
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ) {
-  return engineFor(modelVersion).buildPollPrior(polls);
+  return systemFor(rankingSystemId).engine.buildPollPrior(polls);
 }
 
 export function buildFullPreseasonPrior(
   polls: Poll[],
   currentTeams: string[],
   previousSeasonOrder: string[],
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ) {
-  return engineFor(modelVersion).buildFullPreseasonPrior(
+  return systemFor(rankingSystemId).engine.buildFullPreseasonPrior(
     polls,
     currentTeams,
     previousSeasonOrder,
@@ -59,13 +56,14 @@ export function calculateExpectedStrengthRatings(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior = {},
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ) {
-  return engineFor(modelVersion).calculateExpectedStrengthRatings(
+  const system = systemFor(rankingSystemId);
+  return system.engine.calculateExpectedStrengthRatings(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    system.model,
   );
 }
 
@@ -73,13 +71,14 @@ export function calculateAchievementPoints(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior = {},
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ) {
-  return engineFor(modelVersion).calculateAchievementPoints(
+  const system = systemFor(rankingSystemId);
+  return system.engine.calculateAchievementPoints(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    system.model,
   );
 }
 
@@ -87,12 +86,13 @@ export function calculateRankings(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior = {},
-  modelVersion: ModelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ): TeamRanking[] {
-  return engineFor(modelVersion).calculateRankings(
+  const system = systemFor(rankingSystemId);
+  return system.engine.calculateRankings(
     games,
     throughWeek,
     prior,
-    modelVersion,
+    system.model,
   );
 }

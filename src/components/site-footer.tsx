@@ -1,14 +1,15 @@
 import {
-  DEFAULT_MODEL_VERSION,
-  type ModelVersion,
+  DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemDisplayName,
+  type RankingSystemId,
 } from "@/lib/ranking";
 
 type SiteFooterProps = {
-  modelVersion?: ModelVersion;
+  rankingSystemId?: RankingSystemId;
 };
 
 export function SiteFooter({
-  modelVersion = DEFAULT_MODEL_VERSION,
+  rankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 }: SiteFooterProps) {
   return (
     <footer>
@@ -17,7 +18,7 @@ export function SiteFooter({
         <span>GRIDIRON CURVE</span>
       </div>
       <p>Every result, graded in context.</p>
-      <span>MODEL {modelVersion}</span>
+      <span>RANKING {rankingSystemDisplayName(rankingSystemId)}</span>
     </footer>
   );
 }

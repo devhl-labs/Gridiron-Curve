@@ -3,7 +3,7 @@
 Gridiron Curve is a college-football resume model based on wins, losses, and
 the connected network of opponents.
 
-## Model v0.11
+## Ranking Test.0.11
 
 1. **50% expectation-adjusted network score:** every team starts from the
    full preseason order. A result changes both teams by `20 x (actual -
@@ -51,45 +51,48 @@ the connected network of opponents.
    FCS opponents contribute zero. SOS is not a weighted component; it breaks an
    exact tie in the final Curve score.
 
-## Prerelease model versions
+## Prerelease ranking systems
 
-The rankings selector can reproduce model versions `v0.7` through `v0.11`.
-All are prerelease iterations of Gridiron Curve; `v0.11` is the default. Each
-selection rebuilds the complete chronological prior chain with that version so
-historical rankings are never mixed across models.
+The rankings selector can reproduce Test.0.7 through Test.0.11. All are
+prerelease iterations of Gridiron Curve; Test.0.11 is the default. Each
+selection rebuilds the complete chronological prior chain with that system so
+historical rankings are never mixed across configurations.
 
-Each version keeps its defining parameters in its own directory under
-`src/lib/ranking/models/` and explicitly selects a calculation engine. Versions
-v0.7 through v0.11 are pinned to `src/lib/ranking/engines/v1/ranking.ts`.
-`src/lib/ranking/index.ts` is a compatibility dispatcher that resolves the selected
-model and invokes its engine, so a future structural algorithm change can add a
-new engine without changing historical model behavior.
+Each named engine version and its compatible models are colocated under
+`src/lib/ranking/systems/<name>/<engine-version>/`. The Test engine version 0
+implementation is in `src/lib/ranking/systems/test/0/engine.ts`, with model
+configurations under `src/lib/ranking/systems/test/0/models/`.
+`src/lib/ranking/registry.ts` registers complete ranking-system identifiers,
+while `src/lib/ranking/index.ts` resolves a system and passes its model
+configuration into its engine. Engines depend only on shared contracts and do
+not read the global registry.
 
-- `v0.7` retains the full inherited prior throughout the season.
-- `v0.8` fades the inherited prior in both published ratings and game
+- `Test.0.7` retains the full inherited prior throughout the season.
+- `Test.0.8` fades the inherited prior in both published ratings and game
   expectations.
-- `v0.9` fades the inherited prior in published ratings while retaining full
+- `Test.0.9` fades the inherited prior in published ratings while retaining full
   inherited strength for game expectations.
-- `v0.10` retains the v0.9 rating updates and replaces the ordinal network
+- `Test.0.10` retains the Test.0.9 rating updates and replaces the ordinal network
   percentile in the final blend with a magnitude-aware 1300–1700 network score.
-- `v0.11` blends 25% ordinal network percentile with 75% rating magnitude.
+- `Test.0.11` blends 25% ordinal network percentile with 75% rating magnitude.
 
 Until CFBD inputs are cached, the landing page uses a small, clearly labeled
 illustrative dataset. The sync command retrieves the FBS season and caches
 normalized provider inputs locally. The publication build calculates every
-season, week, and model into versioned static JSON.
+season, week, and ranking system into versioned static JSON.
 
 ## Ranking share images
 
 The latest cached week receives a build-generated 1080x1350 Top 25 JPEG for
-every model. The rankings page can copy its stable image URL or download the
+every ranking system. The rankings page can share its stable image URL or
+download the
 file:
 
 ```text
-/generated/v1/images/2026/week-06/v0.11.jpg
+/generated/v2/images/2026/week-06/Test.0.11.jpg
 ```
 
-Share images use the same historical prior chain and active ranking model as
+Share images use the same historical prior chain and active ranking system as
 the visible table. Historical rankings remain available, but their images are
 not retained in the static publication.
 
@@ -191,12 +194,13 @@ ignored by Git.
 
 Gridiron Curve is published as a static site. `npm run build` first reads the
 versioned local CFBD cache and writes immutable publication data under
-`public/generated/v1/`, then Next.js exports the site to `out/`.
+`public/generated/v2/`, then Next.js exports the site to `out/`.
 
-Published ranking JSON is generated for every cached season, week, and model.
+Published ranking JSON is generated for every cached season, week, and ranking
+system.
 Season schedule data is generated for team pages. The latest week receives
-pre-generated share JPEGs for every model. The generated directory is ignored
-by Git because it is a build artifact.
+pre-generated share JPEGs for every ranking system. The generated directory is
+ignored by Git because it is a build artifact.
 
 Refresh the local source cache, then rebuild to publish a new week:
 
@@ -231,7 +235,7 @@ permissions only in the local `.env` used for cache uploads.
 
 Pull requests never receive those credentials. The PR Gate installs the
 wholly invented two-season fixture in `test/fixtures/cfbd-cache/`, builds all
-five models, and verifies the static manifest and latest JPEG. No fixture
+five ranking systems, and verifies the static manifest and latest JPEG. No fixture
 value was copied from CollegeFootballData.
 
 ## Commands

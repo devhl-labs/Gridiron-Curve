@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ModelVersionSelect } from "@/components/model-version-select";
+import { RankingSystemSelect } from "@/components/ranking-system-select";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
-  DEFAULT_MODEL_VERSION,
-  parseModelVersion,
+  DEFAULT_RANKING_SYSTEM_ID,
+  parseRankingSystemId,
+  rankingSystemDisplayName,
 } from "@/lib/ranking";
 import {
   fetchPublicationManifest,
@@ -231,7 +232,7 @@ type BuiltStudy = ReturnType<typeof buildStudyView>;
 
 export function CaseStudiesPageClient() {
   const searchParams = useSearchParams();
-  const modelVersion = parseModelVersion(searchParams.get("model"));
+  const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
   const [studies, setStudies] = useState<BuiltStudy[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -253,7 +254,7 @@ export function CaseStudiesPageClient() {
                 season.throughWeek,
               );
               const view = await fetchPublishedJson<RankingView>(
-                rankingDataPath(study.season, week, modelVersion),
+                rankingDataPath(study.season, week, rankingSystemId),
                 controller.signal,
               );
               return buildStudyView(study, view);
@@ -274,14 +275,14 @@ export function CaseStudiesPageClient() {
     }
     void loadStudies();
     return () => controller.abort();
-  }, [modelVersion]);
+  }, [rankingSystemId]);
 
   return (
     <main>
       <SiteHeader
         active="case-studies"
-        status={`${studies.length} comparisons · ${modelVersion}`}
-        modelVersion={modelVersion}
+        status={`${studies.length} comparisons · ${rankingSystemDisplayName(rankingSystemId)}`}
+        rankingSystemId={rankingSystemId}
       />
       <section className="info-hero case-hero">
         <span className="kicker">CASE STUDIES</span>
@@ -292,7 +293,7 @@ export function CaseStudiesPageClient() {
           résumé using the same rules and the information available at the time.
         </p>
         <div className="case-model-control">
-          <ModelVersionSelect selectedVersion={modelVersion} />
+          <RankingSystemSelect selectedSystemId={rankingSystemId} />
         </div>
       </section>
 
@@ -310,9 +311,9 @@ export function CaseStudiesPageClient() {
               </div>
               <Link
                 href={`/?season=${study.season}&week=${view.week}${
-                  modelVersion === DEFAULT_MODEL_VERSION
+                  rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
                     ? ""
-                    : `&model=${modelVersion}`
+                    : `&ranking=${rankingSystemId}`
                 }`}
               >
                 View full ranking →
@@ -365,7 +366,7 @@ export function CaseStudiesPageClient() {
           </article>
         ))}
       </section>
-      <SiteFooter modelVersion={modelVersion} />
+      <SiteFooter rankingSystemId={rankingSystemId} />
     </main>
   );
 }
