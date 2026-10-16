@@ -49,10 +49,10 @@ jobs:
       - name: Verify static export
         run: |
           test -f out/index.html
-          test -f out/generated/v2/manifest.json
-          test -f out/generated/v2/images/2099/week-02/Test.0.11.jpg
+          test -f out/generated/v3/manifest.json
+          test -f out/generated/v3/images/2099/week-02/Curve.0.11.jpg
           node - <<'NODE'
-          const manifest = require("./out/generated/v2/manifest.json");
+          const manifest = require("./out/generated/v3/manifest.json");
           const seasons = manifest.seasons.map(({ season }) => season);
           if (seasons.join(",") !== "2098,2099") {
             throw new Error(`Unexpected fixture seasons: ${seasons.join(",")}`);

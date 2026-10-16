@@ -1,9 +1,11 @@
 export type RankingSystemId =
-  | "Test.0.7"
-  | "Test.0.8"
-  | "Test.0.9"
-  | "Test.0.10"
-  | "Test.0.11";
+  | "Curve.0.7"
+  | "Curve.0.8"
+  | "Curve.0.9"
+  | "Curve.0.10"
+  | "Curve.0.11";
+
+export type RankingCategoryId = "resume";
 
 export type TeamBoxScore = {
   totalYards: number;
@@ -91,6 +93,7 @@ export type RankingEngine = {
 
 export type RankingSystemDefinition = {
   id: RankingSystemId;
+  categoryId: RankingCategoryId;
   engineName: string;
   engineVersion: number;
   modelVersion: number;

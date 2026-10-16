@@ -1,22 +1,31 @@
-import { test0Systems } from "./systems/test/0";
+import { curve0Systems } from "./systems/curve/0";
 import type {
+  RankingCategoryId,
   RankingSystemDefinition,
   RankingSystemId,
 } from "./types";
 
 export const RANKING_SYSTEMS = {
-  ...test0Systems,
+  ...curve0Systems,
 } satisfies Record<RankingSystemId, RankingSystemDefinition>;
 
 export const RANKING_SYSTEM_IDS = [
-  "Test.0.7",
-  "Test.0.8",
-  "Test.0.9",
-  "Test.0.10",
-  "Test.0.11",
+  "Curve.0.7",
+  "Curve.0.8",
+  "Curve.0.9",
+  "Curve.0.10",
+  "Curve.0.11",
 ] as const satisfies readonly RankingSystemId[];
 
-export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Test.0.11";
+export const RANKING_CATEGORY_IDS = [
+  "resume",
+] as const satisfies readonly RankingCategoryId[];
+
+const RANKING_CATEGORY_LABELS: Record<RankingCategoryId, string> = {
+  resume: "Resume rankings",
+};
+
+export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Curve.0.11";
 
 export function isRankingSystemId(
   value: string | null | undefined,
@@ -44,4 +53,14 @@ export function compareRankingSystems(
 
 export function rankingSystemDisplayName(id: RankingSystemId) {
   return id;
+}
+
+export function rankingCategoryDisplayName(id: RankingCategoryId) {
+  return RANKING_CATEGORY_LABELS[id];
+}
+
+export function rankingSystemIdsForCategory(id: RankingCategoryId) {
+  return RANKING_SYSTEM_IDS.filter(
+    (rankingSystemId) => RANKING_SYSTEMS[rankingSystemId].categoryId === id,
+  );
 }

@@ -13,13 +13,13 @@ export function MethodologyPageClient() {
   const searchParams = useSearchParams();
   const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
   const rankingSystemName = rankingSystemDisplayName(rankingSystemId);
-  const priorFades = rankingSystemId !== "Test.0.7";
+  const priorFades = rankingSystemId !== "Curve.0.7";
   const separateExpectation =
-    rankingSystemId === "Test.0.9" ||
-    rankingSystemId === "Test.0.10" ||
-    rankingSystemId === "Test.0.11";
-  const magnitudeNetwork = rankingSystemId === "Test.0.10";
-  const hybridNetwork = rankingSystemId === "Test.0.11";
+    rankingSystemId === "Curve.0.9" ||
+    rankingSystemId === "Curve.0.10" ||
+    rankingSystemId === "Curve.0.11";
+  const magnitudeNetwork = rankingSystemId === "Curve.0.10";
+  const hybridNetwork = rankingSystemId === "Curve.0.11";
   const ratingBasedNetwork = magnitudeNetwork || hybridNetwork;
 
   return (
@@ -299,8 +299,8 @@ export function MethodologyPageClient() {
           <span className="kicker">PRERELEASE VERSIONS</span>
           <h2>Reproduce each model iteration</h2>
           <p>
-            The rankings and case studies can be recalculated with Test.0.7
-            through Test.0.11. Every selection rebuilds the full historical
+            The rankings and case studies can be recalculated with Curve.0.7
+            through Curve.0.11. Every selection rebuilds the full historical
             chain with the same version, including each previous season&apos;s
             final order.
           </p>
@@ -316,31 +316,31 @@ export function MethodologyPageClient() {
               </thead>
               <tbody>
                 <tr>
-                  <td>{rankingSystemDisplayName("Test.0.7")}</td>
+                  <td>{rankingSystemDisplayName("Curve.0.7")}</td>
                   <td>100%</td>
                   <td>100%</td>
                   <td>Percentile</td>
                 </tr>
                 <tr>
-                  <td>{rankingSystemDisplayName("Test.0.8")}</td>
+                  <td>{rankingSystemDisplayName("Curve.0.8")}</td>
                   <td>Fades to 25%</td>
                   <td>Fades to 25%</td>
                   <td>Percentile</td>
                 </tr>
                 <tr>
-                  <td>{rankingSystemDisplayName("Test.0.9")}</td>
+                  <td>{rankingSystemDisplayName("Curve.0.9")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Percentile</td>
                 </tr>
                 <tr>
-                  <td>{rankingSystemDisplayName("Test.0.10")}</td>
+                  <td>{rankingSystemDisplayName("Curve.0.10")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Rating magnitude</td>
                 </tr>
                 <tr>
-                  <td>{rankingSystemDisplayName("Test.0.11")}</td>
+                  <td>{rankingSystemDisplayName("Curve.0.11")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>25% percentile + 75% magnitude</td>
@@ -350,7 +350,7 @@ export function MethodologyPageClient() {
           </div>
           <p className="method-note">
             These labels identify prerelease versions of the same model, not
-            separately named ranking systems. Test.0.11 is the default when a
+            separately named ranking systems. Curve.0.11 is the default when a
             URL does not specify a model.
           </p>
         </div>

@@ -7,7 +7,7 @@ import {
 
 describe("ranking system registry", () => {
   it("formats engine and model versions as separate numeric components", () => {
-    expect(rankingSystemDisplayName("Test.0.11")).toBe("Test.0.11");
+    expect(rankingSystemDisplayName("Curve.0.11")).toBe("Curve.0.11");
   });
 
   it("sorts model versions numerically rather than lexicographically", () => {
@@ -16,11 +16,11 @@ describe("ranking system registry", () => {
     );
 
     expect(systems).toEqual([
-      "Test.0.11",
-      "Test.0.10",
-      "Test.0.9",
-      "Test.0.8",
-      "Test.0.7",
+      "Curve.0.11",
+      "Curve.0.10",
+      "Curve.0.9",
+      "Curve.0.8",
+      "Curve.0.7",
     ]);
   });
 });

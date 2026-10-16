@@ -13,6 +13,7 @@ import type {
 export type {
   Game,
   Poll,
+  RankingCategoryId,
   RankingSystemId,
   RatingPrior,
   TeamBoxScore,
@@ -20,13 +21,16 @@ export type {
 } from "./types";
 export {
   DEFAULT_RANKING_SYSTEM_ID,
+  RANKING_CATEGORY_IDS,
   RANKING_SYSTEM_IDS,
   compareRankingSystems,
   isRankingSystemId,
   parseRankingSystemId,
+  rankingCategoryDisplayName,
   rankingSystemDisplayName,
+  rankingSystemIdsForCategory,
 } from "./registry";
-export { hasUsableBoxScore } from "./systems/test/0/engine";
+export { hasUsableBoxScore } from "./systems/curve/0/engine";
 
 function systemFor(rankingSystemId: RankingSystemId) {
   return RANKING_SYSTEMS[rankingSystemId];

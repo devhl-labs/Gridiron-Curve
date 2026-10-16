@@ -1,6 +1,6 @@
 import type { RankingModel } from "../../../../types";
 
-export const model = {
+export const curveModel11 = {
   minimumPriorWeight: 0.25,
   expectationPrior: "full",
   networkPercentileWeight: 0.25,

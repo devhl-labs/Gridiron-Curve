@@ -22,7 +22,7 @@ const EXPECTATION_SCALE = 400;
 const WEEKLY_UPDATE_FACTOR = 20;
 const PRIOR_FADE_WEEKS = 6;
 const FCS_RATING_GAP = 100;
-const NETWORK_WEIGHT = 0.5;
+const RESUME_NETWORK_WEIGHT = 0.5;
 const QUALITY_WINS_WEIGHT = 0.3;
 const ACHIEVEMENT_WEIGHT = 0.2;
 
@@ -525,7 +525,7 @@ export function calculateRankings(
         rank: 0,
         rating: Number(
           (
-            NETWORK_WEIGHT * (networkScores.get(team) ?? 50) +
+            RESUME_NETWORK_WEIGHT * (networkScores.get(team) ?? 50) +
             QUALITY_WINS_WEIGHT * (qualityOfWins.get(team) ?? 0) +
             ACHIEVEMENT_WEIGHT * (achievementScores.get(team) ?? 50)
           ).toFixed(1),

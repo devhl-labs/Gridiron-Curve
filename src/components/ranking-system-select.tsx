@@ -3,9 +3,11 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   DEFAULT_RANKING_SYSTEM_ID,
-  RANKING_SYSTEM_IDS,
+  RANKING_CATEGORY_IDS,
   compareRankingSystems,
+  rankingCategoryDisplayName,
   rankingSystemDisplayName,
+  rankingSystemIdsForCategory,
   type RankingSystemId,
 } from "@/lib/ranking";
 
@@ -44,15 +46,22 @@ export function RankingSystemSelect({
           selectSystem(event.target.value as RankingSystemId)
         }
       >
-        <optgroup label="Resume rankings">
-          {RANKING_SYSTEM_IDS.toSorted((left, right) =>
-            compareRankingSystems(right, left),
-          ).map((rankingSystemId) => (
-            <option key={rankingSystemId} value={rankingSystemId}>
-              {rankingSystemDisplayName(rankingSystemId)}
-            </option>
-          ))}
-        </optgroup>
+        {RANKING_CATEGORY_IDS.map((categoryId) => (
+          <optgroup
+            key={categoryId}
+            label={rankingCategoryDisplayName(categoryId)}
+          >
+            {rankingSystemIdsForCategory(categoryId)
+              .toSorted((left, right) =>
+                compareRankingSystems(right, left),
+              )
+              .map((rankingSystemId) => (
+                <option key={rankingSystemId} value={rankingSystemId}>
+                  {rankingSystemDisplayName(rankingSystemId)}
+                </option>
+              ))}
+          </optgroup>
+        ))}
       </select>
     </label>
   );

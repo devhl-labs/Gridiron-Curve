@@ -3,7 +3,7 @@
 Gridiron Curve is a college-football resume model based on wins, losses, and
 the connected network of opponents.
 
-## Ranking Test.0.11
+## Ranking Curve.0.11
 
 1. **50% expectation-adjusted network score:** every team starts from the
    full preseason order. A result changes both teams by `20 x (actual -
@@ -53,28 +53,28 @@ the connected network of opponents.
 
 ## Prerelease ranking systems
 
-The rankings selector can reproduce Test.0.7 through Test.0.11. All are
-prerelease iterations of Gridiron Curve; Test.0.11 is the default. Each
+The rankings selector can reproduce Curve.0.7 through Curve.0.11. All are
+prerelease iterations of Gridiron Curve; Curve.0.11 is the default. Each
 selection rebuilds the complete chronological prior chain with that system so
 historical rankings are never mixed across configurations.
 
 Each named engine version and its compatible models are colocated under
-`src/lib/ranking/systems/<name>/<engine-version>/`. The Test engine version 0
-implementation is in `src/lib/ranking/systems/test/0/engine.ts`, with model
-configurations under `src/lib/ranking/systems/test/0/models/`.
+`src/lib/ranking/systems/<name>/<engine-version>/`. The Curve engine version 0
+implementation is in `src/lib/ranking/systems/curve/0/engine.ts`, with model
+configurations under `src/lib/ranking/systems/curve/0/models/`.
 `src/lib/ranking/registry.ts` registers complete ranking-system identifiers,
 while `src/lib/ranking/index.ts` resolves a system and passes its model
 configuration into its engine. Engines depend only on shared contracts and do
 not read the global registry.
 
-- `Test.0.7` retains the full inherited prior throughout the season.
-- `Test.0.8` fades the inherited prior in both published ratings and game
+- `Curve.0.7` retains the full inherited prior throughout the season.
+- `Curve.0.8` fades the inherited prior in both published ratings and game
   expectations.
-- `Test.0.9` fades the inherited prior in published ratings while retaining full
+- `Curve.0.9` fades the inherited prior in published ratings while retaining full
   inherited strength for game expectations.
-- `Test.0.10` retains the Test.0.9 rating updates and replaces the ordinal network
+- `Curve.0.10` retains the Curve.0.9 rating updates and replaces the ordinal network
   percentile in the final blend with a magnitude-aware 1300–1700 network score.
-- `Test.0.11` blends 25% ordinal network percentile with 75% rating magnitude.
+- `Curve.0.11` blends 25% ordinal network percentile with 75% rating magnitude.
 
 Until CFBD inputs are cached, the landing page uses a small, clearly labeled
 illustrative dataset. The sync command retrieves the FBS season and caches
@@ -89,7 +89,7 @@ download the
 file:
 
 ```text
-/generated/v2/images/2026/week-06/Test.0.11.jpg
+/generated/v3/images/2026/week-06/Curve.0.11.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as
@@ -194,7 +194,7 @@ ignored by Git.
 
 Gridiron Curve is published as a static site. `npm run build` first reads the
 versioned local CFBD cache and writes immutable publication data under
-`public/generated/v2/`, then Next.js exports the site to `out/`.
+`public/generated/v3/`, then Next.js exports the site to `out/`.
 
 Published ranking JSON is generated for every cached season, week, and ranking
 system.

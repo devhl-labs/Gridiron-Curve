@@ -232,12 +232,12 @@ describe("calculateRankings", () => {
       6,
       prior,
     );
-    const updated = calculateRankings([lateGame], 7, prior, "Test.0.9");
+    const updated = calculateRankings([lateGame], 7, prior, "Curve.0.9");
     const fadedExpectation = calculateRankings(
       [lateGame],
       7,
       prior,
-      "Test.0.8",
+      "Curve.0.8",
     );
     const rating = (
       rankings: ReturnType<typeof calculateRankings>,
@@ -252,7 +252,7 @@ describe("calculateRankings", () => {
     ).toBeGreaterThan(7);
   });
 
-  it("reproduces the persistent prior used by Test.0.7", () => {
+  it("reproduces the persistent prior used by Curve.0.7", () => {
     const inactiveGame = {
       ...games[0],
       week: 13,
@@ -264,7 +264,7 @@ describe("calculateRankings", () => {
       [inactiveGame],
       12,
       { Alpha: 0.75, Bravo: 0.25 },
-      "Test.0.7",
+      "Curve.0.7",
     );
 
     expect(rankings.find(({ team }) => team === "Alpha")?.networkRating).toBe(
@@ -275,7 +275,7 @@ describe("calculateRankings", () => {
     );
   });
 
-  it("uses rating magnitude for the Test.0.10 network component", () => {
+  it("uses rating magnitude for the Curve.0.10 network component", () => {
     const inactiveGame = {
       ...games[0],
       week: 7,
@@ -288,13 +288,13 @@ describe("calculateRankings", () => {
       [inactiveGame],
       6,
       prior,
-      "Test.0.9",
+      "Curve.0.9",
     );
     const magnitude = calculateRankings(
       [inactiveGame],
       6,
       prior,
-      "Test.0.10",
+      "Curve.0.10",
     );
 
     expect(
@@ -305,7 +305,7 @@ describe("calculateRankings", () => {
     ).toBe(62.5);
   });
 
-  it("blends percentile and magnitude in the Test.0.11 network component", () => {
+  it("blends percentile and magnitude in the Curve.0.11 network component", () => {
     const inactiveGame = {
       ...games[0],
       week: 7,
@@ -317,7 +317,7 @@ describe("calculateRankings", () => {
       [inactiveGame],
       6,
       { Alpha: 0.75, Bravo: 0.25 },
-      "Test.0.11",
+      "Curve.0.11",
     );
 
     expect(
