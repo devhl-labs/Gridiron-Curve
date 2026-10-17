@@ -3,6 +3,7 @@ import type { CfbdSourceCache } from "../cfbd/cache";
 import {
   createChainedStartingPrior,
   createRankingView,
+  selectBlendPolls,
 } from "./view";
 
 const source: CfbdSourceCache = {
@@ -248,5 +249,101 @@ describe("createRankingView", () => {
     expect(
       view.rankings.find(({ team }) => team === "Alpha")?.lastResult,
     ).toBe("L 10–40 @ Charlie");
+  });
+
+  it("publishes the six component votes behind consensus", () => {
+    const view = createRankingView(source, [], "Consensus.1.0");
+
+    expect(view.rankings).toHaveLength(source.teams.length);
+    expect(
+      view.rankings.every(
+        ({ consensusRanks }) =>
+          consensusRanks?.length === 6 &&
+          consensusRanks.filter(({ included }) => included).length === 4,
+      ),
+    ).toBe(true);
+  });
+
+  it("selects the latest poll at or before the postweek target", () => {
+    const poll = (name: "AP Top 25" | "Coaches Poll", school: string) => ({
+      poll: name,
+      ranks: [{ rank: 1, school }],
+    });
+    const selection = selectBlendPolls(
+      {
+        ...source,
+        pollWeeks: [
+          {
+            season: 2026,
+            week: 1,
+            polls: [poll("AP Top 25", "Old AP"), poll("Coaches Poll", "Coach")],
+          },
+          {
+            season: 2026,
+            week: 2,
+            polls: [poll("AP Top 25", "Current AP")],
+          },
+          {
+            season: 2026,
+            week: 4,
+            polls: [
+              poll("AP Top 25", "Future AP"),
+              poll("Coaches Poll", "Future Coach"),
+            ],
+          },
+        ],
+      },
+      2,
+    );
+
+    expect(selection.polls).toEqual([
+      poll("AP Top 25", "Current AP"),
+      poll("Coaches Poll", "Coach"),
+    ]);
+    expect(selection.description).toContain("AP Week 2 and Coaches Week 1");
+  });
+
+  it("publishes the aligned poll inputs behind Gridiron Blend", () => {
+    const pollRanks = source.teams.map(({ school }, index) => ({
+      rank: index + 1,
+      school,
+    }));
+    const view = createRankingView(
+      {
+        ...source,
+        pollWeeks: [
+          {
+            season: source.season,
+            week: 3,
+            polls: [
+              { poll: "AP Top 25", ranks: pollRanks },
+              {
+                poll: "Coaches Poll",
+                ranks: [...pollRanks].reverse().map(({ school }, index) => ({
+                  rank: index + 1,
+                  school,
+                })),
+              },
+            ],
+          },
+        ],
+      },
+      [],
+      "Blend.1.0",
+    );
+
+    expect(view.priorDescription).toContain("AP Week 3 and Coaches Week 3");
+    expect(
+      view.rankings.every(
+        ({ blendComponents }) =>
+          blendComponents?.length === 3 &&
+          Math.abs(
+            blendComponents.reduce(
+              (total, { weight }) => total + weight,
+              0,
+            ) - 1,
+          ) < 0.00001,
+      ),
+    ).toBe(true);
   });
 });

@@ -8,12 +8,14 @@ import type {
 export const curve1Systems = {
   "Curve.1.0": {
     id: "Curve.1.0",
-    categoryId: "resume",
+    categoryId: "ranking",
+    kind: "curve",
     engineId: "Curve.1",
     engineName: "Curve",
     engineVersion: 1,
     modelVersion: 0,
     engine,
     model: curveModel0,
+    priorMode: "historical",
   },
 } satisfies Partial<Record<RankingSystemId, RankingSystemDefinition>>;

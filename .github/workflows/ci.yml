@@ -51,13 +51,42 @@ jobs:
           test -f out/index.html
           test -f out/generated/v3/manifest.json
           test -f out/generated/v3/images/2099/week-02/Curve.5.0.jpg
+          test -f out/generated/v3/images/2099/week-02/Consensus.1.0.jpg
+          test -f out/generated/v3/images/2099/week-02/Blend.1.0.jpg
           node - <<'NODE'
           const manifest = require("./out/generated/v3/manifest.json");
           const seasons = manifest.seasons.map(({ season }) => season);
           if (seasons.join(",") !== "2098,2099") {
             throw new Error(`Unexpected fixture seasons: ${seasons.join(",")}`);
           }
-          if (manifest.rankingSystemIds.length !== 10) {
-            throw new Error("The fixture build did not publish all ten ranking systems.");
+          if (manifest.rankingSystemIds.length !== 17) {
+            throw new Error("The fixture build did not publish all seventeen ranking systems.");
+          }
+          const consensus = require("./out/generated/v3/rankings/2099/week-02/Consensus.1.0.json");
+          if (
+            consensus.rankings.length === 0 ||
+            consensus.rankings.some(
+              ({ consensusRanks }) =>
+                consensusRanks?.length !== 6 ||
+                consensusRanks.filter(({ included }) => included).length !== 4,
+            )
+          ) {
+            throw new Error("The fixture consensus does not expose six votes and four included ranks.");
+          }
+          const blend = require("./out/generated/v3/rankings/2099/week-02/Blend.1.0.json");
+          if (
+            blend.rankings.length === 0 ||
+            blend.rankings.some(
+              ({ blendComponents }) =>
+                blendComponents?.length !== 3 ||
+                Math.abs(
+                  blendComponents.reduce(
+                    (total, { weight }) => total + weight,
+                    0,
+                  ) - 1,
+                ) > 0.00001,
+            )
+          ) {
+            throw new Error("The fixture blend does not expose three normalized inputs.");
           }
           NODE

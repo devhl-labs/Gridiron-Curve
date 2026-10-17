@@ -60,7 +60,8 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .rankings-masthead { align-items: end; display: flex; gap: 50px; justify-content: space-between; margin: 0 auto 34px; max-width: 1180px; }
 .rankings-masthead h1, .info-hero h1 { font-family: Georgia, serif; font-size: clamp(46px, 5vw, 72px); font-weight: 400; letter-spacing: -.045em; line-height: 1; margin: 12px 0 10px; }
 .rankings-masthead p { color: #929c94; font-family: var(--font-plex-mono), monospace; font-size: 11px; letter-spacing: .08em; margin: 0; text-transform: uppercase; }
-.history-controls { align-items: end; display: grid; flex: 0 0 min(540px, 100%); gap: 8px; grid-template-columns: 44px minmax(108px, 1fr) minmax(98px, .8fr) minmax(86px, .9fr) 44px; width: min(540px, 100%); }
+.ranking-history-control { flex: 0 0 min(620px, 100%); width: min(620px, 100%); }
+.history-controls { align-items: end; display: grid; gap: 8px; grid-template-columns: 44px minmax(92px, .7fr) minmax(76px, .55fr) minmax(210px, 1.55fr) 44px; width: 100%; }
 .history-step { align-items: center; border: 1px solid #465149; color: var(--paper); display: flex; font-size: 19px; height: 43px; justify-content: center; transition: .15s; }
 .history-step:hover { background: #243229; border-color: #869188; }
 .history-step.disabled { color: #526057; }
@@ -70,6 +71,8 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .history-select { position: relative; }
 .history-select::after { bottom: 14px; color: #8d978f; content: "▾"; font-size: 10px; pointer-events: none; position: absolute; right: 12px; }
 .history-select select:hover, .history-select select:focus { border-color: #869188; outline: none; }
+.ranking-method-description { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 10px 0 0; }
+.rankings-masthead .ranking-method-description { color: #929c94; font-family: var(--font-manrope), sans-serif; font-size: 12px; letter-spacing: 0; line-height: 1.5; text-transform: none; }
 .section-heading { align-items: end; display: flex; justify-content: space-between; margin: auto auto 30px; max-width: 1180px; }
 .section-heading h2, .method-intro h2 { font-family: Georgia, serif; font-size: clamp(40px, 5vw, 67px); font-weight: 400; letter-spacing: -.04em; margin: 8px 0 0; }
 .updated { color: #8d978f; font-family: var(--font-plex-mono), monospace; font-size: 10px; line-height: 1.7; text-align: right; }
@@ -146,7 +149,7 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .rubric-list h3 { font-family: Georgia, serif; font-size: 22px; font-weight: 400; margin: 0 0 7px; }
 .rubric-list p { color: #929c94; font-size: 13px; line-height: 1.7; margin: 0; }
 .case-hero { padding-bottom: 85px; }
-.case-model-control { margin-top: 28px; max-width: 150px; }
+.case-model-control { margin-top: 28px; max-width: 230px; }
 .case-model-control .history-select > span, .rubric-engine-control .history-select > span { color: var(--green); }
 .case-model-control .history-select select, .rubric-engine-control .history-select select { background: transparent; border-color: rgba(23,34,28,.35); color: var(--ink); }
 .case-model-control .history-select::after, .rubric-engine-control .history-select::after { color: var(--green); }
@@ -214,7 +217,7 @@ footer > span { font-family: var(--font-plex-mono), monospace; }
   .header-share { border-right: 0; gap: 22px; padding-right: 0; }
   .hero::after { display: none; }.hero { padding-top: 72px; }
   .rankings-masthead { align-items: start; flex-direction: column; width: 100%; }
-  .history-controls { min-width: 100%; width: 100%; }
+  .ranking-history-control, .history-controls { min-width: 100%; width: 100%; }
   .table-head { display: none; }
   .team-row { grid-template-columns: 38px 42px 1fr 68px; min-height: 78px; }
   .record, .last-result { display: none; }
@@ -239,7 +242,12 @@ footer > span { font-family: var(--font-plex-mono), monospace; }
   .hero h1 { font-size: 48px; }
   .rankings-page { padding-top: 40px; }
   .rankings-masthead h1, .info-hero h1 { font-size: 42px; }
-  .history-controls { gap: 4px; grid-template-columns: 40px repeat(3, minmax(0, 1fr)) 40px; }
+  .history-controls { gap: 4px; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 40px; }
+  .history-controls > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  .history-controls > :nth-child(2) { grid-column: 2; grid-row: 1; }
+  .history-controls > :nth-child(3) { grid-column: 3; grid-row: 1; }
+  .history-controls > :nth-child(4) { grid-column: 1 / -1; grid-row: 2; }
+  .history-controls > :nth-child(5) { grid-column: 4; grid-row: 1; }
   .history-step, .history-select select { height: 42px; }
   .history-select select { font-size: 10px; padding-left: 7px; padding-right: 17px; }
   .history-select::after { right: 5px; }

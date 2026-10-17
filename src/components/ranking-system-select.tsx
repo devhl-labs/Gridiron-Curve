@@ -3,23 +3,30 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   DEFAULT_RANKING_SYSTEM_ID,
-  RANKING_CATEGORY_IDS,
-  compareRankingSystems,
-  rankingCategoryDisplayName,
+  RANKING_SYSTEM_SELECT_GROUPS,
+  isSelectableRankingSystemId,
   rankingSystemDisplayName,
-  rankingSystemIdsForCategory,
+  rankingSystemSelectDescription,
+  rankingSystemSelectDisplayName,
   type RankingSystemId,
 } from "@/lib/ranking";
 
 type RankingSystemSelectProps = {
   selectedSystemId: RankingSystemId;
+  descriptionId?: string;
+  showDescription?: boolean;
 };
 
 export function RankingSystemSelect({
   selectedSystemId,
+  descriptionId,
+  showDescription = false,
 }: RankingSystemSelectProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const resolvedDescriptionId =
+    descriptionId ??
+    (showDescription ? "ranking-method-description" : undefined);
 
   function selectSystem(rankingSystemId: RankingSystemId) {
     const next = new URLSearchParams(searchParams);
@@ -37,32 +44,44 @@ export function RankingSystemSelect({
   }
 
   return (
-    <label className="history-select">
-      <span>Ranking</span>
+    <>
+      <label className="history-select">
+      <span>Ranking Method</span>
       <select
-        aria-label="Ranking system and version"
+        aria-label="Ranking method"
+        aria-describedby={resolvedDescriptionId}
         value={selectedSystemId}
         onChange={(event) =>
           selectSystem(event.target.value as RankingSystemId)
         }
       >
-        {RANKING_CATEGORY_IDS.map((categoryId) => (
+        {!isSelectableRankingSystemId(selectedSystemId) && (
+          <option hidden value={selectedSystemId}>
+            {rankingSystemDisplayName(selectedSystemId)}
+          </option>
+        )}
+        {RANKING_SYSTEM_SELECT_GROUPS.map((group) => (
           <optgroup
-            key={categoryId}
-            label={rankingCategoryDisplayName(categoryId)}
+            key={group.label}
+            label={group.label}
           >
-            {rankingSystemIdsForCategory(categoryId)
-              .toSorted((left, right) =>
-                compareRankingSystems(right, left),
-              )
-              .map((rankingSystemId) => (
+            {group.rankingSystemIds.map((rankingSystemId) => (
                 <option key={rankingSystemId} value={rankingSystemId}>
-                  {rankingSystemDisplayName(rankingSystemId)}
+                  {rankingSystemSelectDisplayName(rankingSystemId)}
                 </option>
               ))}
           </optgroup>
         ))}
       </select>
     </label>
+      {showDescription && (
+        <p
+          className="ranking-method-description"
+          id={resolvedDescriptionId}
+        >
+          {rankingSystemSelectDescription(selectedSystemId)}
+        </p>
+      )}
+    </>
   );
 }

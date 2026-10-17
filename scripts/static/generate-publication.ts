@@ -10,7 +10,7 @@ import {
   DEFAULT_RANKING_SYSTEM_ID,
   RANKING_SYSTEM_IDS,
 } from "../../src/lib/ranking";
-import { sampleView } from "../../src/lib/ranking/sample-data";
+import { createSampleView } from "../../src/lib/ranking/sample-data";
 import {
   createRankingShareSvg,
   RANKING_IMAGE_HEIGHT,
@@ -142,6 +142,11 @@ function createPublishedView(view: RankingView) {
         lastResult,
         scheduleRank,
         upcomingScheduleRank,
+        consensusAverageRank,
+        consensusRanks,
+        blendScore,
+        blendComponents,
+        blendHeadToHeadRecord,
       }) => ({
         team,
         rank,
@@ -156,6 +161,11 @@ function createPublishedView(view: RankingView) {
         lastResult,
         scheduleRank,
         upcomingScheduleRank,
+        consensusAverageRank,
+        consensusRanks,
+        blendScore,
+        blendComponents,
+        blendHeadToHeadRecord,
       }),
     ),
   };
@@ -227,19 +237,21 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
 
 async function generateSamplePublication() {
   await Promise.all(
-    RANKING_SYSTEM_IDS.map((rankingSystemId) =>
-      writeJson(
-        outputRelativePath(
-          rankingDataPath(
-            sampleView.season,
-            sampleView.week,
-            rankingSystemId,
+    RANKING_SYSTEM_IDS.map((rankingSystemId) => {
+      const sampleView = createSampleView(rankingSystemId);
+      return writeJson(
+          outputRelativePath(
+            rankingDataPath(
+              sampleView.season,
+              sampleView.week,
+              rankingSystemId,
+            ),
           ),
-        ),
-        { ...sampleView, rankingSystemId },
-      ),
-    ),
+          sampleView,
+        );
+    }),
   );
+  const sampleView = createSampleView();
   return {
     latest: { season: sampleView.season, week: sampleView.week },
     seasons: [{ season: sampleView.season, throughWeek: sampleView.week }],

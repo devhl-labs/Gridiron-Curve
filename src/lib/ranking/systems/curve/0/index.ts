@@ -16,13 +16,15 @@ function defineSystem(
 ): RankingSystemDefinition {
   return {
     id,
-    categoryId: "resume",
+    categoryId: "ranking",
+    kind: "curve",
     engineId: "Curve.0",
     engineName: "Curve",
     engineVersion: 0,
     modelVersion,
     engine,
     model,
+    priorMode: "historical",
   };
 }
 

@@ -24,6 +24,71 @@ function parseSelection(value: string | undefined) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function ConsensusSummary({
+  ranking,
+}: {
+  ranking: RankingView["rankings"][number];
+}) {
+  if (
+    ranking.consensusAverageRank === undefined ||
+    !ranking.consensusRanks
+  ) {
+    return null;
+  }
+  const ranks = ranking.consensusRanks.map(({ rank }) => rank);
+  const details = ranking.consensusRanks
+    .map(({ rankingSystemId, rank, included }) =>
+      `${rankingSystemId}: ${rank}${included ? "" : " (discarded)"}`,
+    )
+    .join(" · ");
+
+  return (
+    <small title={details}>
+      Middle-four avg {ranking.consensusAverageRank.toFixed(2)} · range{" "}
+      {Math.min(...ranks)}–{Math.max(...ranks)}
+    </small>
+  );
+}
+
+function BlendSummary({
+  ranking,
+}: {
+  ranking: RankingView["rankings"][number];
+}) {
+  if (ranking.blendScore === undefined || !ranking.blendComponents) {
+    return null;
+  }
+  const compactSource = {
+    "Gridiron Consensus": "Computer",
+    "AP Poll": "AP",
+    "Coaches Poll": "Coaches",
+  } as const;
+  const ranks = ranking.blendComponents
+    .map(
+      ({ source, rank }) =>
+        `${compactSource[source]} ${rank === null ? "NR" : `#${rank}`}`,
+    )
+    .join(" · ");
+  const details = ranking.blendComponents
+    .map(
+      ({ source, rank, points, weight }) =>
+        `${source}: ${rank === null ? "unranked" : `#${rank}`}, ${points} points at ${(weight * 100).toFixed(1)}%`,
+    )
+    .join(" · ");
+  const headToHead = ranking.blendHeadToHeadRecord
+    ? ` · tied-group head-to-head ${ranking.blendHeadToHeadRecord}`
+    : "";
+
+  return (
+    <small title={`${details}${headToHead}`}>
+      Combined score {ranking.blendScore.toFixed(2)} · {ranks}
+      {ranking.blendHeadToHeadRecord
+        ? ` · H2H ${ranking.blendHeadToHeadRecord}`
+        : ""}
+    </small>
+  );
+}
+
 type PublicationState = {
   manifest: PublicationManifest;
   view: RankingView;
@@ -220,6 +285,8 @@ export function RankingsPageClient() {
                   </div>
                   <div>
                     <strong>{team.team}</strong>
+                    <ConsensusSummary ranking={team} />
+                    <BlendSummary ranking={team} />
                   </div>
                 </div>
               ) : (
@@ -248,6 +315,8 @@ export function RankingsPageClient() {
                   </div>
                   <div>
                     <strong>{team.team}</strong>
+                    <ConsensusSummary ranking={team} />
+                    <BlendSummary ranking={team} />
                   </div>
                 </Link>
               )}

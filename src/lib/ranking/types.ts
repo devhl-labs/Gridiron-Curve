@@ -8,16 +8,38 @@ export type RankingSystemId =
   | "Curve.2.0"
   | "Curve.3.0"
   | "Curve.4.0"
-  | "Curve.5.0";
+  | "Curve.5.0"
+  | "RecordMatrix.1.0"
+  | "Pairwise.1.0"
+  | "Sequence.1.0"
+  | "LeastSquares.1.0"
+  | "VictoryPaths.1.0"
+  | "Consensus.1.0"
+  | "Blend.1.0";
 
-export type RankingCategoryId = "resume";
+export type RankingCategoryId =
+  | "ranking"
+  | "power-ranking"
+  | "strength-of-schedule";
+export type RankingSystemKind =
+  | "curve"
+  | "computer"
+  | "consensus"
+  | "blend";
 export type RankingEngineId =
   | "Curve.0"
   | "Curve.1"
   | "Curve.2"
   | "Curve.3"
   | "Curve.4"
-  | "Curve.5";
+  | "Curve.5"
+  | "RecordMatrix.1"
+  | "Pairwise.1"
+  | "Sequence.1"
+  | "LeastSquares.1"
+  | "VictoryPaths.1"
+  | "Consensus.1"
+  | "Blend.1";
 
 export type TeamBoxScore = {
   totalYards: number;
@@ -67,6 +89,20 @@ export type TeamRanking = {
   achievementAverage: number;
   achievementScore: number;
   qualityOfWins: number;
+  consensusAverageRank?: number;
+  consensusRanks?: Array<{
+    rankingSystemId: RankingSystemId;
+    rank: number;
+    included: boolean;
+  }>;
+  blendScore?: number;
+  blendComponents?: Array<{
+    source: "Gridiron Consensus" | "AP Poll" | "Coaches Poll";
+    rank: number | null;
+    points: number;
+    weight: number;
+  }>;
+  blendHeadToHeadRecord?: string | null;
 };
 
 export type RankingModel = {
@@ -106,10 +142,12 @@ export type RankingEngine = {
 export type RankingSystemDefinition = {
   id: RankingSystemId;
   categoryId: RankingCategoryId;
+  kind: RankingSystemKind;
   engineId: RankingEngineId;
   engineName: string;
   engineVersion: number;
   modelVersion: number;
   engine: RankingEngine;
   model: RankingModel;
+  priorMode: "historical" | "neutral" | "component";
 };

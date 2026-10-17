@@ -87,10 +87,10 @@ function teamStats(
 }
 
 function polls(season: number, order: readonly string[]): CfbdPollWeek[] {
-  return [
-    {
+  return [1, 2, 3].map(
+    (week): CfbdPollWeek => ({
       season,
-      week: 1,
+      week,
       polls: [
         {
           poll: "AP Top 25",
@@ -107,8 +107,8 @@ function polls(season: number, order: readonly string[]): CfbdPollWeek[] {
           })),
         },
       ],
-    },
-  ];
+    }),
+  );
 }
 
 const season2098Games = [

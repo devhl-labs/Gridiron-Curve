@@ -1,7 +1,76 @@
 # Gridiron Curve
 
-Gridiron Curve is a college-football resume model based on wins, losses, and
-the connected network of opponents.
+Gridiron Curve publishes college-football resume and computer rankings based
+on wins, losses, and the connected network of opponents.
+
+## Gridiron Blend.1.0
+
+Gridiron Blend balances the complete computer consensus with the AP and
+Coaches polls:
+
+```text
+50% Gridiron Consensus
+25% AP Poll
+25% Coaches Poll
+```
+
+Each input receives 25 points for No. 1, 24 for No. 2, through one point for
+No. 25. Unranked teams receive zero points. Raw ratings are never mixed.
+Consensus positions below No. 25 receive a descending fraction below one
+point, preserving the full FBS order without giving any such position the
+value of a Top-25 vote. Poll-unranked teams still receive zero poll points.
+
+Teams with exactly equal blended points are first ordered by win percentage in
+completed head-to-head games among that tied group. If those results cannot
+separate them, the complete Gridiron Consensus rank decides.
+
+A ranking through Week W targets AP and Coaches polls labeled Week W+1. For
+incomplete historical poll data, each poll uses its latest available release
+at or before that target, never a future release. If a poll is entirely
+unavailable, its weight becomes zero and the visible available-source weights
+are proportionally renormalized.
+
+## Gridiron Consensus.1.0
+
+Gridiron Consensus combines six independently calculated full-field rankings:
+
+1. `Curve.5.0`
+2. `RecordMatrix.1.0`
+3. `Pairwise.1.0`
+4. `Sequence.1.0`
+5. `LeastSquares.1.0`
+6. `VictoryPaths.1.0`
+
+For each team, the systems are ordered from its best rank to its worst rank.
+The best and worst positions are discarded, and the remaining four are
+averaged. The lowest middle-four average ranks first. An exact tie is resolved
+by the untrimmed six-system average, then strength of schedule, then team name.
+Published consensus rows retain all six component ranks and identify the four
+that were included.
+
+Raw model scores are never averaged because their scales have different
+meanings. All components rank the same complete FBS field from the same
+completed-game snapshot.
+
+The five new computer systems use generic descriptive names and independently
+written implementations of established mathematical techniques. They do not
+claim to reproduce, represent, or be affiliated with any historical or
+commercial ranking provider:
+
+- **Record Matrix** solves a connected win-loss schedule matrix.
+- **Pairwise Odds** fits regularized pairwise win probabilities.
+- **Result Sequence** applies chronological expectation-adjusted updates.
+- **Least Squares** fits constant win/loss result differences.
+- **Victory Paths** recursively transfers graph value from defeated teams to
+  winners.
+
+All five begin each season evenly and exclude scoring margin, venue, polls,
+previous seasons, recruiting, conference, and brand. Lower-division opponents
+remain graph nodes when they play an FBS team, but the cache does not contain
+their complete schedules; the systems are therefore documented as FBS
+adaptations. Curve.5 retains its separately documented historical prior.
+
+Curve.5 remains the default while the consensus is evaluated.
 
 ## Ranking Curve.5.0
 
@@ -61,12 +130,26 @@ the connected network of opponents.
    FCS opponents contribute zero. SOS is not a weighted component; it breaks an
    exact tie in the final Curve score.
 
-## Prerelease ranking systems
+## Versioned ranking systems
 
-The rankings selector can reproduce Curve.0.7 through Curve.5.0. All are
-prerelease iterations of Gridiron Curve; Curve.5.0 is the default. Each
-selection rebuilds the complete chronological prior chain with that system so
-historical rankings are never mixed across configurations.
+The rankings selector presents Blend.1.0 as **Computer + AP/Coaches**,
+Consensus.1.0 as **Computer Composite**, and Curve.5.0 as **Résumé Ranking**.
+Curve.5.0 and the five other standalone methods appear under **Individual
+Models**. Stable system identifiers and direct links remain unchanged.
+
+The complete publication can reproduce Curve.0.7 through Curve.5.0, the five
+neutral-start computer systems, Gridiron Consensus.1.0, and Gridiron
+Blend.1.0. The Curve systems are prerelease iterations of the Gridiron Curve
+resume model; Curve.5.0 remains the default. Each Curve selection rebuilds its
+complete chronological prior chain so historical rankings are never mixed
+across configurations. Each computer system uses only that season's results.
+Consensus supplies Curve.5 with its own chronological prior while the five
+computer components remain neutral. Blend then combines that consensus with
+the aligned AP and Coaches polls.
+
+Curve.0.7 through Curve.4.0 remain registered, generated, and available by
+their stable `?ranking=` URLs for historical learning, but they are hidden from
+the normal selector. Curve.5.0 is the only Curve iteration shown in the menu.
 
 Each named engine version and its compatible models are colocated under
 `src/lib/ranking/systems/<name>/<engine-version>/`. The Curve engine version 0
@@ -99,6 +182,7 @@ not read the global registry.
 - `Curve.5.0` values those four wins from a same-week provisional resume grade,
   builds a 60% network and 40% win-quality foundation, and limits achievement
   to a five-point adjustment.
+
 Until CFBD inputs are cached, the landing page uses a small, clearly labeled
 illustrative dataset. The sync command retrieves the FBS season and caches
 normalized provider inputs locally. The publication build calculates every
@@ -113,6 +197,8 @@ file:
 
 ```text
 /generated/v3/images/2026/week-06/Curve.5.0.jpg
+/generated/v3/images/2026/week-06/Consensus.1.0.jpg
+/generated/v3/images/2026/week-06/Blend.1.0.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as

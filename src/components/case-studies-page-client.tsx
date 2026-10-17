@@ -10,6 +10,7 @@ import {
   DEFAULT_RANKING_SYSTEM_ID,
   parseRankingSystemId,
   rankingSystemDisplayName,
+  rankingSystemKind,
 } from "@/lib/ranking";
 import {
   fetchPublicationManifest,
@@ -171,7 +172,7 @@ const CASE_STUDIES: CaseStudy[] = [
     decision:
       "Miami received the final at-large berth after the committee used its head-to-head win to separate two 10-2 teams.",
     lens:
-      "Gridiron Curve considers the entire résumé rather than applying a hard head-to-head override.",
+      "The ranking considers the entire résumé rather than applying a hard head-to-head override.",
     teams: ["Miami", "Notre Dame"],
     selected: ["Miami"],
     spots: 1,
@@ -192,8 +193,8 @@ function selectionVerdict(
   return {
     agrees,
     text: agrees
-      ? `Curve agrees within this comparison: ${modelSelection.join(" and ")} ${study.spots === 1 ? "leads" : "fill the available spots"}.`
-      : `Curve disagrees within this comparison: it favors ${modelSelection.join(" and ")} instead of ${study.selected.join(" and ")}.`,
+      ? `The selected system agrees within this comparison: ${modelSelection.join(" and ")} ${study.spots === 1 ? "leads" : "fill the available spots"}.`
+      : `The selected system disagrees within this comparison: it favors ${modelSelection.join(" and ")} instead of ${study.selected.join(" and ")}.`,
   };
 }
 
@@ -209,8 +210,8 @@ function rankingVerdict(
   return {
     agrees,
     text: agrees
-      ? `Curve also ranks ${study.rankedTeam} No. ${study.officialRank}.`
-      : `Curve ranks ${study.rankedTeam} No. ${team.rank}, not No. ${study.officialRank}.`,
+      ? `The selected system also ranks ${study.rankedTeam} No. ${study.officialRank}.`
+      : `The selected system ranks ${study.rankedTeam} No. ${team.rank}, not No. ${study.officialRank}.`,
   };
 }
 
@@ -233,6 +234,8 @@ type BuiltStudy = ReturnType<typeof buildStudyView>;
 export function CaseStudiesPageClient() {
   const searchParams = useSearchParams();
   const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
+  const isCurveRanking =
+    rankingSystemKind(rankingSystemId) === "curve";
   const [studies, setStudies] = useState<BuiltStudy[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -289,11 +292,14 @@ export function CaseStudiesPageClient() {
         <h1>Controversial seasons.<br /><em>One consistent method.</em></h1>
         <p>
           These are not claims that every debate has one correct answer. They
-          show how the current Gridiron Curve model evaluates each disputed
-          résumé using the same rules and the information available at the time.
+          show how the selected ranking system evaluates each disputed résumé
+          using the same rules and the information available at the time.
         </p>
         <div className="case-model-control">
-          <RankingSystemSelect selectedSystemId={rankingSystemId} />
+          <RankingSystemSelect
+            selectedSystemId={rankingSystemId}
+            showDescription
+          />
         </div>
       </section>
 
@@ -333,13 +339,17 @@ export function CaseStudiesPageClient() {
               <table className="case-table">
                 <thead>
                   <tr>
-                    <th>Curve rank</th>
+                    <th>{isCurveRanking ? "Curve rank" : "Rank"}</th>
                     <th>Team</th>
                     <th>Record</th>
-                    <th>Curve</th>
-                    <th>Network</th>
-                    <th>Win quality</th>
-                    <th>Achievement</th>
+                    <th>{isCurveRanking ? "Curve" : "Score"}</th>
+                    {isCurveRanking && (
+                      <>
+                        <th>Network</th>
+                        <th>Win quality</th>
+                        <th>Achievement</th>
+                      </>
+                    )}
                     <th>SOS</th>
                   </tr>
                 </thead>
@@ -350,9 +360,13 @@ export function CaseStudiesPageClient() {
                       <td><strong>{team.team}</strong></td>
                       <td>{team.record}</td>
                       <td>{team.rating.toFixed(1)}</td>
-                      <td>{team.networkScore.toFixed(1)}</td>
-                      <td>{team.qualityOfWins.toFixed(1)}</td>
-                      <td>{team.achievementScore.toFixed(1)}</td>
+                      {isCurveRanking && (
+                        <>
+                          <td>{team.networkScore.toFixed(1)}</td>
+                          <td>{team.qualityOfWins.toFixed(1)}</td>
+                          <td>{team.achievementScore.toFixed(1)}</td>
+                        </>
+                      )}
                       <td>#{team.scheduleRank}</td>
                     </tr>
                   ))}

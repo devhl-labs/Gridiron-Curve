@@ -1,17 +1,22 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { ComputerMethodologyPage } from "@/components/computer-methodology-page";
 import { RankingSystemSelect } from "@/components/ranking-system-select";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
   parseRankingSystemId,
   rankingSystemDisplayName,
+  rankingSystemKind,
 } from "@/lib/ranking";
 
 export function MethodologyPageClient() {
   const searchParams = useSearchParams();
   const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
+  if (rankingSystemKind(rankingSystemId) !== "curve") {
+    return <ComputerMethodologyPage rankingSystemId={rankingSystemId} />;
+  }
   const rankingSystemName = rankingSystemDisplayName(rankingSystemId);
   const usesDiminishingWinValue =
     rankingSystemId === "Curve.1.0" ||
@@ -67,7 +72,10 @@ export function MethodologyPageClient() {
           {` ${rankingSystemName}`}.
         </p>
         <div className="case-model-control">
-          <RankingSystemSelect selectedSystemId={rankingSystemId} />
+          <RankingSystemSelect
+            selectedSystemId={rankingSystemId}
+            showDescription
+          />
         </div>
       </section>
       <section className="method-details">

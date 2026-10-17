@@ -27,6 +27,11 @@ export type PublishedTeamRanking = Pick<
   | "lastResult"
   | "scheduleRank"
   | "upcomingScheduleRank"
+  | "consensusAverageRank"
+  | "consensusRanks"
+  | "blendScore"
+  | "blendComponents"
+  | "blendHeadToHeadRecord"
 >;
 
 export type RankingView = Omit<SourceRankingView, "rankings"> & {

@@ -3,8 +3,12 @@ import {
   buildFullPreseasonPrior,
   buildPollPrior,
   calculateRankings,
+  CONSENSUS_COMPONENT_SYSTEM_IDS,
   DEFAULT_RANKING_SYSTEM_ID,
   hasUsableBoxScore,
+  rankingSystemPriorMode,
+  type RankingPriorMap,
+  type Poll,
   type RankingSystemId,
   type RatingPrior,
   type TeamRanking,
@@ -104,6 +108,39 @@ function selectPreseasonPoll(source: CfbdSourceCache) {
     .sort((a, b) => a.week - b.week)[0];
 }
 
+export function selectBlendPolls(
+  source: CfbdSourceCache,
+  throughWeek: number,
+) {
+  const targetWeek = throughWeek + 1;
+  const selectPoll = (pollName: "AP Top 25" | "Coaches Poll") =>
+    source.pollWeeks
+      .filter(
+        ({ week, polls }) =>
+          week <= targetWeek &&
+          polls.some(({ poll }) => poll === pollName),
+      )
+      .sort((left, right) => right.week - left.week)
+      .flatMap(({ week, polls }) => {
+        const poll = polls.find((candidate) => candidate.poll === pollName);
+        return poll ? [{ poll, week }] : [];
+      })[0];
+  const ap = selectPoll("AP Top 25");
+  const coaches = selectPoll("Coaches Poll");
+  const polls = [ap?.poll, coaches?.poll].filter(
+    (poll): poll is Poll => poll !== undefined,
+  );
+  const sources = [
+    ap ? `AP Week ${ap.week}` : "AP unavailable",
+    coaches ? `Coaches Week ${coaches.week}` : "Coaches unavailable",
+  ];
+
+  return {
+    polls,
+    description: `${sources.join(" and ")} for results through Week ${throughWeek}`,
+  };
+}
+
 const finalOrderCache = new Map<string, string[]>();
 
 function buildSeasonPrior(
@@ -148,6 +185,12 @@ export function createChainedStartingPrior(
   historicalSources: CfbdSourceCache[] = [],
   rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ) {
+  if (rankingSystemPriorMode(rankingSystemId) !== "historical") {
+    return {
+      prior: {},
+      description: "Neutral starting ratings; only current-season results count",
+    };
+  }
   const sourcesBySeason = new Map(
     historicalSources
       .filter((candidate) => candidate.season < source.season)
@@ -195,6 +238,48 @@ export function createChainedStartingPrior(
     previousOrder,
     rankingSystemId,
   );
+}
+
+function createRankingPriorContext(
+  source: CfbdSourceCache,
+  historicalSources: CfbdSourceCache[],
+  rankingSystemId: RankingSystemId,
+): {
+  prior: RatingPrior;
+  componentPriors: RankingPriorMap;
+  description: string;
+} {
+  if (
+    rankingSystemId !== "Consensus.1.0" &&
+    rankingSystemId !== "Blend.1.0"
+  ) {
+    const starting = createChainedStartingPrior(
+      source,
+      historicalSources,
+      rankingSystemId,
+    );
+    return {
+      ...starting,
+      componentPriors: {},
+    };
+  }
+
+  const componentPriors = Object.fromEntries(
+    CONSENSUS_COMPONENT_SYSTEM_IDS.map((componentSystemId) => [
+      componentSystemId,
+      createChainedStartingPrior(
+        source,
+        historicalSources,
+        componentSystemId,
+      ).prior,
+    ]),
+  ) as RankingPriorMap;
+  return {
+    prior: {},
+    componentPriors,
+    description:
+      "Component-specific starting rules; five systems begin neutral and Curve.5 uses its published historical prior",
+  };
 }
 
 function createPriorRankMap(prior: RatingPrior) {
@@ -254,7 +339,7 @@ export function createRankingView(
   historicalSources: CfbdSourceCache[] = [],
   rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ): RankingView {
-  const startingPrior = createChainedStartingPrior(
+  const startingPrior = createRankingPriorContext(
     source,
     historicalSources,
     rankingSystemId,
@@ -269,6 +354,14 @@ export function createRankingView(
     source.teams.map((team) => [team.school, team]),
   );
   const previousWeek = source.throughWeek - 1;
+  const currentBlendPolls =
+    rankingSystemId === "Blend.1.0"
+      ? selectBlendPolls(source, source.throughWeek)
+      : null;
+  const previousBlendPolls =
+    rankingSystemId === "Blend.1.0" && previousWeek > 0
+      ? selectBlendPolls(source, previousWeek)
+      : null;
   const previousRanks =
     previousWeek > 0
       ? new Map(
@@ -277,6 +370,8 @@ export function createRankingView(
             previousWeek,
             startingPrior.prior,
             rankingSystemId,
+            startingPrior.componentPriors,
+            previousBlendPolls?.polls,
           ).map(({ team, rank }) => [team, rank]),
         )
       : createPriorRankMap(startingPrior.prior);
@@ -285,6 +380,8 @@ export function createRankingView(
     source.throughWeek,
     startingPrior.prior,
     rankingSystemId,
+    startingPrior.componentPriors,
+    currentBlendPolls?.polls,
   );
   const scheduleRanks = createScheduleRankMap(currentRankings);
   const upcomingScheduleRanks = createUpcomingScheduleRankMap(
@@ -300,7 +397,8 @@ export function createRankingView(
     generatedAt: source.fetchedAt,
     gamesIncluded: completedGames.length,
     gamesWithStats: completedGames.filter(hasUsableBoxScore).length,
-    priorDescription: startingPrior.description,
+    priorDescription:
+      currentBlendPolls?.description ?? startingPrior.description,
     rankings: currentRankings.map((ranking) => {
       const team = teamsBySchool.get(ranking.team);
       const previousRank = previousRanks.get(ranking.team);

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemSelectDescription,
   type RankingSystemId,
 } from "@/lib/ranking";
 import { RankingSystemSelect } from "./ranking-system-select";
@@ -45,7 +46,8 @@ export function RankingHistoryControls({
     selectedWeek;
 
   return (
-    <nav className="history-controls" aria-label="Ranking history">
+    <div className="ranking-history-control">
+      <nav className="history-controls" aria-label="Ranking history">
       {previous ? (
         <Link
           className="history-step"
@@ -116,7 +118,10 @@ export function RankingHistoryControls({
           ))}
         </select>
       </label>
-      <RankingSystemSelect selectedSystemId={rankingSystemId} />
+      <RankingSystemSelect
+        descriptionId="ranking-method-description"
+        selectedSystemId={rankingSystemId}
+      />
       {next ? (
         <Link
           className="history-step"
@@ -130,6 +135,13 @@ export function RankingHistoryControls({
           →
         </span>
       )}
-    </nav>
+      </nav>
+      <p
+        className="ranking-method-description"
+        id="ranking-method-description"
+      >
+        {rankingSystemSelectDescription(rankingSystemId)}
+      </p>
+    </div>
   );
 }
