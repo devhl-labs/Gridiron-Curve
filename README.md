@@ -138,6 +138,12 @@ your shell. Then sync a completed week:
 npm run sync -- 2025 8
 ```
 
+Omit the week to detect the latest week with completed games:
+
+```bash
+npm run sync -- 2025
+```
+
 To cache the historical regular seasons without requesting unavailable and
 unused historical box scores:
 
@@ -214,6 +220,53 @@ Refresh the local source cache, then rebuild to publish a new week:
 npm run sync -- 2025 15
 npm run build
 ```
+
+### Scheduled Windows cache updates
+
+On the Windows computer,create `.env` and configure
+`CFBD_API_KEY`, `CFBD_CONTAINER_SAS_URL`, and
+`CFBD_CONTAINER_SAS_TOKEN`. Run the one-time host setup from PowerShell:
+
+```powershell
+.\scripts\windows\setup-cfbd-cache-host.ps1
+```
+
+The setup script downloads the latest Windows x64 release for the Node.js major
+in `.nvmrc` directly from `nodejs.org`, verifies its published SHA-256
+checksum, installs it under the ignored `.tools\node` directory, runs
+`npm ci`, and invokes the scheduled-task installer. It does not require a
+global Node.js or npm installation and does not modify the system PATH.
+
+After setup, test an update manually with:
+
+```powershell
+.\scripts\windows\update-cfbd-cache.ps1
+```
+
+The updater selects the season automatically: January and February use the
+previous calendar year, and August 15 through December use the current year.
+From March 1 through August 14, the scheduled process exits successfully
+before accessing the repository, npm, CFBD, Azure, or update logs. Pass
+`-Season` only when manually backfilling a specific season. During the active
+season, it detects the latest completed week, creates a new immutable local
+snapshot, uploads the complete versioned cache to Azure Blob Storage, verifies
+the upload, and keeps its latest 40 logs under
+`%LOCALAPPDATA%\GridironCurve\Logs`.
+Uploads skip immutable blobs that are already present, so repeated Sunday and
+Monday runs transfer only new snapshots and season pointers.
+
+To replace or repair only the unattended scheduled task later:
+
+```powershell
+.\scripts\windows\install-cfbd-cache-task.ps1
+```
+
+The installer prompts for the Windows account that will run while logged out.
+It creates a `CFBD` folder in Task Scheduler, replaces any task with the same
+name inside that folder, and schedules five local-time runs: Sunday at 9 AM,
+2 PM, and 8 PM, then Monday at 8 AM and 6 PM. Automatic season selection allows
+the same task to remain installed across calendar years. Pass `-TaskPath` to
+the setup or installer only if a different Task Scheduler folder is desired.
 
 The deployed site never receives the CFBD API key, reads the raw cache, runs
 ranking calculations, or generates images at request time.

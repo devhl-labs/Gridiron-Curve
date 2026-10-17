@@ -84,13 +84,26 @@ async function main() {
     throw new Error(`No files exist in the ${CFBD_CACHE_NAMESPACE} CFBD cache.`);
   }
 
-  await uploadFiles(container, files);
   const remoteNames = await listBlobNames(
     container,
     `${CFBD_CACHE_NAMESPACE}/`,
   );
+  const existingNames = new Set(remoteNames);
+  const filesToUpload = files.filter(
+    ({ blobName }) =>
+      blobName.endsWith("/latest.json") || !existingNames.has(blobName),
+  );
+  await uploadFiles(container, filesToUpload);
+  console.log(
+    `Uploaded ${filesToUpload.length} new or mutable cache files; ${files.length - filesToUpload.length} immutable files were already present.`,
+  );
+  const verifiedRemoteNames = await listBlobNames(
+    container,
+    `${CFBD_CACHE_NAMESPACE}/`,
+  );
   const expectedNames = new Set(files.map(({ blobName }) => blobName));
-  const missing = [...expectedNames].filter((name) => !remoteNames.includes(name));
+  const verifiedNames = new Set(verifiedRemoteNames);
+  const missing = [...expectedNames].filter((name) => !verifiedNames.has(name));
   if (missing.length > 0) {
     throw new Error(
       `Azure Blob verification failed; ${missing.length} cache files are missing.`,

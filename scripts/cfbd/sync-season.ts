@@ -4,6 +4,7 @@ import {
   fetchTeams,
   fetchTeamStatsWeek,
 } from "../../src/lib/cfbd/client";
+import { latestCompletedWeek } from "../../src/lib/cfbd/completed-week";
 import { writeSeasonCache } from "./write-season-cache";
 
 function parsePositiveInteger(value: string | undefined, name: string) {
@@ -16,10 +17,17 @@ function parsePositiveInteger(value: string | undefined, name: string) {
 
 async function main() {
   const year = parsePositiveInteger(process.argv[2], "year");
-  const throughWeek = parsePositiveInteger(process.argv[3], "week");
+  const requestedWeek = process.argv[3]
+    ? parsePositiveInteger(process.argv[3], "week")
+    : null;
+  const games = await fetchSeasonGames(year);
+  const detectedWeek = latestCompletedWeek(games);
+  if (requestedWeek === null && detectedWeek === null) {
+    throw new Error(`CollegeFootballData returned no completed games for ${year}.`);
+  }
+  const throughWeek = requestedWeek ?? detectedWeek!;
 
-  const [games, pollWeeks, teams, teamStatsByWeek] = await Promise.all([
-    fetchSeasonGames(year),
+  const [pollWeeks, teams, teamStatsByWeek] = await Promise.all([
     fetchSeasonPolls(year),
     fetchTeams(year),
     Promise.all(
@@ -39,7 +47,7 @@ async function main() {
   });
 
   console.log(
-    `Cached raw CFBD responses for ${year} through Week ${throughWeek} in ${syncDirectory}.`,
+    `Cached raw CFBD responses for ${year} through Week ${throughWeek}${requestedWeek ? "" : " (latest completed)"} in ${syncDirectory}.`,
   );
 }
 
