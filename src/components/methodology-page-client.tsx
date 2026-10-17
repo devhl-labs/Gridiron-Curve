@@ -41,12 +41,6 @@ export function MethodologyPageClient() {
           <RankingSystemSelect selectedSystemId={rankingSystemId} />
         </div>
       </section>
-      <section className="method-grid info-grid">
-        <article><b>01 · 50%</b><h2>Update expectations</h2><p>{separateExpectation ? "Full inherited strength grades each result, while the published résumé fades that offset to a 25% floor over six weeks." : priorFades ? "The inherited offset fades to a 25% floor over six weeks in both game expectations and the published résumé." : "The full inherited offset remains in both game expectations and the published résumé throughout the season."}</p></article>
-        <article><b>02 · 30%</b><h2>Value who was beaten</h2><p>Quality of wins averages each defeated opponent&apos;s previous-week network percentile. Until an opponent plays an FBS game, its preseason percentile remains the context. FCS wins receive zero.</p></article>
-        <article><b>03 · 20%</b><h2>Reward achievement</h2><p>Average points per game reward exceeding expectations and penalize falling short, using margin and prior-week opponent strength.</p></article>
-        <article><b>04</b><h2>Start with context</h2><p>The available preseason polls seed 2000. Each later season combines its preseason poll leaders with the previous season&apos;s final Gridiron Curve order. {priorFades ? "The inherited rating weight falls from 100% to 25% over six completed weeks." : "The inherited rating remains at full weight throughout the season."}</p></article>
-      </section>
       <section className="method-details">
         <div className="method-section">
           <span className="kicker">01 · STARTING RATINGS</span>

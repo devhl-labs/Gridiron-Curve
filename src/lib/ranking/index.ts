@@ -13,6 +13,7 @@ import type {
 export type {
   Game,
   Poll,
+  RankingEngineId,
   RankingCategoryId,
   RankingSystemId,
   RatingPrior,
@@ -20,13 +21,19 @@ export type {
   TeamRanking,
 } from "./types";
 export {
+  DEFAULT_RANKING_ENGINE_ID,
   DEFAULT_RANKING_SYSTEM_ID,
   RANKING_CATEGORY_IDS,
+  RANKING_ENGINE_IDS,
   RANKING_SYSTEM_IDS,
   compareRankingSystems,
+  isRankingEngineId,
   isRankingSystemId,
+  parseRankingEngineId,
   parseRankingSystemId,
   rankingCategoryDisplayName,
+  rankingEngineDisplayName,
+  rankingEngineName,
   rankingSystemDisplayName,
   rankingSystemIdsForCategory,
 } from "./registry";

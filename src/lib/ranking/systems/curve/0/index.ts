@@ -17,6 +17,7 @@ function defineSystem(
   return {
     id,
     categoryId: "resume",
+    engineId: "Curve.0",
     engineName: "Curve",
     engineVersion: 0,
     modelVersion,

@@ -1,6 +1,7 @@
 import { curve0Systems } from "./systems/curve/0";
 import type {
   RankingCategoryId,
+  RankingEngineId,
   RankingSystemDefinition,
   RankingSystemId,
 } from "./types";
@@ -25,7 +26,16 @@ const RANKING_CATEGORY_LABELS: Record<RankingCategoryId, string> = {
   resume: "Resume rankings",
 };
 
+const RANKING_ENGINE_NAMES: Record<RankingEngineId, string> = {
+  "Curve.0": "Curve",
+};
+
+export const RANKING_ENGINE_IDS = [
+  "Curve.0",
+] as const satisfies readonly RankingEngineId[];
+
 export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Curve.0.11";
+export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Curve.0";
 
 export function isRankingSystemId(
   value: string | null | undefined,
@@ -35,6 +45,16 @@ export function isRankingSystemId(
 
 export function parseRankingSystemId(value: string | null | undefined) {
   return isRankingSystemId(value) ? value : DEFAULT_RANKING_SYSTEM_ID;
+}
+
+export function isRankingEngineId(
+  value: string | null | undefined,
+): value is RankingEngineId {
+  return RANKING_ENGINE_IDS.some((id) => id === value);
+}
+
+export function parseRankingEngineId(value: string | null | undefined) {
+  return isRankingEngineId(value) ? value : DEFAULT_RANKING_ENGINE_ID;
 }
 
 export function compareRankingSystems(
@@ -57,6 +77,14 @@ export function rankingSystemDisplayName(id: RankingSystemId) {
 
 export function rankingCategoryDisplayName(id: RankingCategoryId) {
   return RANKING_CATEGORY_LABELS[id];
+}
+
+export function rankingEngineDisplayName(id: RankingEngineId) {
+  return id;
+}
+
+export function rankingEngineName(id: RankingEngineId) {
+  return RANKING_ENGINE_NAMES[id];
 }
 
 export function rankingSystemIdsForCategory(id: RankingCategoryId) {

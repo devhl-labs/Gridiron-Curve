@@ -9,7 +9,7 @@ import {
 } from "@/lib/ranking";
 
 type SiteHeaderProps = {
-  active: "rankings" | "methodology" | "case-studies" | "about";
+  active: "rankings" | "rubric" | "methodology" | "case-studies";
   status?: string;
   rankingSystemId?: RankingSystemId;
   shareImagePath?: string;
@@ -59,6 +59,13 @@ export function SiteHeader({
             Rankings
           </Link>
           <Link
+            className={active === "rubric" ? "active" : ""}
+            href="/rubric"
+            onClick={() => setMenuOpen(false)}
+          >
+            Rubric
+          </Link>
+          <Link
             className={active === "methodology" ? "active" : ""}
             href={`/methodology${rankingQuery}`}
             onClick={() => setMenuOpen(false)}
@@ -71,13 +78,6 @@ export function SiteHeader({
             onClick={() => setMenuOpen(false)}
           >
             Case Studies
-          </Link>
-          <Link
-            className={active === "about" ? "active" : ""}
-            href="/about"
-            onClick={() => setMenuOpen(false)}
-          >
-            About
           </Link>
           <a
             className="external-link"

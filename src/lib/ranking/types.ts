@@ -6,6 +6,7 @@ export type RankingSystemId =
   | "Curve.0.11";
 
 export type RankingCategoryId = "resume";
+export type RankingEngineId = "Curve.0";
 
 export type TeamBoxScore = {
   totalYards: number;
@@ -94,6 +95,7 @@ export type RankingEngine = {
 export type RankingSystemDefinition = {
   id: RankingSystemId;
   categoryId: RankingCategoryId;
+  engineId: RankingEngineId;
   engineName: string;
   engineVersion: number;
   modelVersion: number;

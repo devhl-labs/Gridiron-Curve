@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   RANKING_SYSTEM_IDS,
   compareRankingSystems,
+  parseRankingEngineId,
+  rankingCategoryDisplayName,
+  rankingEngineName,
+  rankingSystemIdsForCategory,
   rankingSystemDisplayName,
 } from "./registry";
 
@@ -22,5 +26,12 @@ describe("ranking system registry", () => {
       "Curve.0.8",
       "Curve.0.7",
     ]);
+  });
+
+  it("groups systems by category and exposes selectable engines", () => {
+    expect(rankingCategoryDisplayName("resume")).toBe("Resume rankings");
+    expect(rankingSystemIdsForCategory("resume")).toEqual(RANKING_SYSTEM_IDS);
+    expect(parseRankingEngineId("Curve.0")).toBe("Curve.0");
+    expect(rankingEngineName("Curve.0")).toBe("Curve");
   });
 });
