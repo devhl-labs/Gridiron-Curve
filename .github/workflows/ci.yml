@@ -50,7 +50,7 @@ jobs:
         run: |
           test -f out/index.html
           test -f out/generated/v3/manifest.json
-          test -f out/generated/v3/images/2099/week-02/Curve.0.11.jpg
+          test -f out/generated/v3/images/2099/week-02/Curve.1.0.jpg
           node - <<'NODE'
           const manifest = require("./out/generated/v3/manifest.json");
           const seasons = manifest.seasons.map(({ season }) => season);

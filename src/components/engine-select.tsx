@@ -41,7 +41,7 @@ export function EngineSelect({ selectedEngineId }: EngineSelectProps) {
           selectEngine(event.target.value as RankingEngineId)
         }
       >
-        {RANKING_ENGINE_IDS.map((engineId) => (
+        {RANKING_ENGINE_IDS.toReversed().map((engineId) => (
           <option key={engineId} value={engineId}>
             {rankingEngineDisplayName(engineId)}
           </option>

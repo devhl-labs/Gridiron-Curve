@@ -13,13 +13,16 @@ export function MethodologyPageClient() {
   const searchParams = useSearchParams();
   const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
   const rankingSystemName = rankingSystemDisplayName(rankingSystemId);
+  const usesDiminishingWinValue = rankingSystemId === "Curve.1.0";
   const priorFades = rankingSystemId !== "Curve.0.7";
   const separateExpectation =
     rankingSystemId === "Curve.0.9" ||
     rankingSystemId === "Curve.0.10" ||
-    rankingSystemId === "Curve.0.11";
+    rankingSystemId === "Curve.0.11" ||
+    rankingSystemId === "Curve.1.0";
   const magnitudeNetwork = rankingSystemId === "Curve.0.10";
-  const hybridNetwork = rankingSystemId === "Curve.0.11";
+  const hybridNetwork =
+    rankingSystemId === "Curve.0.11" || rankingSystemId === "Curve.1.0";
   const ratingBasedNetwork = magnitudeNetwork || hybridNetwork;
 
   return (
@@ -200,14 +203,20 @@ export function MethodologyPageClient() {
           <h2>Measure who was actually beaten</h2>
           <p>
             Each win receives the defeated opponent&apos;s network percentile
-            from before the game. The values are averaged across all wins, so
-            one marquee result cannot completely hide the rest of a résumé.
+            from before the game. {usesDiminishingWinValue
+              ? "Wins are ordered from strongest to weakest and receive progressively smaller weights. Every win adds value, so beating another opponent can never weaken a résumé."
+              : "The values are averaged across all wins, so one marquee result cannot completely hide the rest of a résumé."}
           </p>
           <div className="formula-block">
-            <code>Q = sum of win values ÷ number of wins</code>
+            <code>
+              {usesDiminishingWinValue
+                ? "Q = V₁ ÷ 2 + V₂ ÷ 4 + V₃ ÷ 8 + …"
+                : "Q = sum of win values ÷ number of wins"}
+            </code>
             <span>
-              <i>Q</i> is the quality-of-wins score used for 30% of the final
-              rating.
+              {usesDiminishingWinValue
+                ? "V₁ is the strongest win value, V₂ is the second strongest, and each additional win contributes half as much as the previous one."
+                : "Q is the quality-of-wins score used for 30% of the final rating."}
             </span>
           </div>
           <div className="method-table-wrap">
@@ -220,7 +229,12 @@ export function MethodologyPageClient() {
               </tbody>
             </table>
           </div>
-          <p className="method-note">A team without a win has a quality-of-wins score of 0.</p>
+          <p className="method-note">
+            A team without a win has a quality-of-wins score of 0.
+            {usesDiminishingWinValue
+              ? " The theoretical maximum approaches 100 as elite wins accumulate."
+              : ""}
+          </p>
         </div>
 
         <div className="method-section">
@@ -291,11 +305,11 @@ export function MethodologyPageClient() {
 
         <div className="method-section method-final">
           <span className="kicker">PRERELEASE VERSIONS</span>
-          <h2>Reproduce each model iteration</h2>
+          <h2>Reproduce each version</h2>
           <p>
             The rankings and case studies can be recalculated with Curve.0.7
-            through Curve.0.11. Every selection rebuilds the full historical
-            chain with the same version, including each previous season&apos;s
+            through Curve.1.0. Every selection rebuilds the full historical
+            chain with the same system, including each previous season&apos;s
             final order.
           </p>
           <div className="method-table-wrap">
@@ -306,6 +320,7 @@ export function MethodologyPageClient() {
                   <th>Published prior</th>
                   <th>Expectation prior</th>
                   <th>Network component</th>
+                  <th>Win quality</th>
                 </tr>
               </thead>
               <tbody>
@@ -314,38 +329,49 @@ export function MethodologyPageClient() {
                   <td>100%</td>
                   <td>100%</td>
                   <td>Percentile</td>
+                  <td>Average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.8")}</td>
                   <td>Fades to 25%</td>
                   <td>Fades to 25%</td>
                   <td>Percentile</td>
+                  <td>Average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.9")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Percentile</td>
+                  <td>Average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.10")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Rating magnitude</td>
+                  <td>Average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.11")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>25% percentile + 75% magnitude</td>
+                  <td>Average</td>
+                </tr>
+                <tr>
+                  <td>{rankingSystemDisplayName("Curve.1.0")}</td>
+                  <td>Fades to 25%</td>
+                  <td>100%</td>
+                  <td>25% percentile + 75% magnitude</td>
+                  <td>Diminishing cumulative</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p className="method-note">
-            These labels identify prerelease versions of the same model, not
-            separately named ranking systems. Curve.0.11 is the default when a
-            URL does not specify a model.
+            Curve.1.0 changes the engine&apos;s win-quality calculation.
+            Curve.1.0 is the default when a URL does not specify a ranking.
           </p>
         </div>
 

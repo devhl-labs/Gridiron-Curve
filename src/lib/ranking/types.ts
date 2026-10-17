@@ -3,10 +3,11 @@ export type RankingSystemId =
   | "Curve.0.8"
   | "Curve.0.9"
   | "Curve.0.10"
-  | "Curve.0.11";
+  | "Curve.0.11"
+  | "Curve.1.0";
 
 export type RankingCategoryId = "resume";
-export type RankingEngineId = "Curve.0";
+export type RankingEngineId = "Curve.0" | "Curve.1";
 
 export type TeamBoxScore = {
   totalYards: number;

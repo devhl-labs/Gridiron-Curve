@@ -46,7 +46,7 @@ const sampleScheduleRanks = createScheduleRankMap(sampleRankings);
 export const sampleView: RankingView = {
   season: 0,
   week: 3,
-  rankingSystemId: "Curve.0.11",
+  rankingSystemId: "Curve.1.0",
   source: "sample",
   generatedAt: null,
   gamesIncluded: sampleGames.length,

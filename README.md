@@ -3,7 +3,7 @@
 Gridiron Curve is a college-football resume model based on wins, losses, and
 the connected network of opponents.
 
-## Ranking Curve.0.11
+## Ranking Curve.1.0
 
 1. **50% expectation-adjusted network score:** every team starts from the
    full preseason order. A result changes both teams by `20 x (actual -
@@ -18,9 +18,12 @@ the connected network of opponents.
    small differences in a compressed field from becoming extreme percentiles
    without allowing the other components to overwhelm actual network order.
 2. **30% quality of wins:** each win receives the opponent's previous-week
-   network percentile. Those values are averaged across wins; FCS wins receive
-   zero. Until an FBS opponent has played an FBS game, its preseason network
-   percentile remains its win value so FCS-only results cannot distort it.
+   network percentile. Wins are ordered from strongest to weakest and weighted
+   by `1/2`, `1/4`, `1/8`, and so on. Every additional win therefore adds
+   value but contributes less than the wins ahead of it; a weak victory can
+   never reduce the score. FCS wins receive zero. Until an FBS opponent has
+   played an FBS game, its preseason network percentile remains its win value
+   so FCS-only results cannot distort it.
 3. **20% achievement score:** achievement points are averaged per game and
    placed on a fixed `50 + 15 x average` scale capped from 0 to 100. Wins earn
    points and losses deduct points based on margin and the opponent's
@@ -53,15 +56,16 @@ the connected network of opponents.
 
 ## Prerelease ranking systems
 
-The rankings selector can reproduce Curve.0.7 through Curve.0.11. All are
-prerelease iterations of Gridiron Curve; Curve.0.11 is the default. Each
+The rankings selector can reproduce Curve.0.7 through Curve.1.0. All are
+prerelease iterations of Gridiron Curve; Curve.1.0 is the default. Each
 selection rebuilds the complete chronological prior chain with that system so
 historical rankings are never mixed across configurations.
 
 Each named engine version and its compatible models are colocated under
 `src/lib/ranking/systems/<name>/<engine-version>/`. The Curve engine version 0
-implementation is in `src/lib/ranking/systems/curve/0/engine.ts`, with model
-configurations under `src/lib/ranking/systems/curve/0/models/`.
+implementations select version-specific behavior from
+`src/lib/ranking/systems/curve/engine.ts`, with models colocated under each
+engine version directory.
 `src/lib/ranking/registry.ts` registers complete ranking-system identifiers,
 while `src/lib/ranking/index.ts` resolves a system and passes its model
 configuration into its engine. Engines depend only on shared contracts and do
@@ -75,6 +79,8 @@ not read the global registry.
 - `Curve.0.10` retains the Curve.0.9 rating updates and replaces the ordinal network
   percentile in the final blend with a magnitude-aware 1300–1700 network score.
 - `Curve.0.11` blends 25% ordinal network percentile with 75% rating magnitude.
+- `Curve.1.0` retains the Curve.0.11 model and replaces average win quality with
+  cumulative, diminishing win value so another victory cannot weaken a resume.
 
 Until CFBD inputs are cached, the landing page uses a small, clearly labeled
 illustrative dataset. The sync command retrieves the FBS season and caches
@@ -89,7 +95,7 @@ download the
 file:
 
 ```text
-/generated/v3/images/2026/week-06/Curve.0.11.jpg
+/generated/v3/images/2026/week-06/Curve.1.0.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as

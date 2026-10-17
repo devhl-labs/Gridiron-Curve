@@ -37,7 +37,7 @@ export {
   rankingSystemDisplayName,
   rankingSystemIdsForCategory,
 } from "./registry";
-export { hasUsableBoxScore } from "./systems/curve/0/engine";
+export { hasUsableBoxScore } from "./systems/curve/engine";
 
 function systemFor(rankingSystemId: RankingSystemId) {
   return RANKING_SYSTEMS[rankingSystemId];

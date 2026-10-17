@@ -358,8 +358,7 @@ describe("calculateRankings", () => {
   });
 
   it("preserves preseason win quality until an opponent plays an FBS game", () => {
-    const ranked = calculateRankings(
-      [
+    const qualityGames = [
         {
           ...games[0],
           homeTeam: "Southern Miss",
@@ -390,18 +389,78 @@ describe("calculateRankings", () => {
           homeClassification: "fbs",
           awayClassification: "fbs",
         },
-      ],
+      ];
+    const prior = {
+      "Southern Miss": 0.75,
+      Auburn: 0.5,
+      Other: 0.25,
+      Fourth: 0.25,
+    };
+    const ranked = calculateRankings(
+      qualityGames,
       2,
-      {
-        "Southern Miss": 0.75,
-        Auburn: 0.5,
-        Other: 0.25,
-        Fourth: 0.25,
-      },
+      prior,
+    );
+    const previousEngine = calculateRankings(
+      qualityGames,
+      2,
+      prior,
+      "Curve.0.11",
     );
 
     expect(ranked.find(({ team }) => team === "Auburn")?.qualityOfWins).toBe(
+      50,
+    );
+    expect(
+      previousEngine.find(({ team }) => team === "Auburn")?.qualityOfWins,
+    ).toBe(
       100,
+    );
+  });
+
+  it("does not reduce Curve.1 win quality when another weaker win is added", () => {
+    const strongWin = {
+      ...games[0],
+      homeClassification: "fbs",
+      awayClassification: "fbs",
+    };
+    const weakWin = {
+      ...games[1],
+      id: 99,
+      week: 2,
+      homeTeam: "Alpha",
+      awayTeam: "Echo",
+      homeClassification: "fbs",
+      awayClassification: "fbs",
+    };
+    const prior = {
+      Alpha: 0.5,
+      Bravo: 0.75,
+      Charlie: 0.25,
+      Delta: 0.25,
+      Echo: 0.25,
+    };
+    const oneWin = calculateRankings([strongWin, weakWin], 1, prior);
+    const twoWins = calculateRankings([strongWin, weakWin], 2, prior);
+    const previousEngineOneWin = calculateRankings(
+      [strongWin, weakWin],
+      1,
+      prior,
+      "Curve.0.11",
+    );
+    const previousEngineTwoWins = calculateRankings(
+      [strongWin, weakWin],
+      2,
+      prior,
+      "Curve.0.11",
+    );
+    const quality = (
+      rankings: ReturnType<typeof calculateRankings>,
+    ) => rankings.find(({ team }) => team === "Alpha")!.qualityOfWins;
+
+    expect(quality(twoWins)).toBeGreaterThanOrEqual(quality(oneWin));
+    expect(quality(previousEngineTwoWins)).toBeLessThan(
+      quality(previousEngineOneWin),
     );
   });
 });

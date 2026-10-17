@@ -147,9 +147,9 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .rubric-list p { color: #929c94; font-size: 13px; line-height: 1.7; margin: 0; }
 .case-hero { padding-bottom: 85px; }
 .case-model-control { margin-top: 28px; max-width: 150px; }
-.case-model-control .history-select > span { color: var(--green); }
-.case-model-control .history-select select { background: transparent; border-color: rgba(23,34,28,.35); color: var(--ink); }
-.case-model-control .history-select::after { color: var(--green); }
+.case-model-control .history-select > span, .rubric-engine-control .history-select > span { color: var(--green); }
+.case-model-control .history-select select, .rubric-engine-control .history-select select { background: transparent; border-color: rgba(23,34,28,.35); color: var(--ink); }
+.case-model-control .history-select::after, .rubric-engine-control .history-select::after { color: var(--green); }
 .case-studies { margin: 0 clamp(24px, 9vw, 150px) 110px; }
 .case-study { border-top: 1px solid rgba(23,34,28,.22); padding: 58px 0 66px; }
 .case-heading { align-items: flex-start; border: 0; display: flex; justify-content: space-between; margin: 0 0 30px; padding: 0; }
