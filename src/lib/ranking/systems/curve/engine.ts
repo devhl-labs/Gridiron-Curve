@@ -8,7 +8,26 @@ import type {
   TeamRanking,
 } from "../../types";
 
-export type QualityOfWinsStrategy = "average" | "diminishing";
+export type QualityOfWinsStrategy =
+  | "pregame-average"
+  | "pregame-diminishing"
+  | "current-diminishing"
+  | "current-best-four"
+  | "current-resume-best-four";
+
+type AchievementStrategy = "standard" | "signed-weak-wins";
+
+type FinalWeights = {
+  network: number;
+  qualityOfWins: number;
+  achievement: number;
+};
+
+type CurveEngineOptions = {
+  achievementStrategy?: AchievementStrategy;
+  finalWeights?: FinalWeights;
+  finalScoreStrategy?: "weighted-blend" | "resume-foundation";
+};
 
 type TeamRecord = {
   wins: number;
@@ -25,9 +44,11 @@ const EXPECTATION_SCALE = 400;
 const WEEKLY_UPDATE_FACTOR = 20;
 const PRIOR_FADE_WEEKS = 6;
 const FCS_RATING_GAP = 100;
-const RESUME_NETWORK_WEIGHT = 0.5;
-const QUALITY_WINS_WEIGHT = 0.3;
-const ACHIEVEMENT_WEIGHT = 0.2;
+const DEFAULT_FINAL_WEIGHTS: FinalWeights = {
+  network: 0.5,
+  qualityOfWins: 0.3,
+  achievement: 0.2,
+};
 
 export function hasUsableBoxScore(
   game: Game,
@@ -239,6 +260,7 @@ function achievementValue(
   margin: number,
   opponentDifference: number,
   isFcsOpponent: boolean,
+  strategy: AchievementStrategy,
 ) {
   if (margin === 0) return 0;
   const category = marginCategory(margin);
@@ -256,8 +278,16 @@ function achievementValue(
     }
     const points = {
       dominant: { stronger: 4, peer: 3, weaker: 1 },
-      clear: { stronger: 3, peer: 2, weaker: 0.75 },
-      close: { stronger: 2, peer: 1, weaker: 0.5 },
+      clear: {
+        stronger: 3,
+        peer: 2,
+        weaker: strategy === "signed-weak-wins" ? 0 : 0.75,
+      },
+      close: {
+        stronger: 2,
+        peer: 1,
+        weaker: strategy === "signed-weak-wins" ? -1 : 0.5,
+      },
     };
     return points[category][tier];
   }
@@ -270,11 +300,12 @@ function achievementValue(
   return penalties[category][tier];
 }
 
-export function calculateAchievementPoints(
+function calculateAchievementPoints(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior,
   model: RankingModel,
+  strategy: AchievementStrategy,
 ) {
   const fbsTeams = getFbsTeams(games);
   const points = new Map([...fbsTeams].map((team) => [team, 0]));
@@ -311,7 +342,7 @@ export function calculateAchievementPoints(
       points.set(
         game.homeTeam,
         (points.get(game.homeTeam) ?? 0) +
-          achievementValue(homeMargin, difference, !awayIsFbs),
+          achievementValue(homeMargin, difference, !awayIsFbs, strategy),
       );
     }
     if (awayIsFbs) {
@@ -321,7 +352,7 @@ export function calculateAchievementPoints(
       points.set(
         game.awayTeam,
         (points.get(game.awayTeam) ?? 0) +
-          achievementValue(-homeMargin, difference, !homeIsFbs),
+          achievementValue(-homeMargin, difference, !homeIsFbs, strategy),
       );
     }
   }
@@ -373,17 +404,19 @@ function calculateQualityOfWins(
   prior: RatingPrior,
   model: RankingModel,
   strategy: QualityOfWinsStrategy,
+  currentRatings: Map<string, number>,
+  currentResumePercentiles?: Map<string, number>,
 ) {
   const fbsTeams = getFbsTeams(games);
   const defeatedOpponents = new Map(
     [...fbsTeams].map((team) => [team, [] as number[]]),
   );
-  const weeklyRatings = createWeeklyRatings(
-    games,
-    throughWeek,
-    prior,
-    model,
-  );
+  const usesCurrentRatings =
+    strategy === "current-diminishing" || strategy === "current-best-four";
+  const usesResumeRatings = strategy === "current-resume-best-four";
+  const weeklyRatings = usesCurrentRatings || usesResumeRatings
+    ? new Map<number, Map<string, number>>()
+    : createWeeklyRatings(games, throughWeek, prior, model);
   const weeklyPercentiles = new Map(
     [...weeklyRatings].map(([week, ratings]) => [
       week,
@@ -393,6 +426,7 @@ function calculateQualityOfWins(
   const preseasonPercentiles = createPercentiles(
     calculateNetworkRatings(games, 0, prior, model).ratings,
   );
+  const currentPercentiles = createPercentiles(currentRatings);
   const priorFbsGames = new Map<number, Map<string, number>>();
   for (let week = 0; week < throughWeek; week += 1) {
     const counts = new Map([...fbsTeams].map((team) => [team, 0]));
@@ -432,16 +466,33 @@ function calculateQualityOfWins(
       .get(winner)
       ?.push(
         fbsTeams.has(opponent)
-          ? (priorFbsGames.get(game.week - 1)?.get(opponent) ?? 0) === 0
-            ? (preseasonPercentiles.get(opponent) ?? 50)
-            : (weeklyPercentiles.get(game.week - 1)?.get(opponent) ?? 50)
+          ? usesCurrentRatings
+            ? (currentPercentiles.get(opponent) ?? 50)
+            : usesResumeRatings
+              ? (currentResumePercentiles?.get(opponent) ?? 50)
+            : (priorFbsGames.get(game.week - 1)?.get(opponent) ?? 0) === 0
+              ? (preseasonPercentiles.get(opponent) ?? 50)
+              : (weeklyPercentiles.get(game.week - 1)?.get(opponent) ?? 50)
           : 0,
       );
   }
 
   return new Map(
     [...defeatedOpponents].map(([team, opponents]) => {
-      if (strategy === "diminishing") {
+      if (
+        strategy === "current-best-four" ||
+        strategy === "current-resume-best-four"
+      ) {
+        const strongestWins = opponents
+          .toSorted((left, right) => right - left)
+          .slice(0, 4);
+        return [
+          team,
+          strongestWins.reduce((sum, rating) => sum + rating, 0) / 4,
+        ];
+      }
+
+      if (strategy !== "pregame-average") {
         const score = opponents
           .toSorted((left, right) => right - left)
           .reduce(
@@ -468,6 +519,9 @@ function calculateRankings(
   prior: RatingPrior,
   model: RankingModel,
   qualityOfWinsStrategy: QualityOfWinsStrategy,
+  achievementStrategy: AchievementStrategy,
+  finalWeights: FinalWeights,
+  finalScoreStrategy: "weighted-blend" | "resume-foundation",
 ): TeamRanking[] {
   const { teams, records, ratings } = calculateNetworkRatings(
     games,
@@ -481,6 +535,7 @@ function calculateRankings(
     throughWeek,
     prior,
     model,
+    achievementStrategy,
   );
   const achievementAverages = new Map(
     teams.map((team) => {
@@ -499,13 +554,6 @@ function calculateRankings(
       Math.min(100, Math.max(0, 50 + 15 * average)),
     ]),
   );
-  const qualityOfWins = calculateQualityOfWins(
-    games,
-    throughWeek,
-    prior,
-    model,
-    qualityOfWinsStrategy,
-  );
   const networkPercentiles = createPercentiles(ratings);
   const networkScores = new Map(
     teams.map((team) => {
@@ -523,6 +571,39 @@ function calculateRankings(
       ];
     }),
   );
+  const provisionalQuality =
+    qualityOfWinsStrategy === "current-resume-best-four"
+      ? calculateQualityOfWins(
+          games,
+          throughWeek,
+          prior,
+          model,
+          "current-best-four",
+          ratings,
+        )
+      : undefined;
+  const currentResumePercentiles = provisionalQuality
+    ? createPercentiles(
+        new Map(
+          teams.map((team) => [
+            team,
+            ((networkScores.get(team) ?? 50) +
+              (provisionalQuality.get(team) ?? 0) +
+              (achievementScores.get(team) ?? 50)) /
+              3,
+          ]),
+        ),
+      )
+    : undefined;
+  const qualityOfWins = calculateQualityOfWins(
+    games,
+    throughWeek,
+    prior,
+    model,
+    qualityOfWinsStrategy,
+    ratings,
+    currentResumePercentiles,
+  );
 
   return teams
     .map((team) => {
@@ -538,16 +619,28 @@ function calculateRankings(
             (networkPercentiles.get(a.opponent) ?? 0),
         );
 
+      const networkScore = networkScores.get(team) ?? 50;
+      const qualityScore = qualityOfWins.get(team) ?? 0;
+      const achievementScore = achievementScores.get(team) ?? 50;
+      const finalScore =
+        finalScoreStrategy === "resume-foundation"
+          ? Math.min(
+              100,
+              Math.max(
+                0,
+                0.6 * networkScore +
+                  0.4 * qualityScore +
+                  (achievementScore - 50) / 10,
+              ),
+            )
+          : finalWeights.network * networkScore +
+            finalWeights.qualityOfWins * qualityScore +
+            finalWeights.achievement * achievementScore;
+
       return {
         team,
         rank: 0,
-        rating: Number(
-          (
-            RESUME_NETWORK_WEIGHT * (networkScores.get(team) ?? 50) +
-            QUALITY_WINS_WEIGHT * (qualityOfWins.get(team) ?? 0) +
-            ACHIEVEMENT_WEIGHT * (achievementScores.get(team) ?? 50)
-          ).toFixed(1),
-        ),
+        rating: Number(finalScore.toFixed(1)),
         record: `${record.wins}-${record.losses}`,
         wins: record.wins,
         losses: record.losses,
@@ -592,12 +685,24 @@ function calculateRankings(
 
 export function createCurveEngine(
   qualityOfWinsStrategy: QualityOfWinsStrategy,
+  options: CurveEngineOptions = {},
 ): RankingEngine {
+  const achievementStrategy = options.achievementStrategy ?? "standard";
+  const finalWeights = options.finalWeights ?? DEFAULT_FINAL_WEIGHTS;
+  const finalScoreStrategy =
+    options.finalScoreStrategy ?? "weighted-blend";
   return {
     buildPollPrior,
     buildFullPreseasonPrior,
     calculateExpectedStrengthRatings,
-    calculateAchievementPoints,
+    calculateAchievementPoints: (games, throughWeek, prior, model) =>
+      calculateAchievementPoints(
+        games,
+        throughWeek,
+        prior,
+        model,
+        achievementStrategy,
+      ),
     calculateRankings: (games, throughWeek, prior, model) =>
       calculateRankings(
         games,
@@ -605,6 +710,9 @@ export function createCurveEngine(
         prior,
         model,
         qualityOfWinsStrategy,
+        achievementStrategy,
+        finalWeights,
+        finalScoreStrategy,
       ),
   };
 }

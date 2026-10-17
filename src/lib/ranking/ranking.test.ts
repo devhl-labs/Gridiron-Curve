@@ -400,6 +400,7 @@ describe("calculateRankings", () => {
       qualityGames,
       2,
       prior,
+      "Curve.3.0",
     );
     const previousEngine = calculateRankings(
       qualityGames,
@@ -463,6 +464,211 @@ describe("calculateRankings", () => {
       quality(previousEngineOneWin),
     );
   });
+
+  it("revalues Curve.2 wins when a defeated opponent declines", () => {
+    const laterOpponents = ["Echo", "Fourth", "Golf", "Hotel", "India"];
+    const reevaluationGames = [
+      {
+        ...games[0],
+        homeClassification: "fbs",
+        awayClassification: "fbs",
+      },
+      ...laterOpponents.map((opponent, index) => ({
+        ...games[2],
+        id: 100 + index,
+        week: index + 2,
+        homeTeam: "Bravo",
+        awayTeam: opponent,
+        homePoints: 7,
+        awayPoints: 42,
+        homeClassification: "fbs",
+        awayClassification: "fbs",
+      })),
+    ];
+    const prior = {
+      Alpha: 0.5,
+      Bravo: 0.75,
+      ...Object.fromEntries(laterOpponents.map((team) => [team, 0.5])),
+    };
+    const pregameValue = calculateRankings(
+      reevaluationGames,
+      6,
+      prior,
+      "Curve.1.0",
+    ).find(({ team }) => team === "Alpha")!.qualityOfWins;
+    const currentValue = calculateRankings(
+      reevaluationGames,
+      6,
+      prior,
+      "Curve.2.0",
+    ).find(({ team }) => team === "Alpha")!.qualityOfWins;
+
+    expect(currentValue).toBeLessThan(pregameValue);
+  });
+
+  it("penalizes Curve.3 close wins over weaker opponents", () => {
+    const closeWin = {
+      ...games[0],
+      homePoints: 24,
+      awayPoints: 21,
+    };
+    const prior = { Alpha: 0.75, Bravo: 0.25 };
+
+    expect(
+      calculateAchievementPoints(
+        [closeWin],
+        1,
+        prior,
+        "Curve.2.0",
+      ).get("Alpha"),
+    ).toBe(0.5);
+    expect(
+      calculateAchievementPoints(
+        [closeWin],
+        1,
+        prior,
+        "Curve.3.0",
+      ).get("Alpha"),
+    ).toBe(-1);
+
+    const ranking = calculateRankings(
+      [closeWin],
+      1,
+      prior,
+      "Curve.3.0",
+    ).find(({ team }) => team === "Alpha")!;
+    expect(ranking.rating).toBe(
+      Number(
+        (
+          0.4 * ranking.networkScore +
+          0.3 * ranking.qualityOfWins +
+          0.3 * ranking.achievementScore
+        ).toFixed(1),
+      ),
+    );
+  });
+
+  it("averages Curve.4's four strongest defeated FBS opponents", () => {
+    const opponents = ["Bravo", "Charlie", "Delta", "Echo", "Foxtrot"];
+    const curve4Games = opponents.map((opponent, index) => ({
+      ...games[0],
+      id: 200 + index,
+      week: 1,
+      homeTeam: "Alpha",
+      awayTeam: opponent,
+      homeClassification: "fbs",
+      awayClassification: "fbs",
+    }));
+    const prior = {
+      Alpha: 0.5,
+      Bravo: 1,
+      Charlie: 0.8,
+      Delta: 0.6,
+      Echo: 0.4,
+      Foxtrot: 0.2,
+    };
+    const rankings = calculateRankings(
+      curve4Games,
+      1,
+      prior,
+      "Curve.4.0",
+    );
+    const orderedRatings = rankings
+      .toSorted((left, right) => left.networkRating - right.networkRating);
+    const percentiles = new Map(
+      orderedRatings.map(({ team }, index) => [
+        team,
+        (index / (orderedRatings.length - 1)) * 100,
+      ]),
+    );
+    const strongestFour = opponents
+      .map((opponent) => percentiles.get(opponent)!)
+      .toSorted((left, right) => right - left)
+      .slice(0, 4);
+    const expectedQuality =
+      strongestFour.reduce((sum, value) => sum + value, 0) / 4;
+
+    expect(
+      rankings.find(({ team }) => team === "Alpha")!.qualityOfWins,
+    ).toBe(Number(expectedQuality.toFixed(1)));
+    const alpha = rankings.find(({ team }) => team === "Alpha")!;
+    expect(alpha.rating).toBe(
+      Number(
+        (
+          (alpha.networkScore +
+            alpha.qualityOfWins +
+            alpha.achievementScore) /
+          3
+        ).toFixed(1),
+      ),
+    );
+  });
+
+  it("values Curve.5 wins with the current provisional résumé ranking", () => {
+    const curve5Games = [
+      {
+        ...games[0],
+        week: 1,
+        homeClassification: "fbs",
+        awayClassification: "fbs",
+      },
+      {
+        ...games[1],
+        week: 2,
+        homeTeam: "Alpha",
+        awayTeam: "Charlie",
+        homeClassification: "fbs",
+        awayClassification: "fbs",
+      },
+    ];
+    const prior = {
+      Alpha: 0.5,
+      Bravo: 0.75,
+      Charlie: 0.25,
+      Delta: 0.1,
+    };
+    const provisionalRankings = calculateRankings(
+      curve5Games,
+      2,
+      prior,
+      "Curve.4.0",
+    );
+    const provisionalPercentiles = new Map(
+      provisionalRankings.map(({ team, rank }) => [
+        team,
+        ((provisionalRankings.length - rank) /
+          (provisionalRankings.length - 1)) *
+          100,
+      ]),
+    );
+    const rankings = calculateRankings(
+      curve5Games,
+      2,
+      prior,
+      "Curve.5.0",
+    );
+    const alpha = rankings.find(({ team }) => team === "Alpha")!;
+    const expectedQuality =
+      ((provisionalPercentiles.get("Bravo") ?? 0) +
+        (provisionalPercentiles.get("Charlie") ?? 0)) /
+      4;
+
+    expect(alpha.qualityOfWins).toBe(Number(expectedQuality.toFixed(1)));
+    expect(alpha.rating).toBe(
+      Number(
+        Math.min(
+          100,
+          Math.max(
+            0,
+            0.6 * alpha.networkScore +
+              0.4 * alpha.qualityOfWins +
+              (alpha.achievementScore - 50) / 10,
+          ),
+        ).toFixed(1),
+      ),
+    );
+  });
+
 });
 
 describe("buildPollPrior", () => {

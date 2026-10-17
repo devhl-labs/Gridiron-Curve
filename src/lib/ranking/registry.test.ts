@@ -20,6 +20,10 @@ describe("ranking system registry", () => {
     );
 
     expect(systems).toEqual([
+      "Curve.5.0",
+      "Curve.4.0",
+      "Curve.3.0",
+      "Curve.2.0",
       "Curve.1.0",
       "Curve.0.11",
       "Curve.0.10",
@@ -34,7 +38,15 @@ describe("ranking system registry", () => {
     expect(rankingSystemIdsForCategory("resume")).toEqual(RANKING_SYSTEM_IDS);
     expect(parseRankingEngineId("Curve.0")).toBe("Curve.0");
     expect(parseRankingEngineId("Curve.1")).toBe("Curve.1");
+    expect(parseRankingEngineId("Curve.2")).toBe("Curve.2");
+    expect(parseRankingEngineId("Curve.3")).toBe("Curve.3");
+    expect(parseRankingEngineId("Curve.4")).toBe("Curve.4");
+    expect(parseRankingEngineId("Curve.5")).toBe("Curve.5");
     expect(rankingEngineName("Curve.0")).toBe("Curve");
     expect(rankingEngineName("Curve.1")).toBe("Curve");
+    expect(rankingEngineName("Curve.2")).toBe("Curve");
+    expect(rankingEngineName("Curve.3")).toBe("Curve");
+    expect(rankingEngineName("Curve.4")).toBe("Curve");
+    expect(rankingEngineName("Curve.5")).toBe("Curve");
   });
 });

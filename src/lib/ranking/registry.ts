@@ -1,5 +1,9 @@
 import { curve0Systems } from "./systems/curve/0";
 import { curve1Systems } from "./systems/curve/1";
+import { curve2Systems } from "./systems/curve/2";
+import { curve3Systems } from "./systems/curve/3";
+import { curve4Systems } from "./systems/curve/4";
+import { curve5Systems } from "./systems/curve/5";
 import type {
   RankingCategoryId,
   RankingEngineId,
@@ -10,6 +14,10 @@ import type {
 export const RANKING_SYSTEMS = {
   ...curve0Systems,
   ...curve1Systems,
+  ...curve2Systems,
+  ...curve3Systems,
+  ...curve4Systems,
+  ...curve5Systems,
 } satisfies Record<RankingSystemId, RankingSystemDefinition>;
 
 export const RANKING_SYSTEM_IDS = [
@@ -19,6 +27,10 @@ export const RANKING_SYSTEM_IDS = [
   "Curve.0.10",
   "Curve.0.11",
   "Curve.1.0",
+  "Curve.2.0",
+  "Curve.3.0",
+  "Curve.4.0",
+  "Curve.5.0",
 ] as const satisfies readonly RankingSystemId[];
 
 export const RANKING_CATEGORY_IDS = [
@@ -32,15 +44,23 @@ const RANKING_CATEGORY_LABELS: Record<RankingCategoryId, string> = {
 const RANKING_ENGINE_NAMES: Record<RankingEngineId, string> = {
   "Curve.0": "Curve",
   "Curve.1": "Curve",
+  "Curve.2": "Curve",
+  "Curve.3": "Curve",
+  "Curve.4": "Curve",
+  "Curve.5": "Curve",
 };
 
 export const RANKING_ENGINE_IDS = [
   "Curve.0",
   "Curve.1",
+  "Curve.2",
+  "Curve.3",
+  "Curve.4",
+  "Curve.5",
 ] as const satisfies readonly RankingEngineId[];
 
-export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Curve.1.0";
-export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Curve.1";
+export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Curve.5.0";
+export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Curve.5";
 
 export function isRankingSystemId(
   value: string | null | undefined,

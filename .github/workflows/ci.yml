@@ -50,14 +50,14 @@ jobs:
         run: |
           test -f out/index.html
           test -f out/generated/v3/manifest.json
-          test -f out/generated/v3/images/2099/week-02/Curve.1.0.jpg
+          test -f out/generated/v3/images/2099/week-02/Curve.5.0.jpg
           node - <<'NODE'
           const manifest = require("./out/generated/v3/manifest.json");
           const seasons = manifest.seasons.map(({ season }) => season);
           if (seasons.join(",") !== "2098,2099") {
             throw new Error(`Unexpected fixture seasons: ${seasons.join(",")}`);
           }
-          if (manifest.rankingSystemIds.length !== 5) {
-            throw new Error("The fixture build did not publish all five ranking systems.");
+          if (manifest.rankingSystemIds.length !== 10) {
+            throw new Error("The fixture build did not publish all ten ranking systems.");
           }
           NODE

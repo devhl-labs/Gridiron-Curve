@@ -8,4 +8,4 @@ export const {
   calculateExpectedStrengthRatings,
   calculateAchievementPoints,
   calculateRankings,
-} = createCurveEngine("average");
+} = createCurveEngine("pregame-average");

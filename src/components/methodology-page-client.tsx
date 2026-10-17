@@ -13,16 +13,42 @@ export function MethodologyPageClient() {
   const searchParams = useSearchParams();
   const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
   const rankingSystemName = rankingSystemDisplayName(rankingSystemId);
-  const usesDiminishingWinValue = rankingSystemId === "Curve.1.0";
+  const usesDiminishingWinValue =
+    rankingSystemId === "Curve.1.0" ||
+    rankingSystemId === "Curve.2.0" ||
+    rankingSystemId === "Curve.3.0";
+  const usesBestFourWinValue =
+    rankingSystemId === "Curve.4.0" ||
+    rankingSystemId === "Curve.5.0";
+  const usesResumeWinValue = rankingSystemId === "Curve.5.0";
+  const usesCurrentWinValue =
+    rankingSystemId === "Curve.2.0" ||
+    rankingSystemId === "Curve.3.0" ||
+    rankingSystemId === "Curve.4.0";
+  const usesSignedAchievement =
+    rankingSystemId === "Curve.3.0" ||
+    rankingSystemId === "Curve.4.0" ||
+    rankingSystemId === "Curve.5.0";
+  const usesEqualBlend = rankingSystemId === "Curve.4.0";
+  const usesResumeFoundation = rankingSystemId === "Curve.5.0";
   const priorFades = rankingSystemId !== "Curve.0.7";
   const separateExpectation =
     rankingSystemId === "Curve.0.9" ||
     rankingSystemId === "Curve.0.10" ||
     rankingSystemId === "Curve.0.11" ||
-    rankingSystemId === "Curve.1.0";
+    rankingSystemId === "Curve.1.0" ||
+    rankingSystemId === "Curve.2.0" ||
+    rankingSystemId === "Curve.3.0" ||
+    rankingSystemId === "Curve.4.0" ||
+    rankingSystemId === "Curve.5.0";
   const magnitudeNetwork = rankingSystemId === "Curve.0.10";
   const hybridNetwork =
-    rankingSystemId === "Curve.0.11" || rankingSystemId === "Curve.1.0";
+    rankingSystemId === "Curve.0.11" ||
+    rankingSystemId === "Curve.1.0" ||
+    rankingSystemId === "Curve.2.0" ||
+    rankingSystemId === "Curve.3.0" ||
+    rankingSystemId === "Curve.4.0" ||
+    rankingSystemId === "Curve.5.0";
   const ratingBasedNetwork = magnitudeNetwork || hybridNetwork;
 
   return (
@@ -202,19 +228,42 @@ export function MethodologyPageClient() {
           <span className="kicker">04 · QUALITY OF WINS</span>
           <h2>Measure who was actually beaten</h2>
           <p>
-            Each win receives the defeated opponent&apos;s network percentile
-            from before the game. {usesDiminishingWinValue
+            Each win receives the defeated opponent&apos;s{" "}
+            {usesResumeWinValue
+              ? "current provisional résumé percentile"
+              : `${usesCurrentWinValue ? "current" : "pregame"} network percentile`}.
+            {usesResumeWinValue
+              ? ` The provisional grade combines network, network-valued win quality, and achievement before ${rankingSystemName} values victories, so opponent context is current without making the final calculation circular.`
+              : usesCurrentWinValue
+              ? " Win values rise or fall as opponents add results, so the résumé reflects what those opponents have ultimately demonstrated."
+              : ""} {usesBestFourWinValue
+              ? "The four strongest values are averaged. Missing wins count as zero, so a team must build repeated quality results and another victory can never weaken its résumé."
+              : usesDiminishingWinValue
               ? "Wins are ordered from strongest to weakest and receive progressively smaller weights. Every win adds value, so beating another opponent can never weaken a résumé."
               : "The values are averaged across all wins, so one marquee result cannot completely hide the rest of a résumé."}
           </p>
+          {usesResumeWinValue ? (
+            <div className="formula-block">
+              <code>G = (N + Qₙ + A) ÷ 3</code>
+              <span>
+                <i>Qₙ</i> is the four-best-win average using current network
+                percentiles. Opponents are ordered by provisional grade
+                <i> G</i>, and that percentile becomes each win value.
+              </span>
+            </div>
+          ) : null}
           <div className="formula-block">
             <code>
-              {usesDiminishingWinValue
+              {usesBestFourWinValue
+                ? "Q = (V₁ + V₂ + V₃ + V₄) ÷ 4"
+                : usesDiminishingWinValue
                 ? "Q = V₁ ÷ 2 + V₂ ÷ 4 + V₃ ÷ 8 + …"
                 : "Q = sum of win values ÷ number of wins"}
             </code>
             <span>
-              {usesDiminishingWinValue
+              {usesBestFourWinValue
+                ? "V₁ through V₄ are the four strongest defeated-opponent values. Unfilled slots are zero, and a stronger later win replaces the weakest qualifying win."
+                : usesDiminishingWinValue
                 ? "V₁ is the strongest win value, V₂ is the second strongest, and each additional win contributes half as much as the previous one."
                 : "Q is the quality-of-wins score used for 30% of the final rating."}
             </span>
@@ -223,15 +272,25 @@ export function MethodologyPageClient() {
             <table className="method-table">
               <thead><tr><th>Defeated opponent</th><th>Win value</th></tr></thead>
               <tbody>
-                <tr><td>FBS team with prior FBS evidence</td><td>Previous-week network percentile</td></tr>
-                <tr><td>FBS team with no prior FBS game</td><td>Preseason network percentile</td></tr>
+                {usesResumeWinValue ? (
+                  <tr><td>FBS team</td><td>Current provisional résumé percentile</td></tr>
+                ) : usesCurrentWinValue ? (
+                  <tr><td>FBS team</td><td>Current network percentile</td></tr>
+                ) : (
+                  <>
+                    <tr><td>FBS team with prior FBS evidence</td><td>Previous-week network percentile</td></tr>
+                    <tr><td>FBS team with no prior FBS game</td><td>Preseason network percentile</td></tr>
+                  </>
+                )}
                 <tr><td>FCS team</td><td>0</td></tr>
               </tbody>
             </table>
           </div>
           <p className="method-note">
             A team without a win has a quality-of-wins score of 0.
-            {usesDiminishingWinValue
+            {usesBestFourWinValue
+              ? " The maximum is 100 when all four qualifying wins have elite values."
+              : usesDiminishingWinValue
               ? " The theoretical maximum approaches 100 as elite wins accumulate."
               : ""}
           </p>
@@ -250,8 +309,8 @@ export function MethodologyPageClient() {
               <thead><tr><th>Margin</th><th>Stronger win</th><th>Peer win</th><th>Weaker win</th></tr></thead>
               <tbody>
                 <tr><td>Dominant · 17+</td><td>4</td><td>3</td><td>1</td></tr>
-                <tr><td>Clear · 7–16</td><td>3</td><td>2</td><td>0.75</td></tr>
-                <tr><td>Close · 1–6</td><td>2</td><td>1</td><td>0.5</td></tr>
+                <tr><td>Clear · 7–16</td><td>3</td><td>2</td><td>{usesSignedAchievement ? "0" : "0.75"}</td></tr>
+                <tr><td>Close · 1–6</td><td>2</td><td>1</td><td>{usesSignedAchievement ? "−1" : "0.5"}</td></tr>
               </tbody>
             </table>
           </div>
@@ -273,8 +332,10 @@ export function MethodologyPageClient() {
           <div className="formula-block">
             <code>A = clamp(50 + 15 × average achievement, 0, 100)</code>
             <span>
-              <i>A</i> is the achievement score used for 20% of the final
-              rating.
+              <i>A</i> is the achievement score used{" "}
+              {usesResumeFoundation
+                ? "as a bounded −5 to +5 modifier."
+                : `for ${usesSignedAchievement ? "30%" : "20%"} of the final rating.`}
             </span>
           </div>
         </div>
@@ -283,10 +344,21 @@ export function MethodologyPageClient() {
           <span className="kicker">06 · FINAL RATING</span>
           <h2>Combine the three independent views</h2>
           <div className="formula-block formula-primary">
-            <code>Curve = 0.50N + 0.30Q + 0.20A</code>
+            <code>
+              {usesResumeFoundation
+                ? "Curve = clamp(0.60N + 0.40Q + (A − 50) ÷ 10, 0, 100)"
+                : usesSignedAchievement
+                ? usesEqualBlend
+                  ? "Curve = (N + Q + A) ÷ 3"
+                  : "Curve = 0.40N + 0.30Q + 0.30A"
+                : "Curve = 0.50N + 0.30Q + 0.20A"}
+            </code>
             <span>
-              Network {ratingBasedNetwork ? "score" : "percentile"} + quality of
-              wins + achievement.
+              {usesResumeFoundation
+                ? "Network and quality establish the résumé; achievement can adjust it by at most five points."
+                : usesEqualBlend
+                ? "Equal parts network score, quality of wins, and achievement."
+                : `Network ${ratingBasedNetwork ? "score" : "percentile"} + quality of wins + achievement.`}
             </span>
           </div>
           <p>
@@ -308,7 +380,7 @@ export function MethodologyPageClient() {
           <h2>Reproduce each version</h2>
           <p>
             The rankings and case studies can be recalculated with Curve.0.7
-            through Curve.1.0. Every selection rebuilds the full historical
+            through Curve.5.0. Every selection rebuilds the full historical
             chain with the same system, including each previous season&apos;s
             final order.
           </p>
@@ -329,49 +401,82 @@ export function MethodologyPageClient() {
                   <td>100%</td>
                   <td>100%</td>
                   <td>Percentile</td>
-                  <td>Average</td>
+                  <td>Pregame average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.8")}</td>
                   <td>Fades to 25%</td>
                   <td>Fades to 25%</td>
                   <td>Percentile</td>
-                  <td>Average</td>
+                  <td>Pregame average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.9")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Percentile</td>
-                  <td>Average</td>
+                  <td>Pregame average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.10")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>Rating magnitude</td>
-                  <td>Average</td>
+                  <td>Pregame average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.0.11")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>25% percentile + 75% magnitude</td>
-                  <td>Average</td>
+                  <td>Pregame average</td>
                 </tr>
                 <tr>
                   <td>{rankingSystemDisplayName("Curve.1.0")}</td>
                   <td>Fades to 25%</td>
                   <td>100%</td>
                   <td>25% percentile + 75% magnitude</td>
-                  <td>Diminishing cumulative</td>
+                  <td>Pregame diminishing</td>
+                </tr>
+                <tr>
+                  <td>{rankingSystemDisplayName("Curve.2.0")}</td>
+                  <td>Fades to 25%</td>
+                  <td>100%</td>
+                  <td>25% percentile + 75% magnitude</td>
+                  <td>Current diminishing</td>
+                </tr>
+                <tr>
+                  <td>{rankingSystemDisplayName("Curve.3.0")}</td>
+                  <td>Fades to 25%</td>
+                  <td>100%</td>
+                  <td>25% percentile + 75% magnitude</td>
+                  <td>Current diminishing + signed achievement</td>
+                </tr>
+                <tr>
+                  <td>{rankingSystemDisplayName("Curve.4.0")}</td>
+                  <td>Fades to 25%</td>
+                  <td>100%</td>
+                  <td>25% percentile + 75% magnitude</td>
+                  <td>Current four-best average + signed achievement</td>
+                </tr>
+                <tr>
+                  <td>{rankingSystemDisplayName("Curve.5.0")}</td>
+                  <td>Fades to 25%</td>
+                  <td>100%</td>
+                  <td>25% percentile + 75% magnitude</td>
+                  <td>Résumé four-best average + bounded achievement</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p className="method-note">
-            Curve.1.0 changes the engine&apos;s win-quality calculation.
-            Curve.1.0 is the default when a URL does not specify a ranking.
+            Curve.1.0 changes how win values accumulate. Curve.2.0 also
+            revalues those wins with current opponent strength. Curve.3.0
+            allows weak-opponent wins to lose achievement value. Curve.4.0
+            averages the four strongest wins so repeated quality results
+            solidify a résumé. Curve.5.0 values those wins from a same-week
+            provisional résumé grade, makes achievement a bounded modifier,
+            and is the default when a URL does not specify a ranking.
           </p>
         </div>
 

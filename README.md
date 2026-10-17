@@ -3,9 +3,9 @@
 Gridiron Curve is a college-football resume model based on wins, losses, and
 the connected network of opponents.
 
-## Ranking Curve.1.0
+## Ranking Curve.5.0
 
-1. **50% expectation-adjusted network score:** every team starts from the
+1. **60% expectation-adjusted network foundation:** every team starts from the
    full preseason order. A result changes both teams by `20 x (actual -
    expected)`, so an expected win adds little while an upset adds much more.
    Updates are applied in weekly batches so games in the same CFBD week all use
@@ -17,23 +17,30 @@ the connected network of opponents.
    with 75% rating magnitude on the inherited 1300–1700 scale. This prevents
    small differences in a compressed field from becoming extreme percentiles
    without allowing the other components to overwhelm actual network order.
-2. **30% quality of wins:** each win receives the opponent's previous-week
-   network percentile. Wins are ordered from strongest to weakest and weighted
-   by `1/2`, `1/4`, `1/8`, and so on. Every additional win therefore adds
-   value but contributes less than the wins ahead of it; a weak victory can
-   never reduce the score. FCS wins receive zero. Until an FBS opponent has
-   played an FBS game, its preseason network percentile remains its win value
-   so FCS-only results cannot distort it.
-3. **20% achievement score:** achievement points are averaged per game and
-   placed on a fixed `50 + 15 x average` scale capped from 0 to 100. Wins earn
+2. **40% quality-of-wins foundation:** Curve first creates a provisional
+   opponent grade by averaging network, achievement, and four-best-win quality
+   valued from current network percentiles. Each Curve.5 win then receives the
+   defeated opponent's percentile on that provisional grade. This two-pass
+   calculation reflects the opponent's current complete resume without making
+   the final score circular. The four strongest FBS win values are averaged,
+   with zero used for each unfilled slot. Repeated strong wins therefore
+   solidify the resume, while a weak additional victory can never reduce the
+   score. FCS wins receive zero.
+3. **Bounded achievement modifier:** achievement points are averaged per game
+   and placed on a fixed `50 + 15 x average` scale capped from 0 to 100. The
+   final adjustment is `(achievement - 50) / 10`, so margin can move a resume
+   by at most five points but cannot independently create one. Wins earn
    points and losses deduct points based on margin and the opponent's
-   previous-week network percentile.
+   previous-week network percentile. A clear win over a weaker opponent earns
+   zero, and a close win over a weaker opponent earns `-1`; merely surviving a
+   poor opponent can therefore reduce achievement.
 4. **Achievement bands:** margins are close (1-6), clear (7-16), or dominant
    (17+). Opponents at least five network-percentile points higher are stronger;
    opponents at least five points lower are weaker; the rest are peers.
-5. **Previous-week context:** quality wins and achievement points always use
-   ratings from before the game. This prevents a result from changing the
-   context used to grade itself.
+5. **Context timing:** achievement points use ratings from before the game, so
+   a result cannot change the expectation used to grade itself. Quality of wins
+   uses current ratings because a resume should change as opponents reveal
+   their strength.
 6. **Starting ratings:** the available preseason AP/Coaches polls seed the
    first cached season, 2000. Every later season places its preseason poll
    consensus first, then fills the field from the immediately preceding final
@@ -56,8 +63,8 @@ the connected network of opponents.
 
 ## Prerelease ranking systems
 
-The rankings selector can reproduce Curve.0.7 through Curve.1.0. All are
-prerelease iterations of Gridiron Curve; Curve.1.0 is the default. Each
+The rankings selector can reproduce Curve.0.7 through Curve.5.0. All are
+prerelease iterations of Gridiron Curve; Curve.5.0 is the default. Each
 selection rebuilds the complete chronological prior chain with that system so
 historical rankings are never mixed across configurations.
 
@@ -81,7 +88,17 @@ not read the global registry.
 - `Curve.0.11` blends 25% ordinal network percentile with 75% rating magnitude.
 - `Curve.1.0` retains the Curve.0.11 model and replaces average win quality with
   cumulative, diminishing win value so another victory cannot weaken a resume.
-
+- `Curve.2.0` revalues Curve.1.0 win quality using each defeated opponent's
+  current network strength.
+- `Curve.3.0` assigns negative achievement to close wins over weaker opponents
+  and shifts the final blend to 40% network, 30% win quality, and 30%
+  achievement.
+- `Curve.4.0` replaces diminishing win quality with the average value of the
+  four strongest FBS wins, using zero for each unfilled slot, and averages the
+  network, win-quality, and achievement components equally.
+- `Curve.5.0` values those four wins from a same-week provisional resume grade,
+  builds a 60% network and 40% win-quality foundation, and limits achievement
+  to a five-point adjustment.
 Until CFBD inputs are cached, the landing page uses a small, clearly labeled
 illustrative dataset. The sync command retrieves the FBS season and caches
 normalized provider inputs locally. The publication build calculates every
@@ -95,7 +112,7 @@ download the
 file:
 
 ```text
-/generated/v3/images/2026/week-06/Curve.1.0.jpg
+/generated/v3/images/2026/week-06/Curve.5.0.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as
@@ -294,7 +311,7 @@ permissions only in the local `.env` used for cache uploads.
 
 Pull requests never receive those credentials. The PR Gate installs the
 wholly invented two-season fixture in `test/fixtures/cfbd-cache/`, builds all
-five ranking systems, and verifies the static manifest and latest JPEG. No fixture
+ten ranking systems, and verifies the static manifest and latest JPEG. No fixture
 value was copied from CollegeFootballData.
 
 ## Commands
