@@ -10,7 +10,8 @@ export type ComputerMethod =
   | "pairwise"
   | "sequence"
   | "least-squares"
-  | "victory-paths";
+  | "victory-paths"
+  | "schedule-record";
 
 type ResultGame = {
   id: number;
@@ -297,9 +298,80 @@ function solveVictoryPaths(teams: string[], games: ResultGame[]) {
   return new Map(teams.map((team, index) => [team, ratings[index]]));
 }
 
+function solveScheduleRecord(
+  teams: string[],
+  fbsTeams: string[],
+  games: ResultGame[],
+) {
+  const opponentRatings = solvePairwiseOdds(teams, games);
+  const fbsRatings = fbsTeams
+    .map((team) => ({
+      team,
+      rating: opponentRatings.get(team) ?? 0,
+    }))
+    .toSorted(
+      (left, right) =>
+        right.rating - left.rating ||
+        left.team.localeCompare(right.team),
+    );
+  const lastIndex = Math.max(1, fbsRatings.length - 1);
+  const opponentPercentiles = new Map<string, number>();
+  let groupStart = 0;
+  while (groupStart < fbsRatings.length) {
+    let groupEnd = groupStart + 1;
+    while (
+      groupEnd < fbsRatings.length &&
+      fbsRatings[groupEnd].rating === fbsRatings[groupStart].rating
+    ) {
+      groupEnd += 1;
+    }
+    const averageIndex = (groupStart + groupEnd - 1) / 2;
+    const percentile = (fbsRatings.length - 1 - averageIndex) / lastIndex;
+    for (let index = groupStart; index < groupEnd; index += 1) {
+      opponentPercentiles.set(fbsRatings[index].team, percentile);
+    }
+    groupStart = groupEnd;
+  }
+  const schedules = new Map(
+    teams.map((team) => [
+      team,
+      [] as Array<{ opponent: string; result: number }>,
+    ]),
+  );
+
+  for (const game of games) {
+    schedules.get(game.homeTeam)?.push({
+      opponent: game.awayTeam,
+      result: game.homeResult,
+    });
+    schedules.get(game.awayTeam)?.push({
+      opponent: game.homeTeam,
+      result: 1 - game.homeResult,
+    });
+  }
+
+  return new Map(
+    teams.map((team) => {
+      const schedule = schedules.get(team) ?? [];
+      const scheduleAdjustedRecord = schedule.reduce(
+        (total, { opponent, result }) => {
+          const opponentPercentile = opponentPercentiles.get(opponent) ?? 0;
+          return total + result * opponentPercentile;
+        },
+        0,
+      );
+      return [
+        team,
+        schedule.length === 0 ? 0 : scheduleAdjustedRecord / schedule.length,
+      ];
+    }),
+  );
+}
+
 function calculateRawRatings(
   method: ComputerMethod,
   teams: string[],
+  fbsTeams: string[],
   games: ResultGame[],
 ) {
   switch (method) {
@@ -313,6 +385,8 @@ function calculateRawRatings(
       return solveLeastSquares(teams, games);
     case "victory-paths":
       return solveVictoryPaths(teams, games);
+    case "schedule-record":
+      return solveScheduleRecord(teams, fbsTeams, games);
   }
 }
 
@@ -326,6 +400,7 @@ function calculateRankings(
   const rawRatings = calculateRawRatings(
     method,
     prepared.graphTeams,
+    prepared.fbsTeams,
     prepared.completed,
   );
   const records = new Map<string, TeamRecord>(

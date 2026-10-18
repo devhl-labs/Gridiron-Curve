@@ -3,10 +3,44 @@
 Gridiron Curve publishes college-football resume and computer rankings based
 on wins, losses, and the connected network of opponents.
 
-## Gridiron Blend.1.0
+## Gridiron Consensus.4.0
 
-Gridiron Blend balances the complete computer consensus with the AP and
-Coaches polls:
+Gridiron Consensus.4.0 is the latest selectable Computer Composite. It uses
+three prior-aware evidence families:
+
+1. **25% Canonical Result Network:** `ResultNetwork.1.0`
+2. **25% Record Value:** `RecordValue.1.0`
+3. **50% Capped-Margin Performance:** `CappedMarginPerformance.1.0`
+
+Result Network equally averages tie-safe positions from canonical Colley,
+regularized Bradley-Terry, and binary Massey. Record Value equally averages
+Opponent Value, Wins Above Expectation, and Poisson-binomial Strength of
+Record. Those two related families form one equally weighted Outcome Block.
+Performance equally averages opponent-adjusted Massey positions using 14-,
+21-, and 28-point scoring-margin caps.
+
+Computer Composite 4 therefore uses:
+
+```text
+Outcome = 50% Result Network + 50% Record Value
+Composite = 50% Outcome + 50% Performance
+```
+
+Raw scores are never mixed. Exact component-score ties receive their average
+full-field position before the positions are combined.
+
+All three families start from the same preseason AP/Coaches consensus plus the
+previous final Curve order. The shared prior regularizes early team and
+opponent estimates and stabilizes the published positions. Its influence
+fades linearly to zero after six completed weeks, at which point only
+current-season games affect the families.
+
+Consensus.4.0 is selectable but does not overwrite Consensus.3.0.
+
+## Gridiron Blend.3.0
+
+Gridiron Blend.3.0 balances the three-family Computer Composite with the AP
+and Coaches polls:
 
 ```text
 50% Gridiron Consensus
@@ -52,6 +86,46 @@ Raw model scores are never averaged because their scales have different
 meanings. All components rank the same complete FBS field from the same
 completed-game snapshot.
 
+## Gridiron Consensus.2.0
+
+Gridiron Consensus.2.0 is the archived five-component composite. It retains
+`Curve.5.0`, `RecordMatrix.1.0`, `Sequence.1.0`, `LeastSquares.1.0`, and
+`VictoryPaths.1.0`. It removes each team's best and worst positions and
+averages the middle three. Pairwise Odds remains published as an individual
+ranking but does not vote in this composite.
+
+## Gridiron Consensus.3.0
+
+Gridiron Consensus.3.0 is the archived third Computer Composite. It balances three
+evidence families on one full-field rank scale:
+
+1. **20% Graded Résumé:** `Curve.5.0`
+2. **60% Schedule-Adjusted Record:** `ScheduleRecord.1.0`
+3. **20% Neutral Computer Family:** `NeutralFamily.1.0`
+
+Schedule-Adjusted Record first fits neutral current-season opponent strengths
+from completed wins and losses. It converts the FBS field to percentiles, gives
+a win the defeated opponent's percentile, gives a tie half that value, and
+gives a loss zero result credit. The values are averaged across every
+completed game. Lower-division opponents sit below the FBS percentile scale,
+so a lower-division win receives zero opponent-quality credit.
+
+The Neutral Computer Family equally averages the full-field positions from
+Record Matrix, Result Sequence, Least Squares, and Victory Paths, then reranks
+that average. Those four related algorithms therefore contribute one 20%
+family vote rather than four separate votes.
+
+Computer Composite 3 orders teams by:
+
+```text
+20% Graded Résumé rank
+60% Schedule-Adjusted Record rank
+20% Neutral Computer Family rank
+```
+
+Exact ties use the unweighted three-family average, then strength of schedule,
+then team name. Published rows expose all three family positions and weights.
+
 The five new computer systems use generic descriptive names and independently
 written implementations of established mathematical techniques. They do not
 claim to reproduce, represent, or be affiliated with any historical or
@@ -70,7 +144,7 @@ remain graph nodes when they play an FBS team, but the cache does not contain
 their complete schedules; the systems are therefore documented as FBS
 adaptations. Curve.5 retains its separately documented historical prior.
 
-Curve.5 remains the default while the consensus is evaluated.
+Curve.5 remains the default ranking method.
 
 ## Ranking Curve.5.0
 
@@ -132,20 +206,23 @@ Curve.5 remains the default while the consensus is evaluated.
 
 ## Versioned ranking systems
 
-The rankings selector presents Blend.1.0 as **Computer + AP/Coaches**,
-Consensus.1.0 as **Computer Composite**, and Curve.5.0 as **Résumé Ranking**.
-Curve.5.0 and the five other standalone methods appear under **Individual
-Models**. Stable system identifiers and direct links remain unchanged.
+The rankings selector presents Blend.3.0 as **Computer + AP/Coaches**,
+Consensus.4.0 and Consensus.3.0 as versioned **Computer Composite** options,
+and Curve.5.0 as **Résumé Ranking**.
+Curve.5.0, Schedule-Adjusted Record, and the five earlier standalone methods
+appear under **Individual Models**. Stable system identifiers and direct links
+remain unchanged.
 
 The complete publication can reproduce Curve.0.7 through Curve.5.0, the five
-neutral-start computer systems, Gridiron Consensus.1.0, and Gridiron
-Blend.1.0. The Curve systems are prerelease iterations of the Gridiron Curve
-resume model; Curve.5.0 remains the default. Each Curve selection rebuilds its
+neutral-start computer systems, Schedule-Adjusted Record, the Neutral Computer
+Family, Gridiron Consensus.1.0 through 3.0, and Gridiron Blend.1.0 through 3.0.
+The Curve systems are prerelease iterations of the Gridiron Curve resume
+model; Curve.5.0 remains the default. Each Curve selection rebuilds its
 complete chronological prior chain so historical rankings are never mixed
 across configurations. Each computer system uses only that season's results.
-Consensus supplies Curve.5 with its own chronological prior while the five
-computer components remain neutral. Blend then combines that consensus with
-the aligned AP and Coaches polls.
+Each consensus supplies Curve.5 with its own chronological prior while the
+neutral computer components remain neutral. Blend.3.0 uses Consensus.3.0;
+earlier versions remain directly addressable for comparison.
 
 Curve.0.7 through Curve.4.0 remain registered, generated, and available by
 their stable `?ranking=` URLs for historical learning, but they are hidden from
@@ -198,7 +275,13 @@ file:
 ```text
 /generated/v3/images/2026/week-06/Curve.5.0.jpg
 /generated/v3/images/2026/week-06/Consensus.1.0.jpg
+/generated/v3/images/2026/week-06/Consensus.2.0.jpg
+/generated/v3/images/2026/week-06/Consensus.3.0.jpg
+/generated/v3/images/2026/week-06/ScheduleRecord.1.0.jpg
+/generated/v3/images/2026/week-06/NeutralFamily.1.0.jpg
 /generated/v3/images/2026/week-06/Blend.1.0.jpg
+/generated/v3/images/2026/week-06/Blend.2.0.jpg
+/generated/v3/images/2026/week-06/Blend.3.0.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as

@@ -36,15 +36,26 @@ function ConsensusSummary({
     return null;
   }
   const ranks = ranking.consensusRanks.map(({ rank }) => rank);
+  const isWeighted = ranking.consensusRanks.some(
+    ({ weight }) => weight !== undefined,
+  );
   const details = ranking.consensusRanks
-    .map(({ rankingSystemId, rank, included }) =>
-      `${rankingSystemId}: ${rank}${included ? "" : " (discarded)"}`,
-    )
+    .map(({ rankingSystemId, rank, included, weight }) => {
+      const weighting =
+        weight === undefined ? "" : ` at ${(weight * 100).toFixed(0)}%`;
+      return `${rankingSystemId}: ${rank}${weighting}${
+        included ? "" : " (discarded)"
+      }`;
+    })
     .join(" · ");
+  const includedCount = ranking.consensusRanks.filter(
+    ({ included }) => included,
+  ).length;
 
   return (
     <small title={details}>
-      Middle-four avg {ranking.consensusAverageRank.toFixed(2)} · range{" "}
+      {isWeighted ? "Weighted" : `Middle-${includedCount}`} avg{" "}
+      {ranking.consensusAverageRank.toFixed(2)} · range{" "}
       {Math.min(...ranks)}–{Math.max(...ranks)}
     </small>
   );

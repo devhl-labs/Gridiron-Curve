@@ -98,46 +98,92 @@ const computerCriteria = [
   },
 ];
 
-const consensusCriteria = [
+function consensusCriteria(componentCount: number) {
+  const includedCount = componentCount - 2;
+  return [
+    {
+      title: `${componentCount} complete rankings vote`,
+      description:
+        "Every component evaluates the same FBS field from the same completed-game snapshot.",
+    },
+    {
+      title: "Positions share one scale",
+      description:
+        "The composite uses full-field ranks instead of mixing incompatible raw rating values.",
+    },
+    {
+      title: "Every component has equal weight",
+      description:
+        "No method receives an editorial multiplier inside the composite.",
+    },
+    {
+      title: "The best rank is discarded",
+      description:
+        "One unusually favorable component cannot lift a team by itself.",
+    },
+    {
+      title: "The worst rank is discarded",
+      description:
+        "One unusually unfavorable component cannot sink a team by itself.",
+    },
+    {
+      title: `The middle ${includedCount} decide`,
+      description:
+        "The arithmetic mean of the remaining positions determines the consensus order.",
+    },
+    {
+      title: "Disagreement remains visible",
+      description:
+        "Published component positions identify which values were included and discarded.",
+    },
+    {
+      title: "Components remain independently versioned",
+      description:
+        "Changing one component creates a new composite version rather than silently rewriting history.",
+    },
+  ];
+}
+
+const weightedConsensusCriteria = [
   {
-    title: "Six complete rankings vote",
+    title: "Three evidence families vote",
     description:
-      "Every component evaluates the same FBS field from the same completed-game snapshot.",
+      "Graded Résumé, Schedule-Adjusted Record, and the Neutral Computer Family rank the same complete FBS field.",
+  },
+  {
+    title: "Schedule-adjusted results lead",
+    description:
+      "Schedule-Adjusted Record carries 60% so wins over weak opponents cannot dominate through record alone.",
+  },
+  {
+    title: "Résumé context remains independent",
+    description:
+      "Graded Résumé contributes 20% using its published opponent and accomplishment evaluation.",
+  },
+  {
+    title: "Related neutral methods share one vote",
+    description:
+      "Record Matrix, Result Sequence, Least Squares, and Victory Paths first form one equally weighted family ranking.",
+  },
+  {
+    title: "The neutral family contributes 20%",
+    description:
+      "The four related algorithms collectively receive one family vote rather than four separate votes.",
   },
   {
     title: "Positions share one scale",
     description:
-      "The composite uses full-field ranks instead of mixing incompatible raw rating values.",
+      "Every family contributes a full-field rank instead of mixing incompatible raw rating values.",
   },
   {
-    title: "Every component has equal weight",
+    title: "Every weight is published",
     description:
-      "No method receives an editorial multiplier inside the composite.",
+      "Ranking rows expose all three family positions and their 20/60/20 weights.",
   },
   {
-    title: "The best rank is discarded",
+    title: "Every version remains reproducible",
     description:
-      "One unusually favorable component cannot lift a team by itself.",
-  },
-  {
-    title: "The worst rank is discarded",
-    description:
-      "One unusually unfavorable component cannot sink a team by itself.",
-  },
-  {
-    title: "The middle four decide",
-    description:
-      "The arithmetic mean of the remaining positions determines the consensus order.",
-  },
-  {
-    title: "Disagreement remains visible",
-    description:
-      "Published component positions identify which values were included and discarded.",
-  },
-  {
-    title: "Components remain independently versioned",
-    description:
-      "Changing one component creates a new composite version rather than silently rewriting history.",
+      "Earlier composite formulas remain directly addressable rather than being silently rewritten.",
   },
 ];
 
@@ -155,7 +201,7 @@ const blendCriteria = [
   {
     title: "Computers retain half the influence",
     description:
-      "The six-model Computer Composite carries 50%, while AP and Coaches each carry 25%.",
+      "The current Computer Composite carries 50%, while AP and Coaches each carry 25%.",
   },
   {
     title: "Poll timing follows completed games",
@@ -193,14 +239,17 @@ export function RubricPageClient() {
     : engineDisplayName;
   const engineName = rankingEngineName(engineId);
   const isCurve = engineId.startsWith("Curve.");
-  const isConsensus = engineId === "Consensus.1";
-  const isBlend = engineId === "Blend.1";
+  const isConsensus = engineId.startsWith("Consensus.");
+  const isWeightedConsensus = engineId === "Consensus.3";
+  const isBlend = engineId.startsWith("Blend.");
   const criteria = isCurve
     ? curveCriteria
     : isBlend
       ? blendCriteria
     : isConsensus
-      ? consensusCriteria
+      ? engineId === "Consensus.3"
+        ? weightedConsensusCriteria
+        : consensusCriteria(engineId === "Consensus.2" ? 5 : 6)
       : computerCriteria;
 
   return (
@@ -224,6 +273,8 @@ export function RubricPageClient() {
           <h2>
             {isBlend
               ? "Where do computers and polls agree?"
+              : isWeightedConsensus
+              ? "Which records earned the most?"
               : isConsensus
               ? "Where do the methods agree?"
               : "What has each team earned?"}
@@ -231,6 +282,8 @@ export function RubricPageClient() {
           <p>
             {isBlend
               ? `${publicEngineName} balances the Computer Composite with current AP and Coaches opinion.`
+              : isWeightedConsensus
+              ? `${publicEngineName} balances opponent-weighted results with résumé context and one neutral algorithm family.`
               : isConsensus
               ? `${publicEngineName} rewards agreement across independent result-based approaches.`
               : `${publicEngineName} rewards accomplished results in the context of who each team played.`}

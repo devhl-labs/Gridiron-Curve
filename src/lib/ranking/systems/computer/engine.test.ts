@@ -8,6 +8,7 @@ const systems = [
   "Sequence.1.0",
   "LeastSquares.1.0",
   "VictoryPaths.1.0",
+  "ScheduleRecord.1.0",
 ] as const satisfies readonly RankingSystemId[];
 
 const games: Game[] = [

@@ -14,8 +14,18 @@ export type RankingSystemId =
   | "Sequence.1.0"
   | "LeastSquares.1.0"
   | "VictoryPaths.1.0"
+  | "ScheduleRecord.1.0"
+  | "NeutralFamily.1.0"
+  | "ResultNetwork.1.0"
+  | "RecordValue.1.0"
+  | "CappedMarginPerformance.1.0"
   | "Consensus.1.0"
-  | "Blend.1.0";
+  | "Consensus.2.0"
+  | "Consensus.3.0"
+  | "Consensus.4.0"
+  | "Blend.1.0"
+  | "Blend.2.0"
+  | "Blend.3.0";
 
 export type RankingCategoryId =
   | "ranking"
@@ -38,8 +48,18 @@ export type RankingEngineId =
   | "Sequence.1"
   | "LeastSquares.1"
   | "VictoryPaths.1"
+  | "ScheduleRecord.1"
+  | "NeutralFamily.1"
+  | "ResultNetwork.1"
+  | "RecordValue.1"
+  | "CappedMarginPerformance.1"
   | "Consensus.1"
-  | "Blend.1";
+  | "Consensus.2"
+  | "Consensus.3"
+  | "Consensus.4"
+  | "Blend.1"
+  | "Blend.2"
+  | "Blend.3";
 
 export type TeamBoxScore = {
   totalYards: number;
@@ -94,6 +114,7 @@ export type TeamRanking = {
     rankingSystemId: RankingSystemId;
     rank: number;
     included: boolean;
+    weight?: number;
   }>;
   blendScore?: number;
   blendComponents?: Array<{

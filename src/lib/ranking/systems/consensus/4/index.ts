@@ -1,0 +1,21 @@
+import { consensusEngine } from "./engine";
+import { neutralComputerModel } from "../../computer/model";
+import type {
+  RankingSystemDefinition,
+  RankingSystemId,
+} from "../../../types";
+
+export const consensusSystems = {
+  "Consensus.4.0": {
+    id: "Consensus.4.0",
+    categoryId: "ranking",
+    kind: "consensus",
+    engineId: "Consensus.4",
+    engineName: "Gridiron Consensus",
+    engineVersion: 4,
+    modelVersion: 0,
+    engine: consensusEngine,
+    model: neutralComputerModel,
+    priorMode: "component",
+  },
+} satisfies Partial<Record<RankingSystemId, RankingSystemDefinition>>;

@@ -23,14 +23,44 @@ describe("ranking system registry", () => {
     expect(rankingSystemDisplayName("Consensus.1.0")).toBe(
       "Gridiron Consensus.1.0",
     );
+    expect(rankingSystemDisplayName("Consensus.2.0")).toBe(
+      "Gridiron Consensus.2.0",
+    );
+    expect(rankingSystemDisplayName("Consensus.3.0")).toBe(
+      "Gridiron Consensus.3.0",
+    );
+    expect(rankingSystemDisplayName("Consensus.4.0")).toBe(
+      "Gridiron Consensus.4.0",
+    );
     expect(rankingSystemDisplayName("Blend.1.0")).toBe(
       "Gridiron Blend.1.0",
     );
+    expect(rankingSystemDisplayName("Blend.2.0")).toBe(
+      "Gridiron Blend.2.0",
+    );
+    expect(rankingSystemDisplayName("Blend.3.0")).toBe(
+      "Gridiron Blend.3.0",
+    );
     expect(rankingSystemSelectDisplayName("Blend.1.0")).toBe(
+      "Gridiron Blend.1.0",
+    );
+    expect(rankingSystemSelectDisplayName("Blend.2.0")).toBe(
+      "Gridiron Blend.2.0",
+    );
+    expect(rankingSystemSelectDisplayName("Blend.3.0")).toBe(
       "Computer + AP/Coaches",
     );
     expect(rankingSystemSelectDisplayName("Consensus.1.0")).toBe(
-      "Computer Composite",
+      "Gridiron Consensus.1.0",
+    );
+    expect(rankingSystemSelectDisplayName("Consensus.2.0")).toBe(
+      "Gridiron Consensus.2.0",
+    );
+    expect(rankingSystemSelectDisplayName("Consensus.3.0")).toBe(
+      "Computer Composite.3.0",
+    );
+    expect(rankingSystemSelectDisplayName("Consensus.4.0")).toBe(
+      "Computer Composite.4.0",
     );
     expect(rankingSystemSelectDisplayName("Curve.5.0")).toBe(
       "Résumé Ranking",
@@ -82,8 +112,13 @@ describe("ranking system registry", () => {
       "Sequence.1.0",
       "LeastSquares.1.0",
       "VictoryPaths.1.0",
-      "Consensus.1.0",
-      "Blend.1.0",
+      "ScheduleRecord.1.0",
+      "ResultNetwork.1.0",
+      "RecordValue.1.0",
+      "CappedMarginPerformance.1.0",
+      "Consensus.4.0",
+      "Consensus.3.0",
+      "Blend.3.0",
     ]);
     expect(SELECTABLE_RANKING_ENGINE_IDS).not.toContain("Curve.4");
     expect(RANKING_SYSTEM_SELECT_GROUPS.map(({ label }) => label)).toEqual([
@@ -95,9 +130,14 @@ describe("ranking system registry", () => {
         ({ rankingSystemIds }) => rankingSystemIds,
       ),
     ).toEqual([
-      "Blend.1.0",
-      "Consensus.1.0",
+      "Blend.3.0",
+      "Consensus.4.0",
+      "Consensus.3.0",
       "Curve.5.0",
+      "ResultNetwork.1.0",
+      "RecordValue.1.0",
+      "CappedMarginPerformance.1.0",
+      "ScheduleRecord.1.0",
       "VictoryPaths.1.0",
       "Sequence.1.0",
       "RecordMatrix.1.0",
@@ -123,22 +163,68 @@ describe("ranking system registry", () => {
     expect(rankingEngineName("Curve.5")).toBe("Curve");
     expect(parseRankingEngineId("RecordMatrix.1")).toBe("RecordMatrix.1");
     expect(parseRankingEngineId("Consensus.1")).toBe("Consensus.1");
+    expect(parseRankingEngineId("Consensus.2")).toBe("Consensus.2");
+    expect(parseRankingEngineId("Consensus.3")).toBe("Consensus.3");
+    expect(parseRankingEngineId("Consensus.4")).toBe("Consensus.4");
     expect(parseRankingEngineId("Blend.1")).toBe("Blend.1");
+    expect(parseRankingEngineId("Blend.2")).toBe("Blend.2");
+    expect(parseRankingEngineId("Blend.3")).toBe("Blend.3");
     expect(rankingEngineName("RecordMatrix.1")).toBe("Record Matrix");
     expect(rankingEngineName("Consensus.1")).toBe("Gridiron Consensus");
+    expect(rankingEngineName("Consensus.2")).toBe("Gridiron Consensus");
+    expect(rankingEngineName("Consensus.3")).toBe("Gridiron Consensus");
+    expect(rankingEngineName("Consensus.4")).toBe("Gridiron Consensus");
     expect(rankingEngineName("Blend.1")).toBe("Gridiron Blend");
+    expect(rankingEngineName("Blend.2")).toBe("Gridiron Blend");
+    expect(rankingEngineName("Blend.3")).toBe("Gridiron Blend");
     expect(rankingEngineSelectDisplayName("Blend.1")).toBe(
+      "Gridiron Blend.1",
+    );
+    expect(rankingEngineSelectDisplayName("Blend.2")).toBe(
+      "Gridiron Blend.2",
+    );
+    expect(rankingEngineSelectDisplayName("Blend.3")).toBe(
       "Computer + AP/Coaches",
     );
     expect(rankingEngineSelectDisplayName("Consensus.1")).toBe(
-      "Computer Composite",
+      "Gridiron Consensus.1",
+    );
+    expect(rankingEngineSelectDisplayName("Consensus.2")).toBe(
+      "Gridiron Consensus.2",
+    );
+    expect(rankingEngineSelectDisplayName("Consensus.3")).toBe(
+      "Computer Composite.3",
+    );
+    expect(rankingEngineSelectDisplayName("Consensus.4")).toBe(
+      "Computer Composite.4",
     );
     expect(rankingEngineSelectDisplayName("Curve.5")).toBe(
       "Résumé Ranking",
     );
     expect(rankingEngineSelectDisplayName("Curve.4")).toBe("Curve.4");
     expect(rankingEngineSelectDescription("Consensus.1")).toContain(
-      "six independent computer methods",
+      "six computer methods",
+    );
+    expect(rankingEngineSelectDescription("Consensus.2")).toContain(
+      "five computer methods",
+    );
+    expect(rankingEngineSelectDescription("Consensus.3")).toContain(
+      "60% Schedule-Adjusted Record",
+    );
+    expect(rankingEngineSelectDescription("Consensus.4")).toContain(
+      "50% Performance",
+    );
+    expect(rankingEngineSelectDescription("ResultNetwork.1")).toContain(
+      "Colley",
+    );
+    expect(rankingEngineSelectDescription("RecordValue.1")).toContain(
+      "Strength of Record",
+    );
+    expect(
+      rankingEngineSelectDescription("CappedMarginPerformance.1"),
+    ).toContain("28-point");
+    expect(rankingEngineSelectDescription("ScheduleRecord.1")).toContain(
+      "neutral strength of the opponent",
     );
   });
 });
