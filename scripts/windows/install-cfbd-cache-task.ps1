@@ -27,16 +27,29 @@ if ($timeZone.Id -ne "Eastern Standard Time") {
 }
 
 $scheduler = New-Object -ComObject "Schedule.Service"
-$scheduler.Connect()
-$currentFolder = $scheduler.GetFolder("\")
+try {
+    $scheduler.Connect()
+    $currentFolder = $scheduler.GetFolder("\")
+}
+catch {
+    throw "Could not connect to the Windows Task Scheduler service: $($_.Exception.Message)"
+}
 $currentPath = ""
 foreach ($segment in $TaskPath.Trim("\").Split("\")) {
     $currentPath += "\$segment"
     try {
         $currentFolder = $scheduler.GetFolder($currentPath)
     }
-    catch [Runtime.InteropServices.COMException] {
-        $currentFolder = $currentFolder.CreateFolder($segment)
+    catch {
+        if ($_.Exception.HResult -ne -2147024894) {
+            throw "Could not inspect Task Scheduler folder '$currentPath': $($_.Exception.Message)"
+        }
+        try {
+            $currentFolder = $currentFolder.CreateFolder($segment)
+        }
+        catch {
+            throw "Could not create Task Scheduler folder '$currentPath': $($_.Exception.Message)"
+        }
     }
 }
 
