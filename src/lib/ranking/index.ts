@@ -1,7 +1,4 @@
-import {
-  DEFAULT_RANKING_SYSTEM_ID,
-  RANKING_SYSTEMS,
-} from "./registry";
+import { RANKING_SYSTEMS } from "./registry";
 import { combinePollBlendRankings } from "./systems/blend/1/engine";
 import {
   combineConsensusRankings,
@@ -95,13 +92,15 @@ export type RankingPriorMap = Partial<
   Record<RankingSystemId, RatingPrior>
 >;
 
+const DEFAULT_CALCULATION_SYSTEM_ID: RankingSystemId = "Curve.5.0";
+
 function systemFor(rankingSystemId: RankingSystemId) {
   return RANKING_SYSTEMS[rankingSystemId];
 }
 
 export function buildPollPrior(
   polls: Poll[],
-  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
 ) {
   return systemFor(rankingSystemId).engine.buildPollPrior(polls);
 }
@@ -110,7 +109,7 @@ export function buildFullPreseasonPrior(
   polls: Poll[],
   currentTeams: string[],
   previousSeasonOrder: string[],
-  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
 ) {
   return systemFor(rankingSystemId).engine.buildFullPreseasonPrior(
     polls,
@@ -123,7 +122,7 @@ export function calculateExpectedStrengthRatings(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior = {},
-  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
 ) {
   const system = systemFor(rankingSystemId);
   return system.engine.calculateExpectedStrengthRatings(
@@ -138,7 +137,7 @@ export function calculateAchievementPoints(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior = {},
-  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
 ) {
   const system = systemFor(rankingSystemId);
   return system.engine.calculateAchievementPoints(
@@ -153,7 +152,7 @@ export function calculateRankings(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior = {},
-  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
   componentPriors: RankingPriorMap = {},
   polls: Poll[] = [],
 ): TeamRanking[] {

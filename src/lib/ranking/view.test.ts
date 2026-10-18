@@ -112,10 +112,11 @@ describe("createRankingView", () => {
     const view = createRankingView(source);
     const charlie = view.rankings.find(({ team }) => team === "Charlie");
 
+    expect(view.rankingSystemId).toBe("Consensus.4.0");
     expect(charlie?.movement).toBeGreaterThan(0);
   });
 
-  it("uses preseason poll consensus for Week 1 movement", () => {
+  it("uses the full preseason prior for Week 1 movement", () => {
     const view = createRankingView({
       ...source,
       throughWeek: 1,
@@ -142,7 +143,7 @@ describe("createRankingView", () => {
     ).not.toBeNull();
     expect(
       view.rankings.find(({ team }) => team === "Bravo")?.movement,
-    ).toBeNull();
+    ).not.toBeNull();
   });
 
   it("shows the most recently played result", () => {

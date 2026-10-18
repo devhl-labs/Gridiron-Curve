@@ -484,7 +484,7 @@ export function MethodologyPageClient() {
             averages the four strongest wins so repeated quality results
             solidify a résumé. Curve.5.0 values those wins from a same-week
             provisional résumé grade, makes achievement a bounded modifier,
-            and is the default when a URL does not specify a ranking.
+            and remains available as the dedicated résumé ranking.
           </p>
         </div>
 

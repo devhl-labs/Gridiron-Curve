@@ -218,9 +218,11 @@ The complete publication can reproduce Curve.0.7 through Curve.5.0, the five
 neutral-start computer systems, Schedule-Adjusted Record, the Neutral Computer
 Family, Gridiron Consensus.1.0 through 3.0, and Gridiron Blend.1.0 through 3.0.
 The Curve systems are prerelease iterations of the Gridiron Curve resume
-model; Curve.5.0 remains the default. Each Curve selection rebuilds its
-complete chronological prior chain so historical rankings are never mixed
-across configurations. Each computer system uses only that season's results.
+model. Consensus.4.0 is the default when a URL does not specify a ranking,
+while Curve.5.0 remains available as the dedicated résumé ranking. Each Curve
+selection rebuilds its complete chronological prior chain so historical
+rankings are never mixed across configurations. Each computer system uses
+only that season's results.
 Each consensus supplies Curve.5 with its own chronological prior while the
 neutral computer components remain neutral. Blend.3.0 uses Consensus.3.0;
 earlier versions remain directly addressable for comparison.

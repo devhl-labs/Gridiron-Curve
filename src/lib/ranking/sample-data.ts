@@ -1,5 +1,6 @@
 import {
   calculateRankings,
+  CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
   DEFAULT_RANKING_SYSTEM_ID,
   type Game,
   type Poll,
@@ -84,12 +85,21 @@ const samplePolls: Poll[] = [
 export function createSampleView(
   rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ): RankingView {
+  const componentPriors =
+    rankingSystemId === "Consensus.4.0"
+      ? Object.fromEntries(
+          CONSENSUS_V4_COMPONENT_SYSTEM_IDS.map((componentSystemId) => [
+            componentSystemId,
+            samplePrior,
+          ]),
+        )
+      : {};
   const sampleRankings = calculateRankings(
     preparedSampleGames,
     3,
     samplePrior,
     rankingSystemId,
-    {},
+    componentPriors,
     samplePolls,
   );
   const sampleScheduleRanks = createScheduleRankMap(sampleRankings);

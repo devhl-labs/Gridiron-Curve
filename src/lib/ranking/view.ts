@@ -187,7 +187,7 @@ function buildSeasonPrior(
 export function createChainedStartingPrior(
   source: CfbdSourceCache,
   historicalSources: CfbdSourceCache[] = [],
-  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
+  rankingSystemId: RankingSystemId = "Curve.5.0",
 ) {
   const priorRankingSystemId =
     CONSENSUS_V4_COMPONENT_SYSTEM_IDS.includes(
@@ -414,6 +414,16 @@ export function createRankingView(
             previousBlendPolls?.polls,
           ).map(({ team, rank }) => [team, rank]),
         )
+      : Object.keys(startingPrior.componentPriors).length > 0
+        ? new Map(
+            calculateRankings(
+              source.games,
+              0,
+              startingPrior.prior,
+              rankingSystemId,
+              startingPrior.componentPriors,
+            ).map(({ team, rank }) => [team, rank]),
+          )
       : createPriorRankMap(startingPrior.prior);
   const currentRankings = calculateRankings(
     source.games,

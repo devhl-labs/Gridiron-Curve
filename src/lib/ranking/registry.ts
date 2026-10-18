@@ -329,8 +329,8 @@ const RANKING_ENGINE_SELECT_NAMES: Partial<
   "Blend.3": "Computer + AP/Coaches",
 };
 
-export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Curve.5.0";
-export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Curve.5";
+export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Consensus.4.0";
+export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Consensus.4";
 
 export function isRankingSystemId(
   value: string | null | undefined,

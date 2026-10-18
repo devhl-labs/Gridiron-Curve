@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_RANKING_ENGINE_ID,
+  DEFAULT_RANKING_SYSTEM_ID,
   RANKING_SYSTEM_IDS,
   RANKING_ENGINE_SELECT_GROUPS,
   RANKING_SYSTEM_SELECT_GROUPS,
@@ -7,6 +9,7 @@ import {
   SELECTABLE_RANKING_SYSTEM_IDS,
   compareRankingSystems,
   parseRankingEngineId,
+  parseRankingSystemId,
   rankingCategoryDisplayName,
   rankingEngineName,
   rankingEngineSelectDescription,
@@ -93,6 +96,10 @@ describe("ranking system registry", () => {
   });
 
   it("groups systems by category and exposes selectable engines", () => {
+    expect(DEFAULT_RANKING_SYSTEM_ID).toBe("Consensus.4.0");
+    expect(DEFAULT_RANKING_ENGINE_ID).toBe("Consensus.4");
+    expect(parseRankingSystemId(null)).toBe("Consensus.4.0");
+    expect(parseRankingEngineId(null)).toBe("Consensus.4");
     expect(rankingCategoryDisplayName("ranking")).toBe("Rankings");
     expect(rankingCategoryDisplayName("power-ranking")).toBe(
       "Power Rankings",
