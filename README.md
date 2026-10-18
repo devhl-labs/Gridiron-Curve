@@ -424,7 +424,9 @@ The setup script downloads the latest Windows x64 release for the Node.js major
 in `.nvmrc` directly from `nodejs.org`, verifies its published SHA-256
 checksum, installs it under the ignored `.tools\node` directory, runs
 `npm ci`, and invokes the scheduled-task installer. It does not require a
-global Node.js or npm installation and does not modify the system PATH.
+global Node.js or npm installation. The setup and updater prepend the local
+runtime only to their own process PATH so npm lifecycle scripts can resolve
+`node`; they do not modify the user or machine PATH.
 
 After setup, test an update manually with:
 

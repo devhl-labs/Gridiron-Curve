@@ -45,6 +45,36 @@ function Invoke-NpmCommand {
     }
 }
 
+function Add-DirectoryToProcessPath {
+    param([string]$Directory)
+
+    $normalizedDirectory = $Directory.TrimEnd("\")
+    $currentPath = [Environment]::GetEnvironmentVariable("Path", "Process")
+    $pathEntries = if ($currentPath) {
+        $currentPath.Split([IO.Path]::PathSeparator)
+    }
+    else {
+        @()
+    }
+    if ($pathEntries | Where-Object {
+        $_.TrimEnd("\") -ieq $normalizedDirectory
+    }) {
+        return
+    }
+
+    $updatedPath = if ($currentPath) {
+        "$Directory$([IO.Path]::PathSeparator)$currentPath"
+    }
+    else {
+        $Directory
+    }
+    [Environment]::SetEnvironmentVariable(
+        "Path",
+        $updatedPath,
+        "Process"
+    )
+}
+
 $resolvedRepository = (Resolve-Path $RepositoryRoot).Path
 $versionFile = Join-Path $resolvedRepository ".nvmrc"
 $packageLock = Join-Path $resolvedRepository "package-lock.json"
@@ -145,6 +175,11 @@ else {
 
 if (-not (Test-Path $npmExecutable)) {
     throw "npm was not installed with the repository-local Node.js runtime."
+}
+
+Add-DirectoryToProcessPath -Directory $nodeDirectory
+if ((Get-Command "node.exe" -ErrorAction Stop).Source -ne $nodeExecutable) {
+    throw "The repository-local Node.js runtime is not first on the process PATH."
 }
 
 $originalLocation = Get-Location

@@ -20,6 +20,36 @@ function Invoke-NpmCommand {
     }
 }
 
+function Add-DirectoryToProcessPath {
+    param([string]$Directory)
+
+    $normalizedDirectory = $Directory.TrimEnd("\")
+    $currentPath = [Environment]::GetEnvironmentVariable("Path", "Process")
+    $pathEntries = if ($currentPath) {
+        $currentPath.Split([IO.Path]::PathSeparator)
+    }
+    else {
+        @()
+    }
+    if ($pathEntries | Where-Object {
+        $_.TrimEnd("\") -ieq $normalizedDirectory
+    }) {
+        return
+    }
+
+    $updatedPath = if ($currentPath) {
+        "$Directory$([IO.Path]::PathSeparator)$currentPath"
+    }
+    else {
+        $Directory
+    }
+    [Environment]::SetEnvironmentVariable(
+        "Path",
+        $updatedPath,
+        "Process"
+    )
+}
+
 $mutex = [System.Threading.Mutex]::new($false, "GridironCurve-CfbdCacheUpdate")
 $hasMutex = $false
 $transcriptStarted = $false
@@ -51,8 +81,14 @@ try {
         throw "The repository root does not contain package.json: $resolvedRepository"
     }
 
-    $repositoryNpm = Join-Path $resolvedRepository ".tools\node\npm.cmd"
+    $repositoryNodeDirectory = Join-Path $resolvedRepository ".tools\node"
+    $repositoryNode = Join-Path $repositoryNodeDirectory "node.exe"
+    $repositoryNpm = Join-Path $repositoryNodeDirectory "npm.cmd"
     $script:NpmExecutable = if (Test-Path $repositoryNpm) {
+        if (-not (Test-Path $repositoryNode)) {
+            throw "The repository-local npm installation is missing node.exe. Rerun setup-cfbd-cache-host.ps1."
+        }
+        Add-DirectoryToProcessPath -Directory $repositoryNodeDirectory
         $repositoryNpm
     }
     else {
