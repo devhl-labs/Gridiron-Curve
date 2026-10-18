@@ -51,12 +51,21 @@ function ConsensusSummary({
   const includedCount = ranking.consensusRanks.filter(
     ({ included }) => included,
   ).length;
+  const resumeSummary =
+    ranking.resumePressure === undefined
+      ? ""
+      : ` · résumé +${ranking.resumePressure.toFixed(2)}`;
+  const resumeDetails =
+    ranking.resumePressure === undefined
+      ? ""
+      : ` · Résumé pressure: ${ranking.resumePressure.toFixed(2)}; maturity: ${((ranking.resumeMaturity ?? 0) * 100).toFixed(0)}%; schedule rank: ${ranking.resumeScheduleRank ?? "unavailable"}; best-two average: ${ranking.resumeBestTwoWinAverageRank?.toFixed(2) ?? "unavailable"}`;
 
   return (
-    <small title={details}>
+    <small title={`${details}${resumeDetails}`}>
       {isWeighted ? "Weighted" : `Middle-${includedCount}`} avg{" "}
       {ranking.consensusAverageRank.toFixed(2)} · range{" "}
       {Math.min(...ranks)}–{Math.max(...ranks)}
+      {resumeSummary}
     </small>
   );
 }

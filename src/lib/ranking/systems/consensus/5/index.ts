@@ -6,13 +6,13 @@ import type {
 } from "../../../types";
 
 export const consensusSystems = {
-  "Consensus.4.0": {
-    id: "Consensus.4.0",
+  "Consensus.5.0": {
+    id: "Consensus.5.0",
     categoryId: "ranking",
     kind: "consensus",
-    engineId: "Consensus.4",
+    engineId: "Consensus.5",
     engineName: "Gridiron Consensus",
-    engineVersion: 4,
+    engineVersion: 5,
     modelVersion: 0,
     engine: consensusEngine,
     model: neutralComputerModel,

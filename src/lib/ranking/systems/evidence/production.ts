@@ -34,10 +34,10 @@ function toTeamRankings(
   throughWeek: number,
 ): TeamRanking[] {
   const lastIndex = Math.max(1, rankings.length - 1);
-  const percentiles = new Map(
+  const percentileFractions = new Map(
     rankings.map(({ team, rank }) => [
       team,
-      ((rankings.length - rank) / lastIndex) * 100,
+      (rankings.length - rank) / lastIndex,
     ]),
   );
   const schedules = new Map<
@@ -65,20 +65,24 @@ function toTeamRankings(
   return rankings.map((ranking) => {
     const schedule = schedules.get(ranking.team) ?? [];
     const opponentValues = schedule.map(
-      ({ opponent }) => percentiles.get(opponent) ?? 0,
+      ({ opponent }) => percentileFractions.get(opponent) ?? 0,
     );
     const wins = schedule
       .filter(({ result }) => result === 1)
       .toSorted(
         (left, right) =>
-          (percentiles.get(right.opponent) ?? 0) -
-            (percentiles.get(left.opponent) ?? 0) ||
+          (percentileFractions.get(right.opponent) ?? 0) -
+            (percentileFractions.get(left.opponent) ?? 0) ||
           left.opponent.localeCompare(right.opponent),
       );
     const strongestWins = wins
       .slice(0, 4)
-      .map(({ opponent }) => percentiles.get(opponent) ?? 0);
-    const percentile = percentiles.get(ranking.team) ?? 50;
+      .map(
+        ({ opponent }) =>
+          percentileFractions.get(opponent) ?? 0,
+      );
+    const percentile =
+      (percentileFractions.get(ranking.team) ?? 0.5) * 100;
 
     return {
       team: ranking.team,
@@ -93,10 +97,14 @@ function toTeamRankings(
           ? 50
           : Number(
               (
-                opponentValues.reduce(
-                  (total, value) => total + value,
-                  0,
-                ) / opponentValues.length
+                Number(
+                  (
+                    opponentValues.reduce(
+                      (total, value) => total + value,
+                      0,
+                    ) / opponentValues.length
+                  ).toFixed(3),
+                ) * 100
               ).toFixed(1),
             ),
       bestWin: wins[0]?.opponent ?? null,
@@ -109,6 +117,7 @@ function toTeamRankings(
       qualityOfWins: Number(
         (
           strongestWins.reduce((total, value) => total + value, 0) / 4
+          * 100
         ).toFixed(1),
       ),
     };

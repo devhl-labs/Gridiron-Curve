@@ -6,13 +6,13 @@ import type {
 } from "../../../types";
 
 export const blendSystems = {
-  "Blend.4.0": {
-    id: "Blend.4.0",
+  "Blend.5.0": {
+    id: "Blend.5.0",
     categoryId: "ranking",
     kind: "blend",
-    engineId: "Blend.4",
+    engineId: "Blend.5",
     engineName: "Gridiron Blend",
-    engineVersion: 4,
+    engineVersion: 5,
     modelVersion: 0,
     engine: blendEngine,
     model: neutralComputerModel,

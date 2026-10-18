@@ -1,6 +1,6 @@
-import { blendSystems as blend4Systems } from "./systems/blend/4";
+import { blendSystems as blend5Systems } from "./systems/blend/5";
 import { cappedMarginPerformanceSystems } from "./systems/capped-margin-performance/1";
-import { consensusSystems as consensus4Systems } from "./systems/consensus/4";
+import { consensusSystems as consensus5Systems } from "./systems/consensus/5";
 import { recordValueSystems } from "./systems/record-value/1";
 import { resultNetworkSystems } from "./systems/result-network/1";
 import type {
@@ -11,35 +11,35 @@ import type {
 } from "./types";
 
 export const RANKING_SYSTEMS = {
-  ...blend4Systems,
+  ...blend5Systems,
   ...resultNetworkSystems,
   ...recordValueSystems,
   ...cappedMarginPerformanceSystems,
-  ...consensus4Systems,
+  ...consensus5Systems,
 } satisfies Record<RankingSystemId, RankingSystemDefinition>;
 
 export const RANKING_SYSTEM_IDS = [
   "ResultNetwork.1.0",
   "RecordValue.1.0",
   "CappedMarginPerformance.1.0",
-  "Consensus.4.0",
-  "Blend.4.0",
+  "Consensus.5.0",
+  "Blend.5.0",
 ] as const satisfies readonly RankingSystemId[];
 
 export const SELECTABLE_RANKING_SYSTEM_IDS = [
   "ResultNetwork.1.0",
   "RecordValue.1.0",
   "CappedMarginPerformance.1.0",
-  "Consensus.4.0",
-  "Blend.4.0",
+  "Consensus.5.0",
+  "Blend.5.0",
 ] as const satisfies readonly RankingSystemId[];
 
 export const RANKING_SYSTEM_SELECT_GROUPS = [
   {
     label: "Composite Rankings",
     rankingSystemIds: [
-      "Blend.4.0",
-      "Consensus.4.0",
+      "Blend.5.0",
+      "Consensus.5.0",
     ],
   },
   {
@@ -69,38 +69,38 @@ const RANKING_ENGINE_NAMES: Record<RankingEngineId, string> = {
   "ResultNetwork.1": "Canonical Result Network",
   "RecordValue.1": "Record Value",
   "CappedMarginPerformance.1": "Capped-Margin Performance",
-  "Consensus.4": "Gridiron Consensus",
-  "Blend.4": "Gridiron Blend",
+  "Consensus.5": "Gridiron Consensus",
+  "Blend.5": "Gridiron Blend",
 };
 
 const RANKING_ENGINE_LABELS: Record<RankingEngineId, string> = {
   "ResultNetwork.1": "Canonical Result Network.1",
   "RecordValue.1": "Record Value.1",
   "CappedMarginPerformance.1": "Capped-Margin Performance.1",
-  "Consensus.4": "Gridiron Consensus.4",
-  "Blend.4": "Gridiron Blend.4",
+  "Consensus.5": "Gridiron Consensus.5",
+  "Blend.5": "Gridiron Blend.5",
 };
 
 export const RANKING_ENGINE_IDS = [
   "ResultNetwork.1",
   "RecordValue.1",
   "CappedMarginPerformance.1",
-  "Consensus.4",
-  "Blend.4",
+  "Consensus.5",
+  "Blend.5",
 ] as const satisfies readonly RankingEngineId[];
 
 export const SELECTABLE_RANKING_ENGINE_IDS = [
   "ResultNetwork.1",
   "RecordValue.1",
   "CappedMarginPerformance.1",
-  "Consensus.4",
-  "Blend.4",
+  "Consensus.5",
+  "Blend.5",
 ] as const satisfies readonly RankingEngineId[];
 
 export const RANKING_ENGINE_SELECT_GROUPS = [
   {
     label: "Composite Rankings",
-    rankingEngineIds: ["Blend.4", "Consensus.4"],
+    rankingEngineIds: ["Blend.5", "Consensus.5"],
   },
   {
     label: "Composite Components",
@@ -119,8 +119,8 @@ const RANKING_SYSTEM_LABELS: Record<RankingSystemId, string> = {
   "ResultNetwork.1.0": "Canonical Result Network.1.0",
   "RecordValue.1.0": "Record Value.1.0",
   "CappedMarginPerformance.1.0": "Capped-Margin Performance.1.0",
-  "Consensus.4.0": "Gridiron Consensus.4.0",
-  "Blend.4.0": "Gridiron Blend.4.0",
+  "Consensus.5.0": "Gridiron Consensus.5.0",
+  "Blend.5.0": "Gridiron Blend.5.0",
 };
 
 const RANKING_SYSTEM_SELECT_NAMES: Partial<
@@ -129,8 +129,8 @@ const RANKING_SYSTEM_SELECT_NAMES: Partial<
   "ResultNetwork.1.0": "Result Network",
   "RecordValue.1.0": "Record Value",
   "CappedMarginPerformance.1.0": "Performance",
-  "Consensus.4.0": "Computer Composite",
-  "Blend.4.0": "Computer + AP/Coaches",
+  "Consensus.5.0": "Computer Composite",
+  "Blend.5.0": "Computer + AP/Coaches",
 };
 
 const RANKING_ENGINE_SELECT_NAMES: Partial<
@@ -139,12 +139,12 @@ const RANKING_ENGINE_SELECT_NAMES: Partial<
   "ResultNetwork.1": "Result Network",
   "RecordValue.1": "Record Value",
   "CappedMarginPerformance.1": "Performance",
-  "Consensus.4": "Computer Composite",
-  "Blend.4": "Computer + AP/Coaches",
+  "Consensus.5": "Computer Composite",
+  "Blend.5": "Computer + AP/Coaches",
 };
 
-export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Consensus.4.0";
-export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Consensus.4";
+export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Consensus.5.0";
+export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Consensus.5";
 
 export function isRankingSystemId(
   value: string | null | undefined,
@@ -285,7 +285,7 @@ function rankingSelectDescription(
     return "50% Computer Composite · 25% AP Poll · 25% Coaches Poll";
   }
   if (id.startsWith("Consensus.")) {
-    return "25% Result Network · 25% Record Value · 50% Performance";
+    return "40% Record Value · 60% Performance · maturity-scaled résumé check";
   }
   if (id.startsWith("ResultNetwork.")) {
     return "Averages canonical Colley, Bradley–Terry, and binary Massey result networks.";

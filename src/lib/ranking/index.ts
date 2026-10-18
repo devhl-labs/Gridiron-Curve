@@ -5,9 +5,9 @@ import {
 import { combinePollBlendRankings } from "./systems/blend/engine";
 import {
   combineEvidenceCompositeRankings,
-  CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
-  CONSENSUS_V4_COMPONENT_WEIGHTS,
-} from "./systems/consensus/4/engine";
+  CONSENSUS_V5_COMPONENT_SYSTEM_IDS,
+  CONSENSUS_V5_COMPONENT_WEIGHTS,
+} from "./systems/consensus/5/engine";
 import {
   buildFullPreseasonPrior as buildCurvePreseasonPrior,
   buildPollPrior as buildCurvePollPrior,
@@ -63,9 +63,9 @@ export {
   selectableRankingSystemIdsForCategory,
 } from "./registry";
 export {
-  CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
-  CONSENSUS_V4_COMPONENT_WEIGHTS,
-} from "./systems/consensus/4/engine";
+  CONSENSUS_V5_COMPONENT_SYSTEM_IDS,
+  CONSENSUS_V5_COMPONENT_WEIGHTS,
+} from "./systems/consensus/5/engine";
 export { hasUsableBoxScore } from "./systems/curve/engine";
 
 export type RankingPriorMap = Partial<
@@ -100,13 +100,13 @@ export function calculateRankings(
   componentPriors: RankingPriorMap = {},
   polls: Poll[] = [],
 ): TeamRanking[] {
-  if (rankingSystemId === "Blend.4.0") {
+  if (rankingSystemId === "Blend.5.0") {
     return combinePollBlendRankings(
       calculateRankings(
         games,
         throughWeek,
         {},
-        "Consensus.4.0",
+        "Consensus.5.0",
         componentPriors,
       ),
       polls,
@@ -114,9 +114,9 @@ export function calculateRankings(
       throughWeek,
     );
   }
-  if (rankingSystemId === "Consensus.4.0") {
+  if (rankingSystemId === "Consensus.5.0") {
     return combineEvidenceCompositeRankings(
-      CONSENSUS_V4_COMPONENT_SYSTEM_IDS.map((componentSystemId) => ({
+      CONSENSUS_V5_COMPONENT_SYSTEM_IDS.map((componentSystemId) => ({
         rankingSystemId: componentSystemId,
         rankings: calculateRankings(
           games,
@@ -124,8 +124,10 @@ export function calculateRankings(
           componentPriors[componentSystemId] ?? {},
           componentSystemId,
         ),
-        weight: CONSENSUS_V4_COMPONENT_WEIGHTS[componentSystemId],
+        weight: CONSENSUS_V5_COMPONENT_WEIGHTS[componentSystemId],
       })),
+      games,
+      throughWeek,
     );
   }
   const system = systemFor(rankingSystemId);

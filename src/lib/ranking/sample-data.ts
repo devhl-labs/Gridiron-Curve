@@ -1,6 +1,6 @@
 import {
   calculateRankings,
-  CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
+  CONSENSUS_V5_COMPONENT_SYSTEM_IDS,
   DEFAULT_RANKING_SYSTEM_ID,
   type Game,
   type Poll,
@@ -86,9 +86,10 @@ export function createSampleView(
   rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
 ): RankingView {
   const componentPriors =
-    rankingSystemId === "Consensus.4.0"
+    rankingSystemId === "Consensus.5.0" ||
+    rankingSystemId === "Blend.5.0"
       ? Object.fromEntries(
-          CONSENSUS_V4_COMPONENT_SYSTEM_IDS.map((componentSystemId) => [
+          CONSENSUS_V5_COMPONENT_SYSTEM_IDS.map((componentSystemId) => [
             componentSystemId,
             samplePrior,
           ]),

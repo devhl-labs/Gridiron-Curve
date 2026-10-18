@@ -2,8 +2,8 @@ export type RankingSystemId =
   | "ResultNetwork.1.0"
   | "RecordValue.1.0"
   | "CappedMarginPerformance.1.0"
-  | "Consensus.4.0"
-  | "Blend.4.0";
+  | "Consensus.5.0"
+  | "Blend.5.0";
 
 export type RankingCategoryId =
   | "ranking"
@@ -17,8 +17,8 @@ export type RankingEngineId =
   | "ResultNetwork.1"
   | "RecordValue.1"
   | "CappedMarginPerformance.1"
-  | "Consensus.4"
-  | "Blend.4";
+  | "Consensus.5"
+  | "Blend.5";
 
 export type TeamBoxScore = {
   totalYards: number;
@@ -75,6 +75,10 @@ export type TeamRanking = {
     included: boolean;
     weight?: number;
   }>;
+  resumePressure?: number;
+  resumeMaturity?: number;
+  resumeScheduleRank?: number | null;
+  resumeBestTwoWinAverageRank?: number;
   blendScore?: number;
   blendComponents?: Array<{
     source: "Gridiron Consensus" | "AP Poll" | "Coaches Poll";

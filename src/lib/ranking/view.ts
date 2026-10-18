@@ -3,7 +3,7 @@ import {
   buildFullPreseasonPrior,
   buildPollPrior,
   calculateRankings,
-  CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
+  CONSENSUS_V5_COMPONENT_SYSTEM_IDS,
   DEFAULT_RANKING_SYSTEM_ID,
   hasUsableBoxScore,
   rankingSystemKind,
@@ -243,8 +243,8 @@ function createRankingPriorContext(
   description: string;
 } {
   if (
-    rankingSystemId !== "Consensus.4.0" &&
-    rankingSystemId !== "Blend.4.0"
+    rankingSystemId !== "Consensus.5.0" &&
+    rankingSystemId !== "Blend.5.0"
   ) {
     const starting = createChainedStartingPrior(
       source,
@@ -256,7 +256,7 @@ function createRankingPriorContext(
     };
   }
 
-  const componentSystemIds = CONSENSUS_V4_COMPONENT_SYSTEM_IDS;
+  const componentSystemIds = CONSENSUS_V5_COMPONENT_SYSTEM_IDS;
   const sharedEvidencePrior = createChainedStartingPrior(
     source,
     historicalSources,
@@ -271,7 +271,7 @@ function createRankingPriorContext(
     prior: {},
     componentPriors,
     description:
-      "Three prior-aware evidence families; the shared preseason prior fades to zero after Week 6",
+      "Three prior-aware evidence families; the shared preseason prior fades to zero after Week 6 and résumé pressure matures after eight FBS games",
   };
 }
 

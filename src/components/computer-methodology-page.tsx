@@ -23,10 +23,10 @@ type Methodology = {
 };
 
 const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
-  "Blend.4.0": {
+  "Blend.5.0": {
     headline: "Computer results, checked by people.",
     introduction:
-      "Computer + AP/Coaches combines Computer Composite 4 with the AP and Coaches polls. The computer result receives half the weight, while each poll receives one quarter.",
+      "Computer + AP/Coaches combines Computer Composite 5 with the AP and Coaches polls. The computer result receives half the weight, while each poll receives one quarter.",
     sections: [
       {
         kicker: "01 · COMMON POINTS",
@@ -42,7 +42,7 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
         kicker: "02 · WEIGHTING",
         title: "Balance computers and polls",
         description:
-          "Computer Composite 4 has the same total influence as the two human polls combined.",
+          "Computer Composite 5 has the same total influence as the two human polls combined.",
         formula: "B = 0.50C + 0.25A + 0.25H",
         formulaDescription:
           "B is the combined score, C is Computer Composite points, A is AP points, and H is Coaches points.",
@@ -61,49 +61,52 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
       },
     ],
   },
-  "Consensus.4.0": {
-    headline: "Two evidence blocks. One computer ranking.",
+  "Consensus.5.0": {
+    headline: "Performance, record value, and a maturing résumé check.",
     introduction:
-      "Computer Composite 4 balances schedule-sensitive outcome evidence with opponent-adjusted performance. Closely related outcome algorithms are grouped before the Outcome and Performance blocks receive equal weight.",
+      "Computer Composite 5 combines Record Value and opponent-adjusted Performance, then checks every provisional Top-25 résumé against schedule strength and its two best wins.",
     sections: [
       {
-        kicker: "01 · OUTCOME BLOCK",
-        title: "Combine two views of what the record earned",
+        kicker: "01 · BASE COMPOSITE",
+        title: "Balance record value and performance",
         description:
-          "Canonical Result Network averages Colley, Bradley–Terry, and binary Massey. Record Value averages Opponent Value, Wins Above Expectation, and Strength of Record. Their tie-safe full-field positions are averaged into one Outcome Block.",
-        formula: "O = (R + V) ÷ 2",
+          "Record Value measures what the record earned against its opponents. Capped-Margin Performance measures how well the team played after opponent adjustment. Their tie-safe full-field positions receive 40% and 60%.",
+        formula: "B = 0.40V + 0.60P",
         formulaDescription:
-          "R is Canonical Result Network position and V is Record Value position.",
+          "B is the base position, V is Record Value, and P is Capped-Margin Performance.",
       },
       {
-        kicker: "02 · PERFORMANCE BLOCK",
-        title: "Adjust capped scoring margins for opponents",
+        kicker: "02 · RÉSUMÉ EVIDENCE",
+        title: "Grade the schedule and the best two wins",
         description:
-          "Capped-Margin Performance averages opponent-adjusted Massey positions using 14-, 21-, and 28-point margin caps. Multiple caps reduce dependence on one arbitrary blowout threshold.",
+          "Canonical Result Network supplies opponent ranks and the displayed schedule strength. It receives no separate direct vote. A weak schedule matters most when the team's two strongest wins are also weak.",
       },
       {
-        kicker: "03 · EQUAL BLOCKS",
-        title: "Balance outcomes and performance",
+        kicker: "03 · MATURITY",
+        title: "Wait for the résumé to develop",
         description:
-          "Outcome and Performance receive equal block weight. Expanded across the three published families, the weights are 25% Result Network, 25% Record Value, and 50% Performance.",
-        formula: "C = 0.50O + 0.50P",
+          "The résumé check is zero through two completed FBS games, rises linearly from the third through eighth FBS game, and then reaches full strength. FCS games do not advance maturity.",
+        formula: "M = clamp((G − 2) ÷ 6, 0, 1)",
         formulaDescription:
-          "C is the composite position, O is the Outcome Block, and P is Capped-Margin Performance position.",
+          "G is completed FBS games and M is résumé maturity.",
       },
       {
-        kicker: "04 · SHARED START",
+        kicker: "04 · TOP-25 CERTIFICATION",
+        title: "Apply pressure without a hard ceiling",
+        description:
+          "Every provisional Top-25 team and each replacement entrant is checked recursively. Below-median schedules can add up to eight positions of pressure, scaled continuously by schedule weakness, best-two-win weakness, and résumé maturity.",
+        formula: "C = B + 8 × S × W × M",
+        formulaDescription:
+          "C is the certified position; S, W, and M are schedule weakness, best-two-win weakness, and résumé maturity.",
+      },
+      {
+        kicker: "05 · SHARED START",
         title: "Stabilize sparse early schedules",
         description:
-          "All three families receive the same preseason AP/Coaches and prior-season Curve order. The prior informs early opponent estimates and published positions, then fades linearly to zero after six completed weeks.",
+          "All three evidence families receive the same preseason AP/Coaches and prior-season Curve order. It informs early opponent estimates and positions, then fades linearly to zero after Week 6.",
         formula: "w = max(0, 1 − week ÷ 6)",
         formulaDescription:
-          "After Week 6, only current-season games affect the three families.",
-      },
-      {
-        kicker: "05 · COMMON SCALE",
-        title: "Average positions, not incompatible scores",
-        description:
-          "Exact component-score ties receive their average position. The composite averages normalized full-field positions and uses team name only as the final deterministic tiebreak.",
+          "After Week 6, only current-season games affect the evidence families.",
       },
     ],
   },
@@ -202,7 +205,7 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
         kicker: "04 · INTERPRETATION",
         title: "Performance is not the résumé",
         description:
-          "A close loss to an elite opponent may improve the performance estimate. Outcome and record accomplishment remain separate evidence in Computer Composite 4.",
+          "A close loss to an elite opponent may improve the performance estimate. Outcome and record accomplishment remain separate evidence in Computer Composite 5.",
       },
       {
         kicker: "05 · PRIOR",

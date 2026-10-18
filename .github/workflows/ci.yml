@@ -49,129 +49,64 @@ jobs:
       - name: Verify static export
         run: |
           test -f out/index.html
-          test -f out/generated/v3/manifest.json
-          test -f out/generated/v3/images/2099/week-02/Curve.5.0.jpg
-          test -f out/generated/v3/images/2099/week-02/Consensus.1.0.jpg
-          test -f out/generated/v3/images/2099/week-02/Consensus.2.0.jpg
-          test -f out/generated/v3/images/2099/week-02/Consensus.3.0.jpg
-          test -f out/generated/v3/images/2099/week-02/ScheduleRecord.1.0.jpg
-          test -f out/generated/v3/images/2099/week-02/NeutralFamily.1.0.jpg
-          test -f out/generated/v3/images/2099/week-02/Blend.1.0.jpg
-          test -f out/generated/v3/images/2099/week-02/Blend.2.0.jpg
-          test -f out/generated/v3/images/2099/week-02/Blend.3.0.jpg
+          test -f out/generated/v4/manifest.json
+          test -f out/generated/v4/images/2099/week-02/ResultNetwork.1.0.jpg
+          test -f out/generated/v4/images/2099/week-02/RecordValue.1.0.jpg
+          test -f out/generated/v4/images/2099/week-02/CappedMarginPerformance.1.0.jpg
+          test -f out/generated/v4/images/2099/week-02/Consensus.5.0.jpg
+          test -f out/generated/v4/images/2099/week-02/Blend.5.0.jpg
           node - <<'NODE'
-          const manifest = require("./out/generated/v3/manifest.json");
+          const manifest = require("./out/generated/v4/manifest.json");
           const seasons = manifest.seasons.map(({ season }) => season);
           if (seasons.join(",") !== "2098,2099") {
             throw new Error(`Unexpected fixture seasons: ${seasons.join(",")}`);
           }
-          if (manifest.rankingSystemIds.length !== 23) {
-            throw new Error("The fixture build did not publish all twenty-three ranking systems.");
+          const expectedSystems = [
+            "ResultNetwork.1.0",
+            "RecordValue.1.0",
+            "CappedMarginPerformance.1.0",
+            "Consensus.5.0",
+            "Blend.5.0",
+          ];
+          if (manifest.rankingSystemIds.join(",") !== expectedSystems.join(",")) {
+            throw new Error(`Unexpected publication closure: ${manifest.rankingSystemIds.join(",")}`);
           }
-          const consensus = require("./out/generated/v3/rankings/2099/week-02/Consensus.1.0.json");
+          const consensus = require("./out/generated/v4/rankings/2099/week-02/Consensus.5.0.json");
+          const expectedWeights = new Map([
+            ["ResultNetwork.1.0", 0],
+            ["RecordValue.1.0", 0.4],
+            ["CappedMarginPerformance.1.0", 0.6],
+          ]);
           if (
             consensus.rankings.length === 0 ||
             consensus.rankings.some(
-              ({ consensusRanks }) =>
-                consensusRanks?.length !== 6 ||
-                consensusRanks.filter(({ included }) => included).length !== 4,
-            )
-          ) {
-            throw new Error("The fixture consensus does not expose six votes and four included ranks.");
-          }
-          const consensus2 = require("./out/generated/v3/rankings/2099/week-02/Consensus.2.0.json");
-          if (
-            consensus2.rankings.length === 0 ||
-            consensus2.rankings.some(
-              ({ consensusRanks }) =>
-                consensusRanks?.length !== 5 ||
-                consensusRanks.filter(({ included }) => included).length !== 3 ||
-                consensusRanks.some(
-                  ({ rankingSystemId }) => rankingSystemId === "Pairwise.1.0",
-                ),
-            )
-          ) {
-            throw new Error("The fixture Consensus.2 does not expose five votes and three included ranks.");
-          }
-          const neutralFamily = require("./out/generated/v3/rankings/2099/week-02/NeutralFamily.1.0.json");
-          if (
-            neutralFamily.rankings.length === 0 ||
-            neutralFamily.rankings.some(
-              ({ consensusRanks }) =>
-                consensusRanks?.length !== 4 ||
-                consensusRanks.some(
-                  ({ included, weight }) => !included || weight !== 0.25,
-                ),
-            )
-          ) {
-            throw new Error("The fixture Neutral Computer Family does not expose four equal inputs.");
-          }
-          const consensus3 = require("./out/generated/v3/rankings/2099/week-02/Consensus.3.0.json");
-          const expectedConsensus3Weights = new Map([
-            ["Curve.5.0", 0.2],
-            ["ScheduleRecord.1.0", 0.6],
-            ["NeutralFamily.1.0", 0.2],
-          ]);
-          if (
-            consensus3.rankings.length === 0 ||
-            consensus3.rankings.some(
-              ({ consensusRanks }) =>
+              ({ consensusRanks, resumePressure, resumeMaturity }) =>
                 consensusRanks?.length !== 3 ||
                 consensusRanks.some(
                   ({ rankingSystemId, included, weight }) =>
                     !included ||
-                    weight !== expectedConsensus3Weights.get(rankingSystemId),
-                ),
+                    weight !== expectedWeights.get(rankingSystemId),
+                ) ||
+                resumePressure === undefined ||
+                resumeMaturity === undefined,
             )
           ) {
-            throw new Error("The fixture Consensus.3 does not expose the weighted evidence families.");
+            throw new Error("The fixture Consensus.5 does not expose weights and résumé evidence.");
           }
-          const blend = require("./out/generated/v3/rankings/2099/week-02/Blend.1.0.json");
+          const blend = require("./out/generated/v4/rankings/2099/week-02/Blend.5.0.json");
+          const consensusRanks = new Map(
+            consensus.rankings.map(({ team, rank }) => [team, rank]),
+          );
           if (
             blend.rankings.length === 0 ||
             blend.rankings.some(
-              ({ blendComponents }) =>
-                blendComponents?.length !== 3 ||
-                Math.abs(
-                  blendComponents.reduce(
-                    (total, { weight }) => total + weight,
-                    0,
-                  ) - 1,
-                ) > 0.00001,
-            )
-          ) {
-            throw new Error("The fixture blend does not expose three normalized inputs.");
-          }
-          const blend2 = require("./out/generated/v3/rankings/2099/week-02/Blend.2.0.json");
-          const consensus2Ranks = new Map(
-            consensus2.rankings.map(({ team, rank }) => [team, rank]),
-          );
-          if (
-            blend2.rankings.length === 0 ||
-            blend2.rankings.some(
               ({ team, blendComponents }) =>
                 blendComponents?.length !== 3 ||
                 blendComponents.find(
                   ({ source }) => source === "Gridiron Consensus",
-                )?.rank !== consensus2Ranks.get(team),
+                )?.rank !== consensusRanks.get(team),
             )
           ) {
-            throw new Error("The fixture Blend.2 does not use the five-vote Consensus.2 input.");
-          }
-          const blend3 = require("./out/generated/v3/rankings/2099/week-02/Blend.3.0.json");
-          const consensus3Ranks = new Map(
-            consensus3.rankings.map(({ team, rank }) => [team, rank]),
-          );
-          if (
-            blend3.rankings.length === 0 ||
-            blend3.rankings.some(
-              ({ team, blendComponents }) =>
-                blendComponents?.length !== 3 ||
-                blendComponents.find(
-                  ({ source }) => source === "Gridiron Consensus",
-                )?.rank !== consensus3Ranks.get(team),
-            )
-          ) {
-            throw new Error("The fixture Blend.3 does not use the three-family Consensus.3 input.");
+            throw new Error("The fixture Blend.5 does not use Consensus.5.");
           }
           NODE

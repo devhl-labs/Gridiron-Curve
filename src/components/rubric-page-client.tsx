@@ -57,19 +57,19 @@ const componentCriteria = [
 
 const consensusCriteria = [
   {
-    title: "Three evidence families vote",
+    title: "Two evidence families vote",
     description:
-      "Result Network, Record Value, and Capped-Margin Performance rank the same complete FBS field.",
+      "Record Value receives 40% and Capped-Margin Performance receives 60% of the base composite.",
   },
   {
-    title: "Outcome evidence forms one block",
+    title: "Result Network grades the résumé",
     description:
-      "Result Network and Record Value receive 25% each, combining into one 50% Outcome block.",
+      "Result Network supplies opponent ranks and schedule strength without receiving a separate direct vote.",
   },
   {
-    title: "Performance forms the other block",
+    title: "Top-25 résumés are certified",
     description:
-      "Opponent-adjusted capped scoring margins receive the remaining 50%.",
+      "Weak schedules and weak best-two wins can add up to eight positions of downward pressure.",
   },
   {
     title: "Positions share one scale",
@@ -82,9 +82,9 @@ const consensusCriteria = [
       "All three families use the same preseason information, which fades completely after Week 6.",
   },
   {
-    title: "Every weight is published",
+    title: "Pressure matures with evidence",
     description:
-      "Ranking rows expose all three family positions and their 25/25/50 weights.",
+      "The résumé check is zero through two FBS games, grows linearly, and reaches full strength after eight.",
   },
 ];
 

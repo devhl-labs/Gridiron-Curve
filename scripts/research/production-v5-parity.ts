@@ -7,7 +7,7 @@ import {
 } from "../../src/lib/cfbd/cache";
 import {
   calculateRankings,
-  CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
+  CONSENSUS_V5_COMPONENT_SYSTEM_IDS,
   type RankingPriorMap,
   type RankingSystemId,
   type TeamRanking,
@@ -24,16 +24,18 @@ import {
   type CandidateRanking,
 } from "./candidate-engines";
 import {
-  COMPOSITE_CANDIDATES,
-  combineFamilyRankings,
-} from "./composite-tournament";
+  combineCompositeV5Rankings,
+  resultNetworkScheduleRanks,
+  strongestDefeatedOpponentEvidence,
+} from "./composite-v5";
 
 const OUTPUT_PATH = path.join(
   process.cwd(),
   "shawn",
-  "production-v4-parity-results.json",
+  "production-v5-parity-results.json",
 );
-const SELECTED_CANDIDATE_ID = "block-arithmetic.O50-P50";
+const SELECTED_CANDIDATE_ID =
+  "record-performance-maturity-depth-certification.V40-P8";
 const CURRENT_KEY_TEAMS = [
   "James Madison",
   "SMU",
@@ -140,7 +142,7 @@ function compareComposite(
     mismatches.push({
       season: source.season,
       week,
-      scope: "Consensus.4.0",
+      scope: "Consensus.5.0",
       team: null,
       expected: expected.length,
       actual: actual.length,
@@ -155,10 +157,21 @@ function compareComposite(
       mismatches.push({
         season: source.season,
         week,
-        scope: "Consensus.4.0.order",
+        scope: "Consensus.5.0.order",
         team: expected[index].team,
         expected: `${expected[index].rank}:${expected[index].team}`,
         actual: `${actual[index].rank}:${actual[index].team}`,
+      });
+      return;
+    }
+    if (expected[index].score !== actual[index].networkRating) {
+      mismatches.push({
+        season: source.season,
+        week,
+        scope: "Consensus.5.0.score",
+        team: expected[index].team,
+        expected: expected[index].score,
+        actual: actual[index].networkRating,
       });
       return;
     }
@@ -167,13 +180,6 @@ function compareComposite(
 
 function main() {
   const sources = loadSources();
-  const selectedCandidate = COMPOSITE_CANDIDATES.find(
-    ({ id }) => id === SELECTED_CANDIDATE_ID,
-  );
-  if (!selectedCandidate) {
-    throw new Error(`Missing composite candidate ${SELECTED_CANDIDATE_ID}.`);
-  }
-
   const mismatches: Mismatch[] = [];
   let snapshotsCompared = 0;
   let familyRowsCompared = 0;
@@ -189,7 +195,7 @@ function main() {
       history,
     );
     const componentPriors = Object.fromEntries(
-      CONSENSUS_V4_COMPONENT_SYSTEM_IDS.map((rankingSystemId) => [
+      CONSENSUS_V5_COMPONENT_SYSTEM_IDS.map((rankingSystemId) => [
         rankingSystemId,
         starting.prior,
       ]),
@@ -225,17 +231,33 @@ function main() {
         familyRowsCompared += production.length;
       }
 
-      const researchComposite = combineFamilyRankings(
-        selectedCandidate,
+      const strongestWinEvidence =
+        strongestDefeatedOpponentEvidence(
+          source,
+          week,
+          researchFamilies[0].rankings,
+        );
+      const researchComposite = combineCompositeV5Rankings(
         researchFamilies[0].rankings,
         researchFamilies[1].rankings,
         researchFamilies[2].rankings,
+        {
+          scheduleRanks: resultNetworkScheduleRanks(
+            source,
+            week,
+            researchFamilies[0].rankings,
+          ),
+          bestWinRanks: strongestWinEvidence.bestWinRanks,
+          topTwoWinAverageRanks:
+            strongestWinEvidence.topTwoWinAverageRanks,
+          fbsGamesPlayed: strongestWinEvidence.fbsGamesPlayed,
+        },
       );
       const productionComposite = calculateRankings(
         source.games,
         week,
         {},
-        "Consensus.4.0",
+        "Consensus.5.0",
         componentPriors,
       );
       compareComposite(
@@ -258,14 +280,14 @@ function main() {
   }
 
   if (!currentRankings) {
-    throw new Error("No current Computer Composite 4 ranking was produced.");
+    throw new Error("No current Computer Composite 5 ranking was produced.");
   }
   const currentRanks = new Map(
     currentRankings.map(({ team, rank }) => [team, rank]),
   );
   const result = {
     generatedAt: new Date().toISOString(),
-    productionSystemId: "Consensus.4.0",
+    productionSystemId: "Consensus.5.0",
     researchCandidateId: SELECTED_CANDIDATE_ID,
     seasonsCompared: sources.length,
     snapshotsCompared,
@@ -289,7 +311,7 @@ function main() {
 
   if (mismatches.length > 0) {
     throw new Error(
-      `Computer Composite 4 has ${mismatches.length} production/research parity mismatches.`,
+      `Computer Composite 5 has ${mismatches.length} production/research parity mismatches.`,
     );
   }
 }
