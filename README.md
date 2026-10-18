@@ -1,7 +1,7 @@
 # Gridiron Curve
 
-Gridiron Curve publishes college-football resume and computer rankings based
-on wins, losses, and the connected network of opponents.
+Gridiron Curve publishes college-football computer rankings based on outcomes,
+record value, opponent-adjusted performance, and the connected schedule graph.
 
 ## Gridiron Consensus.4.0
 
@@ -35,13 +35,12 @@ opponent estimates and stabilizes the published positions. Its influence
 fades linearly to zero after six completed weeks, at which point only
 current-season games affect the families.
 
-Consensus.4.0 is the selectable Computer Composite. Consensus.3.0 remains
-registered for archived publications and direct historical links, but is not
-shown in ranking dropdowns.
+Consensus.4.0 is the selectable Computer Composite and the default ranking
+when a URL does not choose another system.
 
-## Gridiron Blend.3.0
+## Gridiron Blend.4.0
 
-Gridiron Blend.3.0 balances the three-family Computer Composite with the AP
+Gridiron Blend.4.0 balances Computer Composite 4 with the AP
 and Coaches polls:
 
 ```text
@@ -66,202 +65,22 @@ at or before that target, never a future release. If a poll is entirely
 unavailable, its weight becomes zero and the visible available-source weights
 are proportionally renormalized.
 
-## Gridiron Consensus.1.0
+## Published ranking systems
 
-Gridiron Consensus combines six independently calculated full-field rankings:
+The rankings selector presents Blend.4.0 as **Computer + AP/Coaches**,
+Consensus.4.0 as **Computer Composite**, and the three Composite 4 inputs under
+**Composite Components**:
 
-1. `Curve.5.0`
-2. `RecordMatrix.1.0`
-3. `Pairwise.1.0`
-4. `Sequence.1.0`
-5. `LeastSquares.1.0`
-6. `VictoryPaths.1.0`
+- `ResultNetwork.1.0`
+- `RecordValue.1.0`
+- `CappedMarginPerformance.1.0`
 
-For each team, the systems are ordered from its best rank to its worst rank.
-The best and worst positions are discarded, and the remaining four are
-averaged. The lowest middle-four average ranks first. An exact tie is resolved
-by the untrimmed six-system average, then strength of schedule, then team name.
-Published consensus rows retain all six component ranks and identify the four
-that were included.
-
-Raw model scores are never averaged because their scales have different
-meanings. All components rank the same complete FBS field from the same
-completed-game snapshot.
-
-## Gridiron Consensus.2.0
-
-Gridiron Consensus.2.0 is the archived five-component composite. It retains
-`Curve.5.0`, `RecordMatrix.1.0`, `Sequence.1.0`, `LeastSquares.1.0`, and
-`VictoryPaths.1.0`. It removes each team's best and worst positions and
-averages the middle three. Pairwise Odds remains published as an individual
-ranking but does not vote in this composite.
-
-## Gridiron Consensus.3.0
-
-Gridiron Consensus.3.0 is the archived third Computer Composite. It balances three
-evidence families on one full-field rank scale:
-
-1. **20% Graded Résumé:** `Curve.5.0`
-2. **60% Schedule-Adjusted Record:** `ScheduleRecord.1.0`
-3. **20% Neutral Computer Family:** `NeutralFamily.1.0`
-
-Schedule-Adjusted Record first fits neutral current-season opponent strengths
-from completed wins and losses. It converts the FBS field to percentiles, gives
-a win the defeated opponent's percentile, gives a tie half that value, and
-gives a loss zero result credit. The values are averaged across every
-completed game. Lower-division opponents sit below the FBS percentile scale,
-so a lower-division win receives zero opponent-quality credit.
-
-The Neutral Computer Family equally averages the full-field positions from
-Record Matrix, Result Sequence, Least Squares, and Victory Paths, then reranks
-that average. Those four related algorithms therefore contribute one 20%
-family vote rather than four separate votes.
-
-Computer Composite 3 orders teams by:
-
-```text
-20% Graded Résumé rank
-60% Schedule-Adjusted Record rank
-20% Neutral Computer Family rank
-```
-
-Exact ties use the unweighted three-family average, then strength of schedule,
-then team name. Published rows expose all three family positions and weights.
-
-The five new computer systems use generic descriptive names and independently
-written implementations of established mathematical techniques. They do not
-claim to reproduce, represent, or be affiliated with any historical or
-commercial ranking provider:
-
-- **Record Matrix** solves a connected win-loss schedule matrix.
-- **Pairwise Odds** fits regularized pairwise win probabilities.
-- **Result Sequence** applies chronological expectation-adjusted updates.
-- **Least Squares** fits constant win/loss result differences.
-- **Victory Paths** recursively transfers graph value from defeated teams to
-  winners.
-
-All five begin each season evenly and exclude scoring margin, venue, polls,
-previous seasons, recruiting, conference, and brand. Lower-division opponents
-remain graph nodes when they play an FBS team, but the cache does not contain
-their complete schedules; the systems are therefore documented as FBS
-adaptations. Curve.5 retains its separately documented historical prior.
-
-Curve.5 remains the default ranking method.
-
-## Ranking Curve.5.0
-
-1. **60% expectation-adjusted network foundation:** every team starts from the
-   full preseason order. A result changes both teams by `20 x (actual -
-   expected)`, so an expected win adds little while an upset adds much more.
-   Updates are applied in weekly batches so games in the same CFBD week all use
-   the same pregame strength. Expectations retain the full inherited offset so
-   fading confidence does not make established favorites look like coin flips.
-   The published resume rating fades that inherited offset from 100% to a 25%
-   stability floor over the first six completed weeks; result-driven rating
-   changes do not fade. The network component combines 25% ordinal percentile
-   with 75% rating magnitude on the inherited 1300–1700 scale. This prevents
-   small differences in a compressed field from becoming extreme percentiles
-   without allowing the other components to overwhelm actual network order.
-2. **40% quality-of-wins foundation:** Curve first creates a provisional
-   opponent grade by averaging network, achievement, and four-best-win quality
-   valued from current network percentiles. Each Curve.5 win then receives the
-   defeated opponent's percentile on that provisional grade. This two-pass
-   calculation reflects the opponent's current complete resume without making
-   the final score circular. The four strongest FBS win values are averaged,
-   with zero used for each unfilled slot. Repeated strong wins therefore
-   solidify the resume, while a weak additional victory can never reduce the
-   score. FCS wins receive zero.
-3. **Bounded achievement modifier:** achievement points are averaged per game
-   and placed on a fixed `50 + 15 x average` scale capped from 0 to 100. The
-   final adjustment is `(achievement - 50) / 10`, so margin can move a resume
-   by at most five points but cannot independently create one. Wins earn
-   points and losses deduct points based on margin and the opponent's
-   previous-week network percentile. A clear win over a weaker opponent earns
-   zero, and a close win over a weaker opponent earns `-1`; merely surviving a
-   poor opponent can therefore reduce achievement.
-4. **Achievement bands:** margins are close (1-6), clear (7-16), or dominant
-   (17+). Opponents at least five network-percentile points higher are stronger;
-   opponents at least five points lower are weaker; the rest are peers.
-5. **Context timing:** achievement points use ratings from before the game, so
-   a result cannot change the expectation used to grade itself. Quality of wins
-   uses current ratings because a resume should change as opponents reveal
-   their strength.
-6. **Starting ratings:** the available preseason AP/Coaches polls seed the
-   first cached season, 2000. Every later season places its preseason poll
-   consensus first, then fills the field from the immediately preceding final
-   Gridiron Curve ranking. The chronological chain handles changing FBS
-   membership and maps each full order to a 1300-1700 expectation scale. The
-   inherited portion loses 12.5 percentage points of weight after each
-   completed week until 25% remains. This preserves early-season stability
-   without allowing the starting order to dominate the full season.
-7. **Excluded inputs:** yardage, turnovers, venue, recency, and in-season polls
-   do not affect the ranking.
-8. **FCS treatment:** the FCS expectation rating is always 100 points below the
-   current lowest FBS rating, encoding the assumption that every FBS team is
-   stronger than every FCS team. Dominant, clear, and close FCS wins earn 0.25,
-   0.1, and 0 achievement points. FCS wins receive zero quality value, and only
-   FBS teams are published.
-9. **Strength of schedule:** SOS Played and SOS Upcoming average the current
-   network percentiles of completed and remaining regular-season opponents.
-   FCS opponents contribute zero. SOS is not a weighted component; it breaks an
-   exact tie in the final Curve score.
-
-## Versioned ranking systems
-
-The rankings selector presents Blend.3.0 as **Computer + AP/Coaches**,
-Consensus.4.0 as **Computer Composite**, and Curve.5.0 as **Résumé Ranking**.
-Curve.5.0, Schedule-Adjusted Record, and the five earlier standalone methods
-appear under **Individual Models**. Stable system identifiers and direct links
-remain unchanged.
-
-The complete publication can reproduce Curve.0.7 through Curve.5.0, the five
-neutral-start computer systems, Schedule-Adjusted Record, the Neutral Computer
-Family, Gridiron Consensus.1.0 through 3.0, and Gridiron Blend.1.0 through 3.0.
-The Curve systems are prerelease iterations of the Gridiron Curve resume
-model. Consensus.4.0 is the default when a URL does not specify a ranking,
-while Curve.5.0 remains available as the dedicated résumé ranking. Each Curve
-selection rebuilds its complete chronological prior chain so historical
-rankings are never mixed across configurations. Each computer system uses
-only that season's results.
-Each consensus supplies Curve.5 with its own chronological prior while the
-neutral computer components remain neutral. Blend.3.0 uses Consensus.3.0;
-earlier versions remain directly addressable for comparison.
-
-Curve.0.7 through Curve.4.0 remain registered, generated, and available by
-their stable `?ranking=` URLs for historical learning, but they are hidden from
-the normal selector. Curve.5.0 is the only Curve iteration shown in the menu.
-
-Each named engine version and its compatible models are colocated under
-`src/lib/ranking/systems/<name>/<engine-version>/`. The Curve engine version 0
-implementations select version-specific behavior from
-`src/lib/ranking/systems/curve/engine.ts`, with models colocated under each
-engine version directory.
-`src/lib/ranking/registry.ts` registers complete ranking-system identifiers,
-while `src/lib/ranking/index.ts` resolves a system and passes its model
-configuration into its engine. Engines depend only on shared contracts and do
-not read the global registry.
-
-- `Curve.0.7` retains the full inherited prior throughout the season.
-- `Curve.0.8` fades the inherited prior in both published ratings and game
-  expectations.
-- `Curve.0.9` fades the inherited prior in published ratings while retaining full
-  inherited strength for game expectations.
-- `Curve.0.10` retains the Curve.0.9 rating updates and replaces the ordinal network
-  percentile in the final blend with a magnitude-aware 1300–1700 network score.
-- `Curve.0.11` blends 25% ordinal network percentile with 75% rating magnitude.
-- `Curve.1.0` retains the Curve.0.11 model and replaces average win quality with
-  cumulative, diminishing win value so another victory cannot weaken a resume.
-- `Curve.2.0` revalues Curve.1.0 win quality using each defeated opponent's
-  current network strength.
-- `Curve.3.0` assigns negative achievement to close wins over weaker opponents
-  and shifts the final blend to 40% network, 30% win quality, and 30%
-  achievement.
-- `Curve.4.0` replaces diminishing win quality with the average value of the
-  four strongest FBS wins, using zero for each unfilled slot, and averages the
-  network, win-quality, and achievement components equally.
-- `Curve.5.0` values those four wins from a same-week provisional resume grade,
-  builds a 60% network and 40% win-quality foundation, and limits achievement
-  to a five-point adjustment.
+The static publication generates only these five live systems. Consensus.4.0
+is the default when a URL does not specify a ranking, and Blend.4.0 uses it as
+the computer input. Removed development and standalone systems fall back to
+the current default instead of adding publication work to every season and
+week. The internal Curve calculation remains only to extend the shared
+preseason prior across seasons; it is not published as a ranking.
 
 Until CFBD inputs are cached, the landing page uses a small, clearly labeled
 illustrative dataset. The sync command retrieves the FBS season and caches
@@ -276,15 +95,11 @@ download the
 file:
 
 ```text
-/generated/v3/images/2026/week-06/Curve.5.0.jpg
-/generated/v3/images/2026/week-06/Consensus.1.0.jpg
-/generated/v3/images/2026/week-06/Consensus.2.0.jpg
-/generated/v3/images/2026/week-06/Consensus.3.0.jpg
-/generated/v3/images/2026/week-06/ScheduleRecord.1.0.jpg
-/generated/v3/images/2026/week-06/NeutralFamily.1.0.jpg
-/generated/v3/images/2026/week-06/Blend.1.0.jpg
-/generated/v3/images/2026/week-06/Blend.2.0.jpg
-/generated/v3/images/2026/week-06/Blend.3.0.jpg
+/generated/v3/images/2026/week-06/Consensus.4.0.jpg
+/generated/v3/images/2026/week-06/ResultNetwork.1.0.jpg
+/generated/v3/images/2026/week-06/RecordValue.1.0.jpg
+/generated/v3/images/2026/week-06/CappedMarginPerformance.1.0.jpg
+/generated/v3/images/2026/week-06/Blend.4.0.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as

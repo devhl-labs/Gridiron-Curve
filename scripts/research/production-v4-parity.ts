@@ -187,7 +187,6 @@ function main() {
     const starting = createChainedStartingPrior(
       source,
       history,
-      "Curve.5.0",
     );
     const componentPriors = Object.fromEntries(
       CONSENSUS_V4_COMPONENT_SYSTEM_IDS.map((rankingSystemId) => [

@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_RANKING_ENGINE_ID,
   DEFAULT_RANKING_SYSTEM_ID,
-  RANKING_SYSTEM_IDS,
+  RANKING_ENGINE_IDS,
   RANKING_ENGINE_SELECT_GROUPS,
+  RANKING_SYSTEM_IDS,
   RANKING_SYSTEM_SELECT_GROUPS,
   SELECTABLE_RANKING_ENGINE_IDS,
   SELECTABLE_RANKING_SYSTEM_IDS,
-  compareRankingSystems,
+  isRankingEngineId,
+  isRankingSystemId,
   parseRankingEngineId,
   parseRankingSystemId,
   rankingCategoryDisplayName,
@@ -20,216 +22,86 @@ import {
   rankingSystemDisplayName,
 } from "./registry";
 
+const expectedSystemIds = [
+  "ResultNetwork.1.0",
+  "RecordValue.1.0",
+  "CappedMarginPerformance.1.0",
+  "Consensus.4.0",
+  "Blend.4.0",
+] as const;
+
+const expectedEngineIds = [
+  "ResultNetwork.1",
+  "RecordValue.1",
+  "CappedMarginPerformance.1",
+  "Consensus.4",
+  "Blend.4",
+] as const;
+
 describe("ranking system registry", () => {
-  it("formats engine and model versions as separate numeric components", () => {
-    expect(rankingSystemDisplayName("Curve.0.11")).toBe("Curve.0.11");
-    expect(rankingSystemDisplayName("Consensus.1.0")).toBe(
-      "Gridiron Consensus.1.0",
-    );
-    expect(rankingSystemDisplayName("Consensus.2.0")).toBe(
-      "Gridiron Consensus.2.0",
-    );
-    expect(rankingSystemDisplayName("Consensus.3.0")).toBe(
-      "Gridiron Consensus.3.0",
-    );
-    expect(rankingSystemDisplayName("Consensus.4.0")).toBe(
-      "Gridiron Consensus.4.0",
-    );
-    expect(rankingSystemDisplayName("Blend.1.0")).toBe(
-      "Gridiron Blend.1.0",
-    );
-    expect(rankingSystemDisplayName("Blend.2.0")).toBe(
-      "Gridiron Blend.2.0",
-    );
-    expect(rankingSystemDisplayName("Blend.3.0")).toBe(
-      "Gridiron Blend.3.0",
-    );
-    expect(rankingSystemSelectDisplayName("Blend.1.0")).toBe(
-      "Gridiron Blend.1.0",
-    );
-    expect(rankingSystemSelectDisplayName("Blend.2.0")).toBe(
-      "Gridiron Blend.2.0",
-    );
-    expect(rankingSystemSelectDisplayName("Blend.3.0")).toBe(
-      "Computer + AP/Coaches",
-    );
-    expect(rankingSystemSelectDisplayName("Consensus.1.0")).toBe(
-      "Gridiron Consensus.1.0",
-    );
-    expect(rankingSystemSelectDisplayName("Consensus.2.0")).toBe(
-      "Gridiron Consensus.2.0",
-    );
-    expect(rankingSystemSelectDisplayName("Consensus.3.0")).toBe(
-      "Gridiron Consensus.3.0",
-    );
-    expect(rankingSystemSelectDisplayName("Consensus.4.0")).toBe(
-      "Computer Composite",
-    );
-    expect(rankingSystemSelectDisplayName("Curve.5.0")).toBe(
-      "Résumé Ranking",
-    );
-    expect(rankingSystemSelectDisplayName("Curve.4.0")).toBe(
-      "Curve.4.0",
-    );
-    expect(rankingSystemSelectDescription("Blend.1.0")).toContain(
-      "50% Computer Composite · 25% AP Poll · 25% Coaches Poll",
-    );
+  it("publishes only the live ranking dependency closure", () => {
+    expect(RANKING_SYSTEM_IDS).toEqual(expectedSystemIds);
+    expect(RANKING_ENGINE_IDS).toEqual(expectedEngineIds);
+    expect(SELECTABLE_RANKING_SYSTEM_IDS).toEqual(expectedSystemIds);
+    expect(SELECTABLE_RANKING_ENGINE_IDS).toEqual(expectedEngineIds);
+    expect(isRankingSystemId("Consensus.3.0")).toBe(false);
+    expect(isRankingEngineId("Blend.3")).toBe(false);
   });
 
-  it("sorts model versions numerically rather than lexicographically", () => {
-    const systems = RANKING_SYSTEM_IDS
-      .filter((rankingSystemId) => rankingSystemId.startsWith("Curve."))
-      .toSorted((left, right) => compareRankingSystems(right, left));
-
-    expect(systems).toEqual([
-      "Curve.5.0",
-      "Curve.4.0",
-      "Curve.3.0",
-      "Curve.2.0",
-      "Curve.1.0",
-      "Curve.0.11",
-      "Curve.0.10",
-      "Curve.0.9",
-      "Curve.0.8",
-      "Curve.0.7",
-    ]);
-  });
-
-  it("groups systems by category and exposes selectable engines", () => {
+  it("uses Computer Composite 4 as the default", () => {
     expect(DEFAULT_RANKING_SYSTEM_ID).toBe("Consensus.4.0");
     expect(DEFAULT_RANKING_ENGINE_ID).toBe("Consensus.4");
     expect(parseRankingSystemId(null)).toBe("Consensus.4.0");
     expect(parseRankingEngineId(null)).toBe("Consensus.4");
-    expect(rankingCategoryDisplayName("ranking")).toBe("Rankings");
-    expect(rankingCategoryDisplayName("power-ranking")).toBe(
-      "Power Rankings",
-    );
-    expect(rankingCategoryDisplayName("strength-of-schedule")).toBe(
-      "Strength of Schedule",
-    );
-    expect(rankingSystemIdsForCategory("ranking")).toEqual(
-      RANKING_SYSTEM_IDS,
-    );
-    expect(rankingSystemIdsForCategory("power-ranking")).toEqual([]);
-    expect(rankingSystemIdsForCategory("strength-of-schedule")).toEqual([]);
-    expect(SELECTABLE_RANKING_SYSTEM_IDS).toEqual([
-      "Curve.5.0",
-      "RecordMatrix.1.0",
-      "Pairwise.1.0",
-      "Sequence.1.0",
-      "LeastSquares.1.0",
-      "VictoryPaths.1.0",
-      "ScheduleRecord.1.0",
-      "ResultNetwork.1.0",
-      "RecordValue.1.0",
-      "CappedMarginPerformance.1.0",
+    expect(parseRankingSystemId("Consensus.3.0")).toBe(
       "Consensus.4.0",
-      "Blend.3.0",
-    ]);
-    expect(SELECTABLE_RANKING_ENGINE_IDS).not.toContain("Curve.4");
+    );
+  });
+
+  it("groups and labels every live ranking", () => {
+    expect(rankingCategoryDisplayName("ranking")).toBe("Rankings");
+    expect(rankingSystemIdsForCategory("ranking")).toEqual(
+      expectedSystemIds,
+    );
     expect(RANKING_SYSTEM_SELECT_GROUPS.map(({ label }) => label)).toEqual([
       "Composite Rankings",
-      "Individual Models",
+      "Composite Components",
     ]);
     expect(
       RANKING_SYSTEM_SELECT_GROUPS.flatMap(
         ({ rankingSystemIds }) => rankingSystemIds,
       ),
     ).toEqual([
-      "Blend.3.0",
+      "Blend.4.0",
       "Consensus.4.0",
-      "Curve.5.0",
       "ResultNetwork.1.0",
       "RecordValue.1.0",
       "CappedMarginPerformance.1.0",
-      "ScheduleRecord.1.0",
-      "VictoryPaths.1.0",
-      "Sequence.1.0",
-      "RecordMatrix.1.0",
-      "Pairwise.1.0",
-      "LeastSquares.1.0",
     ]);
     expect(
       RANKING_ENGINE_SELECT_GROUPS.flatMap(
         ({ rankingEngineIds }) => rankingEngineIds,
       ),
-    ).toHaveLength(SELECTABLE_RANKING_ENGINE_IDS.length);
-    expect(parseRankingEngineId("Curve.0")).toBe("Curve.0");
-    expect(parseRankingEngineId("Curve.1")).toBe("Curve.1");
-    expect(parseRankingEngineId("Curve.2")).toBe("Curve.2");
-    expect(parseRankingEngineId("Curve.3")).toBe("Curve.3");
-    expect(parseRankingEngineId("Curve.4")).toBe("Curve.4");
-    expect(parseRankingEngineId("Curve.5")).toBe("Curve.5");
-    expect(rankingEngineName("Curve.0")).toBe("Curve");
-    expect(rankingEngineName("Curve.1")).toBe("Curve");
-    expect(rankingEngineName("Curve.2")).toBe("Curve");
-    expect(rankingEngineName("Curve.3")).toBe("Curve");
-    expect(rankingEngineName("Curve.4")).toBe("Curve");
-    expect(rankingEngineName("Curve.5")).toBe("Curve");
-    expect(parseRankingEngineId("RecordMatrix.1")).toBe("RecordMatrix.1");
-    expect(parseRankingEngineId("Consensus.1")).toBe("Consensus.1");
-    expect(parseRankingEngineId("Consensus.2")).toBe("Consensus.2");
-    expect(parseRankingEngineId("Consensus.3")).toBe("Consensus.3");
-    expect(parseRankingEngineId("Consensus.4")).toBe("Consensus.4");
-    expect(parseRankingEngineId("Blend.1")).toBe("Blend.1");
-    expect(parseRankingEngineId("Blend.2")).toBe("Blend.2");
-    expect(parseRankingEngineId("Blend.3")).toBe("Blend.3");
-    expect(rankingEngineName("RecordMatrix.1")).toBe("Record Matrix");
-    expect(rankingEngineName("Consensus.1")).toBe("Gridiron Consensus");
-    expect(rankingEngineName("Consensus.2")).toBe("Gridiron Consensus");
-    expect(rankingEngineName("Consensus.3")).toBe("Gridiron Consensus");
-    expect(rankingEngineName("Consensus.4")).toBe("Gridiron Consensus");
-    expect(rankingEngineName("Blend.1")).toBe("Gridiron Blend");
-    expect(rankingEngineName("Blend.2")).toBe("Gridiron Blend");
-    expect(rankingEngineName("Blend.3")).toBe("Gridiron Blend");
-    expect(rankingEngineSelectDisplayName("Blend.1")).toBe(
-      "Gridiron Blend.1",
+    ).toHaveLength(expectedEngineIds.length);
+
+    expect(rankingSystemDisplayName("Blend.4.0")).toBe(
+      "Gridiron Blend.4.0",
     );
-    expect(rankingEngineSelectDisplayName("Blend.2")).toBe(
-      "Gridiron Blend.2",
-    );
-    expect(rankingEngineSelectDisplayName("Blend.3")).toBe(
+    expect(rankingSystemSelectDisplayName("Blend.4.0")).toBe(
       "Computer + AP/Coaches",
     );
-    expect(rankingEngineSelectDisplayName("Consensus.1")).toBe(
-      "Gridiron Consensus.1",
-    );
-    expect(rankingEngineSelectDisplayName("Consensus.2")).toBe(
-      "Gridiron Consensus.2",
-    );
-    expect(rankingEngineSelectDisplayName("Consensus.3")).toBe(
-      "Gridiron Consensus.3",
-    );
-    expect(rankingEngineSelectDisplayName("Consensus.4")).toBe(
+    expect(rankingSystemSelectDisplayName("Consensus.4.0")).toBe(
       "Computer Composite",
     );
-    expect(rankingEngineSelectDisplayName("Curve.5")).toBe(
-      "Résumé Ranking",
-    );
-    expect(rankingEngineSelectDisplayName("Curve.4")).toBe("Curve.4");
-    expect(rankingEngineSelectDescription("Consensus.1")).toContain(
-      "six computer methods",
-    );
-    expect(rankingEngineSelectDescription("Consensus.2")).toContain(
-      "five computer methods",
-    );
-    expect(rankingEngineSelectDescription("Consensus.3")).toContain(
-      "60% Schedule-Adjusted Record",
+    expect(rankingEngineName("Blend.4")).toBe("Gridiron Blend");
+    expect(rankingEngineSelectDisplayName("Blend.4")).toBe(
+      "Computer + AP/Coaches",
     );
     expect(rankingEngineSelectDescription("Consensus.4")).toContain(
       "50% Performance",
     );
-    expect(rankingEngineSelectDescription("ResultNetwork.1")).toContain(
-      "Colley",
-    );
-    expect(rankingEngineSelectDescription("RecordValue.1")).toContain(
-      "Strength of Record",
-    );
-    expect(
-      rankingEngineSelectDescription("CappedMarginPerformance.1"),
-    ).toContain("28-point");
-    expect(rankingEngineSelectDescription("ScheduleRecord.1")).toContain(
-      "neutral strength of the opponent",
+    expect(rankingSystemSelectDescription("Blend.4.0")).toContain(
+      "50% Computer Composite",
     );
   });
 });

@@ -10,7 +10,6 @@ import {
   DEFAULT_RANKING_SYSTEM_ID,
   parseRankingSystemId,
   rankingSystemDisplayName,
-  rankingSystemKind,
 } from "@/lib/ranking";
 import {
   fetchPublicationManifest,
@@ -234,8 +233,6 @@ type BuiltStudy = ReturnType<typeof buildStudyView>;
 export function CaseStudiesPageClient() {
   const searchParams = useSearchParams();
   const rankingSystemId = parseRankingSystemId(searchParams.get("ranking"));
-  const isCurveRanking =
-    rankingSystemKind(rankingSystemId) === "curve";
   const [studies, setStudies] = useState<BuiltStudy[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -339,17 +336,10 @@ export function CaseStudiesPageClient() {
               <table className="case-table">
                 <thead>
                   <tr>
-                    <th>{isCurveRanking ? "Curve rank" : "Rank"}</th>
+                    <th>Rank</th>
                     <th>Team</th>
                     <th>Record</th>
-                    <th>{isCurveRanking ? "Curve" : "Score"}</th>
-                    {isCurveRanking && (
-                      <>
-                        <th>Network</th>
-                        <th>Win quality</th>
-                        <th>Achievement</th>
-                      </>
-                    )}
+                    <th>Score</th>
                     <th>SOS</th>
                   </tr>
                 </thead>
@@ -360,13 +350,6 @@ export function CaseStudiesPageClient() {
                       <td><strong>{team.team}</strong></td>
                       <td>{team.record}</td>
                       <td>{team.rating.toFixed(1)}</td>
-                      {isCurveRanking && (
-                        <>
-                          <td>{team.networkScore.toFixed(1)}</td>
-                          <td>{team.qualityOfWins.toFixed(1)}</td>
-                          <td>{team.achievementScore.toFixed(1)}</td>
-                        </>
-                      )}
                       <td>#{team.scheduleRank}</td>
                     </tr>
                   ))}

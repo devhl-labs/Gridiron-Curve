@@ -1,9 +1,7 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import {
-  calculateRankings,
   type Game,
-  type RankingSystemId,
 } from "../../src/lib/ranking";
 import {
   CANDIDATE_ENGINES,
@@ -15,7 +13,10 @@ import {
   COMPOSITE_CANDIDATES,
   combineFamilyRankings,
 } from "./composite-tournament";
-import { BENCHMARK_ENGINE_IDS } from "./engine-benchmark";
+import {
+  BENCHMARK_ENGINE_IDS,
+  calculateBenchmarkRankings,
+} from "./benchmark-engines";
 
 type EngineAdapter = {
   id: string;
@@ -52,11 +53,10 @@ const incumbentAdapters: EngineAdapter[] = BENCHMARK_ENGINE_IDS.map(
     id: rankingSystemId,
     score(games, throughWeek) {
       return new Map(
-        calculateRankings(
+        calculateBenchmarkRankings(
+          rankingSystemId,
           games,
           throughWeek,
-          {},
-          rankingSystemId as RankingSystemId,
         ).map(({ team, rating, networkRating }) => [
           team,
           rankingSystemId === "Curve.5.0" ? rating : networkRating,

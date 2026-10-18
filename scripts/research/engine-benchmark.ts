@@ -7,28 +7,19 @@ import {
   type CfbdSourceCache,
 } from "../../src/lib/cfbd/cache";
 import {
-  calculateRankings,
   hasUsableBoxScore,
   type Game,
-  type RankingSystemId,
   type TeamRanking,
 } from "../../src/lib/ranking";
 import {
   createChainedStartingPrior,
   selectBlendPolls,
 } from "../../src/lib/ranking/view";
-
-export const BENCHMARK_ENGINE_IDS = [
-  "Curve.5.0",
-  "RecordMatrix.1.0",
-  "Pairwise.1.0",
-  "Sequence.1.0",
-  "LeastSquares.1.0",
-  "VictoryPaths.1.0",
-  "ScheduleRecord.1.0",
-] as const satisfies readonly RankingSystemId[];
-
-type BenchmarkEngineId = (typeof BENCHMARK_ENGINE_IDS)[number];
+import {
+  BENCHMARK_ENGINE_IDS,
+  calculateBenchmarkRankings,
+  type BenchmarkEngineId,
+} from "./benchmark-engines";
 type SeasonStage = "early" | "middle" | "late";
 
 type MetricAccumulator = {
@@ -276,7 +267,6 @@ export function benchmarkEngines(sources: CfbdSourceCache[]) {
     const curvePrior = createChainedStartingPrior(
       source,
       history,
-      "Curve.5.0",
     ).prior;
 
     for (let week = 1; week <= source.throughWeek; week += 1) {
@@ -299,11 +289,11 @@ export function benchmarkEngines(sources: CfbdSourceCache[]) {
       >();
 
       for (const rankingSystemId of BENCHMARK_ENGINE_IDS) {
-        const rankings = calculateRankings(
+        const rankings = calculateBenchmarkRankings(
+          rankingSystemId,
           source.games,
           week,
-          rankingSystemId === "Curve.5.0" ? curvePrior : {},
-          rankingSystemId,
+          curvePrior,
         );
         snapshotRankings.set(rankingSystemId, rankings);
         const ranks = rankingsByTeam(rankings);

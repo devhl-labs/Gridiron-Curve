@@ -7,13 +7,15 @@ import {
   type CfbdSourceCache,
 } from "../../src/lib/cfbd/cache";
 import {
-  calculateRankings,
   type RatingPrior,
 } from "../../src/lib/ranking";
 import {
   createChainedStartingPrior,
   selectBlendPolls,
 } from "../../src/lib/ranking/view";
+import {
+  calculateBenchmarkRankings,
+} from "./benchmark-engines";
 import {
   cappedMarginPerformanceFamilyEngine,
   calculatePublishedEvidenceRankings,
@@ -119,10 +121,6 @@ const INCUMBENT_BASELINES = [
   {
     id: "Curve.5.0",
     purpose: "Published Curve ranking",
-  },
-  {
-    id: "Consensus.3.0",
-    purpose: "Published Computer Composite 3.0",
   },
 ] as const;
 
@@ -691,7 +689,6 @@ export function benchmarkCompositeCandidates(
     const starting = createChainedStartingPrior(
       source,
       history,
-      "Curve.5.0",
     );
 
     for (let week = 1; week <= source.throughWeek; week += 1) {
@@ -709,21 +706,11 @@ export function benchmarkCompositeCandidates(
       const rankingsById = new Map<string, RankingRow[]>([
         [
           "Curve.5.0",
-          calculateRankings(
+          calculateBenchmarkRankings(
+            "Curve.5.0",
             source.games,
             week,
             starting.prior,
-            "Curve.5.0",
-          ),
-        ],
-        [
-          "Consensus.3.0",
-          calculateRankings(
-            source.games,
-            week,
-            {},
-            "Consensus.3.0",
-            { "Curve.5.0": starting.prior },
           ),
         ],
         ["Family.CanonicalResultNetwork", families.resultNetwork],

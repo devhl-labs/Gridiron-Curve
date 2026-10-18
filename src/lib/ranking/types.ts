@@ -1,65 +1,24 @@
 export type RankingSystemId =
-  | "Curve.0.7"
-  | "Curve.0.8"
-  | "Curve.0.9"
-  | "Curve.0.10"
-  | "Curve.0.11"
-  | "Curve.1.0"
-  | "Curve.2.0"
-  | "Curve.3.0"
-  | "Curve.4.0"
-  | "Curve.5.0"
-  | "RecordMatrix.1.0"
-  | "Pairwise.1.0"
-  | "Sequence.1.0"
-  | "LeastSquares.1.0"
-  | "VictoryPaths.1.0"
-  | "ScheduleRecord.1.0"
-  | "NeutralFamily.1.0"
   | "ResultNetwork.1.0"
   | "RecordValue.1.0"
   | "CappedMarginPerformance.1.0"
-  | "Consensus.1.0"
-  | "Consensus.2.0"
-  | "Consensus.3.0"
   | "Consensus.4.0"
-  | "Blend.1.0"
-  | "Blend.2.0"
-  | "Blend.3.0";
+  | "Blend.4.0";
 
 export type RankingCategoryId =
   | "ranking"
   | "power-ranking"
   | "strength-of-schedule";
 export type RankingSystemKind =
-  | "curve"
   | "computer"
   | "consensus"
   | "blend";
 export type RankingEngineId =
-  | "Curve.0"
-  | "Curve.1"
-  | "Curve.2"
-  | "Curve.3"
-  | "Curve.4"
-  | "Curve.5"
-  | "RecordMatrix.1"
-  | "Pairwise.1"
-  | "Sequence.1"
-  | "LeastSquares.1"
-  | "VictoryPaths.1"
-  | "ScheduleRecord.1"
-  | "NeutralFamily.1"
   | "ResultNetwork.1"
   | "RecordValue.1"
   | "CappedMarginPerformance.1"
-  | "Consensus.1"
-  | "Consensus.2"
-  | "Consensus.3"
   | "Consensus.4"
-  | "Blend.1"
-  | "Blend.2"
-  | "Blend.3";
+  | "Blend.4";
 
 export type TeamBoxScore = {
   totalYards: number;

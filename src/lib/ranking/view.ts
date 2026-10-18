@@ -3,20 +3,20 @@ import {
   buildFullPreseasonPrior,
   buildPollPrior,
   calculateRankings,
-  CONSENSUS_COMPONENT_SYSTEM_IDS,
-  CONSENSUS_V2_COMPONENT_SYSTEM_IDS,
-  CONSENSUS_V3_COMPONENT_SYSTEM_IDS,
   CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
   DEFAULT_RANKING_SYSTEM_ID,
   hasUsableBoxScore,
   rankingSystemKind,
-  rankingSystemPriorMode,
   type RankingPriorMap,
   type Poll,
   type RankingSystemId,
   type RatingPrior,
   type TeamRanking,
 } from ".";
+import {
+  calculateRankings as calculateCurveRankings,
+} from "./systems/curve/5/engine";
+import { curveModel0 } from "./systems/curve/5/models/0";
 
 export type RankingView = {
   season: number;
@@ -151,15 +151,14 @@ function buildSeasonPrior(
   source: CfbdSourceCache,
   previousSeason: number | null,
   previousOrder: string[] | null,
-  rankingSystemId: RankingSystemId,
 ): { prior: RatingPrior; description: string } {
   const preseason = selectPreseasonPoll(source);
   if (previousOrder && previousSeason === source.season - 1) {
-    const currentTeams = calculateRankings(
+    const currentTeams = calculateCurveRankings(
       source.games,
       0,
       {},
-      rankingSystemId,
+      curveModel0,
     ).map(
       ({ team }) => team,
     );
@@ -168,7 +167,6 @@ function buildSeasonPrior(
         preseason?.polls ?? [],
         currentTeams,
         previousOrder,
-        rankingSystemId,
       ),
       description: `${source.season} preseason polls plus ${previousSeason} final Gridiron Curve ranking`,
     };
@@ -177,7 +175,7 @@ function buildSeasonPrior(
     .map(({ poll }) => poll)
     .filter((poll) => poll === "AP Top 25" || poll === "Coaches Poll");
   return {
-    prior: buildPollPrior(preseason?.polls ?? [], rankingSystemId),
+    prior: buildPollPrior(preseason?.polls ?? []),
     description: pollNames.length > 0
       ? `${source.season} preseason ${pollNames.join(" and ")}`
       : "Neutral starting ratings",
@@ -187,20 +185,7 @@ function buildSeasonPrior(
 export function createChainedStartingPrior(
   source: CfbdSourceCache,
   historicalSources: CfbdSourceCache[] = [],
-  rankingSystemId: RankingSystemId = "Curve.5.0",
 ) {
-  const priorRankingSystemId =
-    CONSENSUS_V4_COMPONENT_SYSTEM_IDS.includes(
-      rankingSystemId as (typeof CONSENSUS_V4_COMPONENT_SYSTEM_IDS)[number],
-    )
-      ? "Curve.5.0"
-      : rankingSystemId;
-  if (rankingSystemPriorMode(priorRankingSystemId) !== "historical") {
-    return {
-      prior: {},
-      description: "Neutral starting ratings; only current-season results count",
-    };
-  }
   const sourcesBySeason = new Map(
     historicalSources
       .filter((candidate) => candidate.season < source.season)
@@ -211,7 +196,7 @@ export function createChainedStartingPrior(
   );
   let previousSeason: number | null = null;
   let previousOrder: string[] | null = null;
-  let chainKey: string = priorRankingSystemId;
+  let chainKey = "Curve.5.0";
 
   for (const historicalSource of orderedHistory) {
     if (
@@ -220,23 +205,22 @@ export function createChainedStartingPrior(
     ) {
       previousSeason = null;
       previousOrder = null;
-      chainKey = priorRankingSystemId;
+      chainKey = "Curve.5.0";
     }
     const starting = buildSeasonPrior(
       historicalSource,
       previousSeason,
       previousOrder,
-      priorRankingSystemId,
     );
     chainKey = `${chainKey}|${historicalSource.season}:${historicalSource.fetchedAt}`;
     const cachedOrder = finalOrderCache.get(chainKey);
     previousOrder =
       cachedOrder ??
-      calculateRankings(
+      calculateCurveRankings(
         historicalSource.games,
         historicalSource.throughWeek,
         starting.prior,
-        priorRankingSystemId,
+        curveModel0,
       ).map(({ team }) => team);
     if (!cachedOrder) finalOrderCache.set(chainKey, previousOrder);
     previousSeason = historicalSource.season;
@@ -246,7 +230,6 @@ export function createChainedStartingPrior(
     source,
     previousSeason,
     previousOrder,
-    priorRankingSystemId,
   );
 }
 
@@ -260,18 +243,12 @@ function createRankingPriorContext(
   description: string;
 } {
   if (
-    rankingSystemId !== "Consensus.1.0" &&
-    rankingSystemId !== "Consensus.2.0" &&
-    rankingSystemId !== "Consensus.3.0" &&
     rankingSystemId !== "Consensus.4.0" &&
-    rankingSystemId !== "Blend.1.0" &&
-    rankingSystemId !== "Blend.2.0" &&
-    rankingSystemId !== "Blend.3.0"
+    rankingSystemId !== "Blend.4.0"
   ) {
     const starting = createChainedStartingPrior(
       source,
       historicalSources,
-      rankingSystemId,
     );
     return {
       ...starting,
@@ -279,45 +256,22 @@ function createRankingPriorContext(
     };
   }
 
-  const componentSystemIds =
-    rankingSystemId === "Consensus.4.0"
-      ? CONSENSUS_V4_COMPONENT_SYSTEM_IDS
-      : rankingSystemId === "Consensus.3.0" ||
-      rankingSystemId === "Blend.3.0"
-      ? CONSENSUS_V3_COMPONENT_SYSTEM_IDS
-      : rankingSystemId === "Consensus.2.0" ||
-          rankingSystemId === "Blend.2.0"
-        ? CONSENSUS_V2_COMPONENT_SYSTEM_IDS
-        : CONSENSUS_COMPONENT_SYSTEM_IDS;
-  const sharedEvidencePrior =
-    rankingSystemId === "Consensus.4.0"
-      ? createChainedStartingPrior(
-          source,
-          historicalSources,
-          "Curve.5.0",
-        ).prior
-      : null;
+  const componentSystemIds = CONSENSUS_V4_COMPONENT_SYSTEM_IDS;
+  const sharedEvidencePrior = createChainedStartingPrior(
+    source,
+    historicalSources,
+  ).prior;
   const componentPriors = Object.fromEntries(
     componentSystemIds.map((componentSystemId) => [
       componentSystemId,
-      sharedEvidencePrior ??
-        createChainedStartingPrior(
-          source,
-          historicalSources,
-          componentSystemId,
-        ).prior,
+      sharedEvidencePrior,
     ]),
   ) as RankingPriorMap;
   return {
     prior: {},
     componentPriors,
     description:
-      rankingSystemId === "Consensus.4.0"
-        ? "Three prior-aware evidence families; the shared preseason prior fades to zero after Week 6"
-        : rankingSystemId === "Consensus.3.0" ||
-        rankingSystemId === "Blend.3.0"
-        ? "Three evidence families; Curve.5 uses its published historical prior while Schedule-Adjusted Record and the Neutral Computer Family use current-season results"
-        : `Component-specific starting rules; ${componentSystemIds.length - 1} systems begin neutral and Curve.5 uses its published historical prior`,
+      "Three prior-aware evidence families; the shared preseason prior fades to zero after Week 6",
   };
 }
 

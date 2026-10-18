@@ -7,13 +7,15 @@ import {
   type CfbdSourceCache,
 } from "../../src/lib/cfbd/cache";
 import {
-  calculateRankings,
   type RatingPrior,
 } from "../../src/lib/ranking";
 import {
   createChainedStartingPrior,
   selectBlendPolls,
 } from "../../src/lib/ranking/view";
+import {
+  calculateBenchmarkRankings,
+} from "./benchmark-engines";
 import {
   cappedMarginPerformanceFamilyEngine,
   recordValueFamilyEngine,
@@ -509,7 +511,6 @@ export function benchmarkPriorArchitectures(
     const starting = createChainedStartingPrior(
       source,
       history,
-      "Curve.5.0",
     );
     const finalNeutralByFamily = new Map(
       SELECTED_FAMILY_ENGINES.map((engine) => [
@@ -546,11 +547,11 @@ export function benchmarkPriorArchitectures(
       const snapshotRankings = new Map<string, RankingRow[]>();
       snapshotRankings.set(
         "Curve.5.0",
-        calculateRankings(
+        calculateBenchmarkRankings(
+          "Curve.5.0",
           source.games,
           week,
           starting.prior,
-          "Curve.5.0",
         ),
       );
 

@@ -1,15 +1,32 @@
 import { describe, expect, it } from "vitest";
-import type { Game, RankingSystemId } from "../../types";
-import { calculateRankings } from "../..";
+import type { Game } from "../../types";
+import {
+  createComputerEngine,
+  type ComputerMethod,
+} from "./engine";
+import { neutralComputerModel } from "./model";
 
 const systems = [
-  "RecordMatrix.1.0",
-  "Pairwise.1.0",
-  "Sequence.1.0",
-  "LeastSquares.1.0",
-  "VictoryPaths.1.0",
-  "ScheduleRecord.1.0",
-] as const satisfies readonly RankingSystemId[];
+  "record-matrix",
+  "pairwise",
+  "sequence",
+  "least-squares",
+  "victory-paths",
+  "schedule-record",
+] as const satisfies readonly ComputerMethod[];
+
+function calculateRankings(
+  method: ComputerMethod,
+  inputGames: Game[],
+  throughWeek: number,
+) {
+  return createComputerEngine(method).calculateRankings(
+    inputGames,
+    throughWeek,
+    {},
+    neutralComputerModel,
+  );
+}
 
 const games: Game[] = [
   {
@@ -81,7 +98,7 @@ const games: Game[] = [
 
 describe("computer ranking engines", () => {
   it.each(systems)("%s ranks the undefeated team first", (rankingSystemId) => {
-    const rankings = calculateRankings(games, 3, {}, rankingSystemId);
+    const rankings = calculateRankings(rankingSystemId, games, 3);
 
     expect(rankings).toHaveLength(4);
     expect(rankings[0].team).toBe("Alpha");
@@ -91,8 +108,9 @@ describe("computer ranking engines", () => {
   it.each(systems)("%s uses outcomes rather than scoring margin", (
     rankingSystemId,
   ) => {
-    const baseline = calculateRankings(games, 3, {}, rankingSystemId);
+    const baseline = calculateRankings(rankingSystemId, games, 3);
     const changed = calculateRankings(
+      rankingSystemId,
       games.map((game) => ({
         ...game,
         homePoints:
@@ -101,8 +119,6 @@ describe("computer ranking engines", () => {
           game.homePoints! > game.awayPoints! ? 3 : game.homePoints === game.awayPoints ? 10 : 70,
       })),
       3,
-      {},
-      rankingSystemId,
     );
 
     expect(
@@ -115,8 +131,9 @@ describe("computer ranking engines", () => {
   it.each(systems)("%s ignores future and incomplete games", (
     rankingSystemId,
   ) => {
-    const baseline = calculateRankings(games, 3, {}, rankingSystemId);
+    const baseline = calculateRankings(rankingSystemId, games, 3);
     const changed = calculateRankings(
+      rankingSystemId,
       [
         ...games,
         {
@@ -137,8 +154,6 @@ describe("computer ranking engines", () => {
         },
       ],
       3,
-      {},
-      rankingSystemId,
     );
 
     expect(

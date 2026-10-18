@@ -6,8 +6,6 @@ import {
   type CfbdSourceCache,
 } from "../../src/lib/cfbd/cache";
 import {
-  calculateRankings,
-  type RankingSystemId,
 } from "../../src/lib/ranking";
 import {
   createChainedStartingPrior,
@@ -18,11 +16,14 @@ import {
   type CandidateEngineFamily,
 } from "./candidate-engines";
 import {
-  BENCHMARK_ENGINE_IDS,
   createOpponentWinPercentageScheduleRanks,
   seasonStage,
   spearmanRankCorrelation,
 } from "./engine-benchmark";
+import {
+  BENCHMARK_ENGINE_IDS,
+  calculateBenchmarkRankings,
+} from "./benchmark-engines";
 
 type RankingRow = {
   team: string;
@@ -97,11 +98,11 @@ const incumbentAdapters: EngineAdapter[] = BENCHMARK_ENGINE_IDS.map(
     source: "incumbent",
     purpose: "Published standalone engine",
     calculate(source, week, curvePrior) {
-      return calculateRankings(
+      return calculateBenchmarkRankings(
+        rankingSystemId,
         source.games,
         week,
-        rankingSystemId === "Curve.5.0" ? curvePrior : {},
-        rankingSystemId as RankingSystemId,
+        curvePrior,
       );
     },
   }),
@@ -223,7 +224,6 @@ function main() {
     const curvePrior = createChainedStartingPrior(
       source,
       history,
-      "Curve.5.0",
     ).prior;
 
     for (let week = 1; week <= source.throughWeek; week += 1) {

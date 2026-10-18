@@ -3,7 +3,11 @@ import type {
   RankingSystemId,
   TeamRanking,
 } from "../../../types";
-import type { ConsensusComponent } from "../../consensus/1/engine";
+
+type ConsensusComponent = {
+  rankingSystemId: RankingSystemId;
+  rankings: TeamRanking[];
+};
 
 export const CONSENSUS_V4_COMPONENT_WEIGHTS = {
   "ResultNetwork.1.0": 0.25,

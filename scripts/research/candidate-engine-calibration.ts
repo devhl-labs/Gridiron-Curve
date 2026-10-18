@@ -5,14 +5,15 @@ import {
   readCfbdSourceCache,
 } from "../../src/lib/cfbd/cache";
 import {
-  calculateRankings,
-  type RankingSystemId,
 } from "../../src/lib/ranking";
 import {
   createChainedStartingPrior,
 } from "../../src/lib/ranking/view";
 import { CANDIDATE_ENGINES } from "./candidate-engines";
-import { BENCHMARK_ENGINE_IDS } from "./engine-benchmark";
+import {
+  BENCHMARK_ENGINE_IDS,
+  calculateBenchmarkRankings,
+} from "./benchmark-engines";
 
 type TeamRange = {
   team: string;
@@ -56,7 +57,6 @@ const history = listCfbdCacheManifests()
 const curvePrior = createChainedStartingPrior(
   source,
   history,
-  "Curve.5.0",
 ).prior;
 const rangeMap = new Map(
   labels.ranges.map((range) => [range.team, range]),
@@ -112,11 +112,11 @@ function evaluate(rankings: RankingRow[]) {
 
 const incumbentResults = Object.fromEntries(
   BENCHMARK_ENGINE_IDS.map((rankingSystemId) => {
-    const rankings = calculateRankings(
+    const rankings = calculateBenchmarkRankings(
+      rankingSystemId,
       source.games,
       labels.week,
-      rankingSystemId === "Curve.5.0" ? curvePrior : {},
-      rankingSystemId as RankingSystemId,
+      curvePrior,
     );
     return [rankingSystemId, evaluate(rankings)];
   }),

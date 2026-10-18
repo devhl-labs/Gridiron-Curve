@@ -3,7 +3,7 @@ import type {
   Game,
   Poll,
   TeamRanking,
-} from "../../../types";
+} from "../../types";
 import { combinePollBlendRankings } from "./engine";
 
 function ranking(team: string, rank: number): TeamRanking {

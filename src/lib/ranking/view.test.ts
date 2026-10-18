@@ -100,7 +100,6 @@ describe("createRankingView", () => {
     const resultNetwork = createChainedStartingPrior(
       season2026,
       [season2024, season2025],
-      "ResultNetwork.1.0",
     ).prior;
 
     expect(chained.Bravo).toBeGreaterThan(chained.Alpha);
@@ -258,88 +257,6 @@ describe("createRankingView", () => {
     ).toBe("L 10–40 @ Charlie");
   });
 
-  it("publishes the six component votes behind consensus", () => {
-    const view = createRankingView(source, [], "Consensus.1.0");
-
-    expect(view.rankings).toHaveLength(source.teams.length);
-    expect(
-      view.rankings.every(
-        ({ consensusRanks }) =>
-          consensusRanks?.length === 6 &&
-          consensusRanks.filter(({ included }) => included).length === 4,
-      ),
-    ).toBe(true);
-  });
-
-  it("publishes five votes and three included ranks for Consensus.2", () => {
-    const view = createRankingView(source, [], "Consensus.2.0");
-
-    expect(view.rankings).toHaveLength(source.teams.length);
-    expect(
-      view.rankings.every(
-        ({ consensusRanks }) =>
-          consensusRanks?.length === 5 &&
-          consensusRanks.filter(({ included }) => included).length === 3 &&
-          consensusRanks.every(
-            ({ rankingSystemId }) =>
-              rankingSystemId !== "Pairwise.1.0",
-          ),
-      ),
-    ).toBe(true);
-  });
-
-  it("uses Consensus.2 as the computer input for Blend.2", () => {
-    const view = createRankingView(source, [], "Blend.2.0");
-    const consensus = createRankingView(source, [], "Consensus.2.0");
-    const consensusRanks = new Map(
-      consensus.rankings.map(({ team, rank }) => [team, rank]),
-    );
-
-    expect(view.rankings).toHaveLength(source.teams.length);
-    expect(
-      view.rankings.every(
-        ({ team, blendComponents }) =>
-          blendComponents?.length === 3 &&
-          blendComponents.find(
-            ({ source }) => source === "Gridiron Consensus",
-          )?.rank === consensusRanks.get(team),
-      ),
-    ).toBe(true);
-  });
-
-  it("publishes the three weighted evidence families for Consensus.3", () => {
-    const view = createRankingView(source, [], "Consensus.3.0");
-
-    expect(view.rankings).toHaveLength(source.teams.length);
-    expect(
-      view.rankings.every(
-        ({ consensusRanks }) =>
-          consensusRanks?.length === 3 &&
-          consensusRanks.every(({ included }) => included) &&
-          consensusRanks.reduce(
-            (total, { weight }) => total + (weight ?? 0),
-            0,
-          ) === 1,
-      ),
-    ).toBe(true);
-    expect(view.rankings[0].consensusRanks).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          rankingSystemId: "Curve.5.0",
-          weight: 0.2,
-        }),
-        expect.objectContaining({
-          rankingSystemId: "ScheduleRecord.1.0",
-          weight: 0.6,
-        }),
-        expect.objectContaining({
-          rankingSystemId: "NeutralFamily.1.0",
-          weight: 0.2,
-        }),
-      ]),
-    );
-  });
-
   it("publishes the selected prior-aware families for Consensus.4", () => {
     const view = createRankingView(source, [], "Consensus.4.0");
 
@@ -365,23 +282,9 @@ describe("createRankingView", () => {
     );
   });
 
-  it("publishes the four algorithms behind the Neutral Computer Family", () => {
-    const view = createRankingView(source, [], "NeutralFamily.1.0");
-
-    expect(
-      view.rankings.every(
-        ({ consensusRanks }) =>
-          consensusRanks?.length === 4 &&
-          consensusRanks.every(
-            ({ included, weight }) => included && weight === 0.25,
-          ),
-      ),
-    ).toBe(true);
-  });
-
-  it("uses Consensus.3 as the computer input for Blend.3", () => {
-    const view = createRankingView(source, [], "Blend.3.0");
-    const consensus = createRankingView(source, [], "Consensus.3.0");
+  it("uses Consensus.4 as the computer input for Blend.4", () => {
+    const view = createRankingView(source, [], "Blend.4.0");
+    const consensus = createRankingView(source, [], "Consensus.4.0");
     const consensusRanks = new Map(
       consensus.rankings.map(({ team, rank }) => [team, rank]),
     );
@@ -463,7 +366,7 @@ describe("createRankingView", () => {
         ],
       },
       [],
-      "Blend.1.0",
+      "Blend.4.0",
     );
 
     expect(view.priorDescription).toContain("AP Week 3 and Coaches Week 3");

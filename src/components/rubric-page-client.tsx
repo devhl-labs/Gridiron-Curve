@@ -12,59 +12,16 @@ import {
   rankingEngineSelectDisplayName,
 } from "@/lib/ranking";
 
-const curveCriteria = [
+const componentCriteria = [
   {
     title: "Completed games are the evidence",
     description:
-      "Rankings measure what teams have done on the field, not what they might do next week.",
+      "Only completed regular-season games can change current-season evidence.",
   },
   {
-    title: "Results come before projections",
+    title: "Starting assumptions fade",
     description:
-      "Wins and losses carry more authority than talent estimates, betting markets, or hypothetical matchups.",
-  },
-  {
-    title: "Opponent quality must be earned",
-    description:
-      "A team is a strong opponent because of its results and schedule, not its logo, conference, or preseason reputation.",
-  },
-  {
-    title: "The same rules apply to every team",
-    description:
-      "Every result is evaluated by one published standard regardless of brand, ranking, or postseason expectations.",
-  },
-  {
-    title: "Margin provides context, not absolution",
-    description:
-      "How decisively a team played can distinguish similar results, but a convincing loss does not become a win.",
-  },
-  {
-    title: "Starting assumptions must fade",
-    description:
-      "Preseason information may stabilize early rankings, but played games steadily replace inherited expectations.",
-  },
-  {
-    title: "The whole resume matters",
-    description:
-      "Head-to-head results matter without erasing every other opponent, win, loss, and degree of difficulty.",
-  },
-  {
-    title: "Every ranking should be explainable",
-    description:
-      "A team's position should be traceable to its schedule, results, opponents, and the published methodology.",
-  },
-];
-
-const computerCriteria = [
-  {
-    title: "Completed outcomes are the evidence",
-    description:
-      "Only completed regular-season wins, losses, and ties can change the ranking.",
-  },
-  {
-    title: "Every team starts evenly",
-    description:
-      "Preseason polls, previous seasons, recruiting, and brand reputation are excluded.",
+      "A shared prior stabilizes sparse early schedules and reaches zero after Week 6.",
   },
   {
     title: "Opponent context is connected",
@@ -72,9 +29,9 @@ const computerCriteria = [
       "A result gains meaning through the opponent's results and the larger schedule graph.",
   },
   {
-    title: "Winning margin is irrelevant",
+    title: "Each family answers one question",
     description:
-      "A one-point win and a forty-point win contribute the same outcome.",
+      "Result Network measures outcomes, Record Value measures schedule-adjusted accomplishment, and Performance measures capped scoring margins.",
   },
   {
     title: "Venue is irrelevant",
@@ -87,9 +44,9 @@ const computerCriteria = [
       "The method produces one deterministic order rather than only selecting a Top 25.",
   },
   {
-    title: "The formula is versioned",
+    title: "Scores become tie-safe positions",
     description:
-      "Parameters and behavior remain fixed within a published system version.",
+      "Composite inputs use full-field positions instead of mixing incompatible raw scales.",
   },
   {
     title: "The implementation is inspectable",
@@ -98,92 +55,36 @@ const computerCriteria = [
   },
 ];
 
-function consensusCriteria(componentCount: number) {
-  const includedCount = componentCount - 2;
-  return [
-    {
-      title: `${componentCount} complete rankings vote`,
-      description:
-        "Every component evaluates the same FBS field from the same completed-game snapshot.",
-    },
-    {
-      title: "Positions share one scale",
-      description:
-        "The composite uses full-field ranks instead of mixing incompatible raw rating values.",
-    },
-    {
-      title: "Every component has equal weight",
-      description:
-        "No method receives an editorial multiplier inside the composite.",
-    },
-    {
-      title: "The best rank is discarded",
-      description:
-        "One unusually favorable component cannot lift a team by itself.",
-    },
-    {
-      title: "The worst rank is discarded",
-      description:
-        "One unusually unfavorable component cannot sink a team by itself.",
-    },
-    {
-      title: `The middle ${includedCount} decide`,
-      description:
-        "The arithmetic mean of the remaining positions determines the consensus order.",
-    },
-    {
-      title: "Disagreement remains visible",
-      description:
-        "Published component positions identify which values were included and discarded.",
-    },
-    {
-      title: "Components remain independently versioned",
-      description:
-        "Changing one component creates a new composite version rather than silently rewriting history.",
-    },
-  ];
-}
-
-const weightedConsensusCriteria = [
+const consensusCriteria = [
   {
     title: "Three evidence families vote",
     description:
-      "Graded Résumé, Schedule-Adjusted Record, and the Neutral Computer Family rank the same complete FBS field.",
+      "Result Network, Record Value, and Capped-Margin Performance rank the same complete FBS field.",
   },
   {
-    title: "Schedule-adjusted results lead",
+    title: "Outcome evidence forms one block",
     description:
-      "Schedule-Adjusted Record carries 60% so wins over weak opponents cannot dominate through record alone.",
+      "Result Network and Record Value receive 25% each, combining into one 50% Outcome block.",
   },
   {
-    title: "Résumé context remains independent",
+    title: "Performance forms the other block",
     description:
-      "Graded Résumé contributes 20% using its published opponent and accomplishment evaluation.",
-  },
-  {
-    title: "Related neutral methods share one vote",
-    description:
-      "Record Matrix, Result Sequence, Least Squares, and Victory Paths first form one equally weighted family ranking.",
-  },
-  {
-    title: "The neutral family contributes 20%",
-    description:
-      "The four related algorithms collectively receive one family vote rather than four separate votes.",
+      "Opponent-adjusted capped scoring margins receive the remaining 50%.",
   },
   {
     title: "Positions share one scale",
     description:
-      "Every family contributes a full-field rank instead of mixing incompatible raw rating values.",
+      "The composite uses tie-safe full-field positions rather than mixing incompatible family scores.",
+  },
+  {
+    title: "One shared prior stabilizes early weeks",
+    description:
+      "All three families use the same preseason information, which fades completely after Week 6.",
   },
   {
     title: "Every weight is published",
     description:
-      "Ranking rows expose all three family positions and their 20/60/20 weights.",
-  },
-  {
-    title: "Every version remains reproducible",
-    description:
-      "Earlier composite formulas remain directly addressable rather than being silently rewritten.",
+      "Ranking rows expose all three family positions and their 25/25/50 weights.",
   },
 ];
 
@@ -238,19 +139,13 @@ export function RubricPageClient() {
     ? rankingEngineSelectDisplayName(engineId)
     : engineDisplayName;
   const engineName = rankingEngineName(engineId);
-  const isCurve = engineId.startsWith("Curve.");
   const isConsensus = engineId.startsWith("Consensus.");
-  const isWeightedConsensus = engineId === "Consensus.3";
   const isBlend = engineId.startsWith("Blend.");
-  const criteria = isCurve
-    ? curveCriteria
-    : isBlend
+  const criteria = isBlend
       ? blendCriteria
     : isConsensus
-      ? engineId === "Consensus.3"
-        ? weightedConsensusCriteria
-        : consensusCriteria(engineId === "Consensus.2" ? 5 : 6)
-      : computerCriteria;
+      ? consensusCriteria
+      : componentCriteria;
 
   return (
     <main>
@@ -273,19 +168,15 @@ export function RubricPageClient() {
           <h2>
             {isBlend
               ? "Where do computers and polls agree?"
-              : isWeightedConsensus
-              ? "Which records earned the most?"
               : isConsensus
-              ? "Where do the methods agree?"
+              ? "Which teams balance outcomes and performance?"
               : "What has each team earned?"}
           </h2>
           <p>
             {isBlend
               ? `${publicEngineName} balances the Computer Composite with current AP and Coaches opinion.`
-              : isWeightedConsensus
-              ? `${publicEngineName} balances opponent-weighted results with résumé context and one neutral algorithm family.`
               : isConsensus
-              ? `${publicEngineName} rewards agreement across independent result-based approaches.`
+              ? `${publicEngineName} balances schedule-sensitive outcome evidence with opponent-adjusted performance.`
               : `${publicEngineName} rewards accomplished results in the context of who each team played.`}
           </p>
         </article>

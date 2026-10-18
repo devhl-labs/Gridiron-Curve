@@ -3,7 +3,7 @@ import type {
   Poll,
   RankingEngine,
   TeamRanking,
-} from "../../../types";
+} from "../../types";
 
 type PollName = "AP Top 25" | "Coaches Poll";
 

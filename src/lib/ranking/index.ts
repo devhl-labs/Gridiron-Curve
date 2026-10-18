@@ -1,26 +1,17 @@
-import { RANKING_SYSTEMS } from "./registry";
-import { combinePollBlendRankings } from "./systems/blend/1/engine";
 import {
-  combineConsensusRankings,
-  CONSENSUS_COMPONENT_SYSTEM_IDS,
-} from "./systems/consensus/1/engine";
-import {
-  CONSENSUS_V2_COMPONENT_SYSTEM_IDS,
-} from "./systems/consensus/2/engine";
-import {
-  combineWeightedConsensusRankings,
-  CONSENSUS_V3_COMPONENT_SYSTEM_IDS,
-  CONSENSUS_V3_COMPONENT_WEIGHTS,
-} from "./systems/consensus/3/engine";
+  DEFAULT_RANKING_SYSTEM_ID,
+  RANKING_SYSTEMS,
+} from "./registry";
+import { combinePollBlendRankings } from "./systems/blend/engine";
 import {
   combineEvidenceCompositeRankings,
   CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
   CONSENSUS_V4_COMPONENT_WEIGHTS,
 } from "./systems/consensus/4/engine";
 import {
-  combineNeutralFamilyRankings,
-  NEUTRAL_FAMILY_COMPONENT_SYSTEM_IDS,
-} from "./systems/neutral-family/1/engine";
+  buildFullPreseasonPrior as buildCurvePreseasonPrior,
+  buildPollPrior as buildCurvePollPrior,
+} from "./systems/curve/5/engine";
 import type {
   Game,
   Poll,
@@ -71,80 +62,33 @@ export {
   rankingSystemSelectDisplayName,
   selectableRankingSystemIdsForCategory,
 } from "./registry";
-export { CONSENSUS_COMPONENT_SYSTEM_IDS } from "./systems/consensus/1/engine";
-export {
-  CONSENSUS_V2_COMPONENT_SYSTEM_IDS,
-} from "./systems/consensus/2/engine";
-export {
-  CONSENSUS_V3_COMPONENT_SYSTEM_IDS,
-  CONSENSUS_V3_COMPONENT_WEIGHTS,
-} from "./systems/consensus/3/engine";
 export {
   CONSENSUS_V4_COMPONENT_SYSTEM_IDS,
   CONSENSUS_V4_COMPONENT_WEIGHTS,
 } from "./systems/consensus/4/engine";
-export {
-  NEUTRAL_FAMILY_COMPONENT_SYSTEM_IDS,
-} from "./systems/neutral-family/1/engine";
 export { hasUsableBoxScore } from "./systems/curve/engine";
 
 export type RankingPriorMap = Partial<
   Record<RankingSystemId, RatingPrior>
 >;
 
-const DEFAULT_CALCULATION_SYSTEM_ID: RankingSystemId = "Curve.5.0";
-
 function systemFor(rankingSystemId: RankingSystemId) {
   return RANKING_SYSTEMS[rankingSystemId];
 }
 
-export function buildPollPrior(
-  polls: Poll[],
-  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
-) {
-  return systemFor(rankingSystemId).engine.buildPollPrior(polls);
+export function buildPollPrior(polls: Poll[]) {
+  return buildCurvePollPrior(polls);
 }
 
 export function buildFullPreseasonPrior(
   polls: Poll[],
   currentTeams: string[],
   previousSeasonOrder: string[],
-  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
 ) {
-  return systemFor(rankingSystemId).engine.buildFullPreseasonPrior(
+  return buildCurvePreseasonPrior(
     polls,
     currentTeams,
     previousSeasonOrder,
-  );
-}
-
-export function calculateExpectedStrengthRatings(
-  games: Game[],
-  throughWeek: number,
-  prior: RatingPrior = {},
-  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
-) {
-  const system = systemFor(rankingSystemId);
-  return system.engine.calculateExpectedStrengthRatings(
-    games,
-    throughWeek,
-    prior,
-    system.model,
-  );
-}
-
-export function calculateAchievementPoints(
-  games: Game[],
-  throughWeek: number,
-  prior: RatingPrior = {},
-  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
-) {
-  const system = systemFor(rankingSystemId);
-  return system.engine.calculateAchievementPoints(
-    games,
-    throughWeek,
-    prior,
-    system.model,
   );
 }
 
@@ -152,45 +96,22 @@ export function calculateRankings(
   games: Game[],
   throughWeek: number,
   prior: RatingPrior = {},
-  rankingSystemId: RankingSystemId = DEFAULT_CALCULATION_SYSTEM_ID,
+  rankingSystemId: RankingSystemId = DEFAULT_RANKING_SYSTEM_ID,
   componentPriors: RankingPriorMap = {},
   polls: Poll[] = [],
 ): TeamRanking[] {
-  const blendConsensusSystemId =
-    rankingSystemId === "Blend.1.0"
-      ? "Consensus.1.0"
-      : rankingSystemId === "Blend.2.0"
-        ? "Consensus.2.0"
-        : rankingSystemId === "Blend.3.0"
-          ? "Consensus.3.0"
-        : null;
-  if (blendConsensusSystemId) {
+  if (rankingSystemId === "Blend.4.0") {
     return combinePollBlendRankings(
       calculateRankings(
         games,
         throughWeek,
         {},
-        blendConsensusSystemId,
+        "Consensus.4.0",
         componentPriors,
       ),
       polls,
       games,
       throughWeek,
-    );
-  }
-  if (rankingSystemId === "Consensus.3.0") {
-    return combineWeightedConsensusRankings(
-      CONSENSUS_V3_COMPONENT_SYSTEM_IDS.map((componentSystemId) => ({
-        rankingSystemId: componentSystemId,
-        rankings: calculateRankings(
-          games,
-          throughWeek,
-          componentPriors[componentSystemId] ??
-            (componentSystemId === "Curve.5.0" ? prior : {}),
-          componentSystemId,
-        ),
-        weight: CONSENSUS_V3_COMPONENT_WEIGHTS[componentSystemId],
-      })),
     );
   }
   if (rankingSystemId === "Consensus.4.0") {
@@ -204,39 +125,6 @@ export function calculateRankings(
           componentSystemId,
         ),
         weight: CONSENSUS_V4_COMPONENT_WEIGHTS[componentSystemId],
-      })),
-    );
-  }
-  if (rankingSystemId === "NeutralFamily.1.0") {
-    return combineNeutralFamilyRankings(
-      NEUTRAL_FAMILY_COMPONENT_SYSTEM_IDS.map((componentSystemId) => ({
-        rankingSystemId: componentSystemId,
-        rankings: calculateRankings(
-          games,
-          throughWeek,
-          {},
-          componentSystemId,
-        ),
-      })),
-    );
-  }
-  const consensusComponentSystemIds =
-    rankingSystemId === "Consensus.1.0"
-      ? CONSENSUS_COMPONENT_SYSTEM_IDS
-      : rankingSystemId === "Consensus.2.0"
-        ? CONSENSUS_V2_COMPONENT_SYSTEM_IDS
-        : null;
-  if (consensusComponentSystemIds) {
-    return combineConsensusRankings(
-      consensusComponentSystemIds.map((componentSystemId) => ({
-        rankingSystemId: componentSystemId,
-        rankings: calculateRankings(
-          games,
-          throughWeek,
-          componentPriors[componentSystemId] ??
-            (componentSystemId === "Curve.5.0" ? prior : {}),
-          componentSystemId,
-        ),
       })),
     );
   }
