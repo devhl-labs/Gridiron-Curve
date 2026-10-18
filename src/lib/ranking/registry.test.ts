@@ -57,10 +57,10 @@ describe("ranking system registry", () => {
       "Gridiron Consensus.2.0",
     );
     expect(rankingSystemSelectDisplayName("Consensus.3.0")).toBe(
-      "Computer Composite.3.0",
+      "Gridiron Consensus.3.0",
     );
     expect(rankingSystemSelectDisplayName("Consensus.4.0")).toBe(
-      "Computer Composite.4.0",
+      "Computer Composite",
     );
     expect(rankingSystemSelectDisplayName("Curve.5.0")).toBe(
       "Résumé Ranking",
@@ -117,7 +117,6 @@ describe("ranking system registry", () => {
       "RecordValue.1.0",
       "CappedMarginPerformance.1.0",
       "Consensus.4.0",
-      "Consensus.3.0",
       "Blend.3.0",
     ]);
     expect(SELECTABLE_RANKING_ENGINE_IDS).not.toContain("Curve.4");
@@ -132,7 +131,6 @@ describe("ranking system registry", () => {
     ).toEqual([
       "Blend.3.0",
       "Consensus.4.0",
-      "Consensus.3.0",
       "Curve.5.0",
       "ResultNetwork.1.0",
       "RecordValue.1.0",
@@ -193,10 +191,10 @@ describe("ranking system registry", () => {
       "Gridiron Consensus.2",
     );
     expect(rankingEngineSelectDisplayName("Consensus.3")).toBe(
-      "Computer Composite.3",
+      "Gridiron Consensus.3",
     );
     expect(rankingEngineSelectDisplayName("Consensus.4")).toBe(
-      "Computer Composite.4",
+      "Computer Composite",
     );
     expect(rankingEngineSelectDisplayName("Curve.5")).toBe(
       "Résumé Ranking",

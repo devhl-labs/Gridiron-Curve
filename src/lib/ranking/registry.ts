@@ -96,7 +96,6 @@ export const SELECTABLE_RANKING_SYSTEM_IDS = [
   "RecordValue.1.0",
   "CappedMarginPerformance.1.0",
   "Consensus.4.0",
-  "Consensus.3.0",
   "Blend.3.0",
 ] as const satisfies readonly RankingSystemId[];
 
@@ -106,7 +105,6 @@ export const RANKING_SYSTEM_SELECT_GROUPS = [
     rankingSystemIds: [
       "Blend.3.0",
       "Consensus.4.0",
-      "Consensus.3.0",
     ],
   },
   {
@@ -229,14 +227,13 @@ export const SELECTABLE_RANKING_ENGINE_IDS = [
   "RecordValue.1",
   "CappedMarginPerformance.1",
   "Consensus.4",
-  "Consensus.3",
   "Blend.3",
 ] as const satisfies readonly RankingEngineId[];
 
 export const RANKING_ENGINE_SELECT_GROUPS = [
   {
     label: "Composite Rankings",
-    rankingEngineIds: ["Blend.3", "Consensus.4", "Consensus.3"],
+    rankingEngineIds: ["Blend.3", "Consensus.4"],
   },
   {
     label: "Individual Models",

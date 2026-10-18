@@ -35,7 +35,9 @@ opponent estimates and stabilizes the published positions. Its influence
 fades linearly to zero after six completed weeks, at which point only
 current-season games affect the families.
 
-Consensus.4.0 is selectable but does not overwrite Consensus.3.0.
+Consensus.4.0 is the selectable Computer Composite. Consensus.3.0 remains
+registered for archived publications and direct historical links, but is not
+shown in ranking dropdowns.
 
 ## Gridiron Blend.3.0
 
@@ -207,8 +209,7 @@ Curve.5 remains the default ranking method.
 ## Versioned ranking systems
 
 The rankings selector presents Blend.3.0 as **Computer + AP/Coaches**,
-Consensus.4.0 and Consensus.3.0 as versioned **Computer Composite** options,
-and Curve.5.0 as **Résumé Ranking**.
+Consensus.4.0 as **Computer Composite**, and Curve.5.0 as **Résumé Ranking**.
 Curve.5.0, Schedule-Adjusted Record, and the five earlier standalone methods
 appear under **Individual Models**. Stable system identifiers and direct links
 remain unchanged.
