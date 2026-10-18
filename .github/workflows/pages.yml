@@ -2,7 +2,12 @@ name: Publish GitHub Pages
 
 on:
   schedule:
-    - cron: "0 12 * 8-12 0"
+    # Ten minutes after the 11:59 PM Eastern cache pull.
+    - cron: "9 0 * * *"
+      timezone: "America/New_York"
+    # Ten minutes after the other five daily Eastern cache pulls.
+    - cron: "10 1,6,15,16,20 * * *"
+      timezone: "America/New_York"
   workflow_dispatch:
 
 permissions:
@@ -28,13 +33,16 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
         run: |
-          month="$(date -u +%m)"
-          day="$(date -u +%d)"
-          if [[ "${EVENT_NAME}" == "workflow_dispatch" || "${month}" != "08" || $((10#${day})) -ge 20 ]]; then
+          month="$(TZ=America/New_York date +%m)"
+          day="$(TZ=America/New_York date +%d)"
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ||
+                $((10#${month})) -le 2 ||
+                $((10#${month})) -ge 9 ||
+                ("${month}" == "08" && $((10#${day})) -ge 15) ]]; then
             echo "publish=true" >> "${GITHUB_OUTPUT}"
           else
             echo "publish=false" >> "${GITHUB_OUTPUT}"
-            echo "Skipping publication before August 20."
+            echo "Skipping publication during the CFBD updater's offseason window."
           fi
 
       - name: Check out repository

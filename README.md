@@ -441,8 +441,8 @@ season, it detects the latest completed week, creates a new immutable local
 snapshot, uploads the complete versioned cache to Azure Blob Storage, verifies
 the upload, and keeps its latest 40 logs under
 `%LOCALAPPDATA%\GridironCurve\Logs`.
-Uploads skip immutable blobs that are already present, so repeated Sunday and
-Monday runs transfer only new snapshots and season pointers.
+Uploads skip immutable blobs that are already present, so repeated daily runs
+transfer only new snapshots and season pointers.
 
 To replace or repair only the unattended scheduled task later:
 
@@ -452,10 +452,12 @@ To replace or repair only the unattended scheduled task later:
 
 The installer prompts for the Windows account that will run while logged out.
 It creates a `CFBD` folder in Task Scheduler, replaces any task with the same
-name inside that folder, and schedules five local-time runs: Sunday at 9 AM,
-2 PM, and 8 PM, then Monday at 8 AM and 6 PM. Automatic season selection allows
-the same task to remain installed across calendar years. Pass `-TaskPath` to
-the setup or installer only if a different Task Scheduler folder is desired.
+name inside that folder, and schedules six daily pulls at 1 AM, 6 AM, 3 PM,
+4 PM, 8 PM, and 11:59 PM Eastern. The Windows host must use the
+`Eastern Standard Time` time zone so Task Scheduler follows Eastern daylight
+saving changes. Automatic season selection allows the same task to remain
+installed across calendar years. Pass `-TaskPath` to the setup or installer
+only if a different Task Scheduler folder is desired.
 
 The deployed site never receives the CFBD API key, reads the raw cache, runs
 ranking calculations, or generates images at request time.
@@ -464,9 +466,13 @@ ranking calculations, or generates images at request time.
 
 GitHub Pages hosts the exported site at
 `https://devhl-labs.github.io/Gridiron-Curve/`. The scheduled workflow in
-`.github/workflows/pages.yml` runs at 12:00 UTC every Sunday from August
-through December. Scheduled August runs before August 20 exit without
-publishing. The workflow can also be started manually at any time.
+`.github/workflows/pages.yml` rebuilds ten minutes after each scheduled data
+pull using the native `America/New_York` timezone. Daily publication times are
+12:09 AM, 1:10 AM, 6:10 AM, 3:10 PM, 4:10 PM, and 8:10 PM Eastern; the
+12:09 AM publication follows the prior day's 11:59 PM pull. Scheduled runs
+follow the updater's active-season window: January through February and
+August 15 through December. The workflow can also be started manually at any
+time.
 
 Each publication:
 
@@ -483,8 +489,8 @@ permissions only in the local `.env` used for cache uploads.
 
 Pull requests never receive those credentials. The PR Gate installs the
 wholly invented two-season fixture in `test/fixtures/cfbd-cache/`, builds all
-ten ranking systems, and verifies the static manifest and latest JPEG. No fixture
-value was copied from CollegeFootballData.
+registered ranking systems, and verifies the static manifest and latest JPEG.
+No fixture value was copied from CollegeFootballData.
 
 ## Commands
 

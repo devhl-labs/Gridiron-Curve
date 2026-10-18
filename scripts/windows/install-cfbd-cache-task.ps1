@@ -21,6 +21,11 @@ if (-not (Test-Path $updateScript)) {
     throw "The cache update script does not exist: $updateScript"
 }
 
+$timeZone = Get-TimeZone
+if ($timeZone.Id -ne "Eastern Standard Time") {
+    throw "The CFBD update host must use the Windows 'Eastern Standard Time' time zone. Current time zone: '$($timeZone.Id)'."
+}
+
 $scheduler = New-Object -ComObject "Schedule.Service"
 $scheduler.Connect()
 $currentFolder = $scheduler.GetFolder("\")
@@ -63,11 +68,12 @@ $action = New-ScheduledTaskAction `
     -WorkingDirectory $resolvedRepository
 
 $triggers = @(
-    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Sunday -At "9:00 AM"
-    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Sunday -At "2:00 PM"
-    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Sunday -At "8:00 PM"
-    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday -At "8:00 AM"
-    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday -At "6:00 PM"
+    New-ScheduledTaskTrigger -Daily -At "1:00 AM"
+    New-ScheduledTaskTrigger -Daily -At "6:00 AM"
+    New-ScheduledTaskTrigger -Daily -At "3:00 PM"
+    New-ScheduledTaskTrigger -Daily -At "4:00 PM"
+    New-ScheduledTaskTrigger -Daily -At "8:00 PM"
+    New-ScheduledTaskTrigger -Daily -At "11:59 PM"
 )
 $settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
@@ -120,4 +126,4 @@ if ($TaskPath -ne "\") {
 $task = Get-ScheduledTask -TaskName $TaskName -TaskPath $TaskPath
 Write-Host "Registered scheduled task '$TaskPath$TaskName' with automatic season selection."
 Write-Host "Run account: $($task.Principal.UserId)"
-Write-Host "Schedule: Sunday 9 AM, 2 PM, and 8 PM; Monday 8 AM and 6 PM."
+Write-Host "Schedule: Daily at 1 AM, 6 AM, 3 PM, 4 PM, 8 PM, and 11:59 PM Eastern."
