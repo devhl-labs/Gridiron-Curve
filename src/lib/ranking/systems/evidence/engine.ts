@@ -3,7 +3,6 @@ import type { Game, RatingPrior } from "../../types";
 export type CandidateEngineFamily =
   | "result-network"
   | "performance"
-  | "strength-of-record"
   | "accomplishment"
   | "record-value"
   | "temporal";
@@ -438,26 +437,6 @@ function percentileMap(
   );
 }
 
-function poissonBinomialAtLeast(
-  probabilities: number[],
-  wins: number,
-) {
-  const distribution = Array<number>(probabilities.length + 1).fill(0);
-  distribution[0] = 1;
-  probabilities.forEach((probability, gameIndex) => {
-    for (let resultWins = gameIndex + 1; resultWins >= 0; resultWins -= 1) {
-      distribution[resultWins] =
-        (distribution[resultWins] ?? 0) * (1 - probability) +
-        (resultWins > 0
-          ? (distribution[resultWins - 1] ?? 0) * probability
-          : 0);
-    }
-  });
-  return distribution
-    .slice(Math.max(0, wins))
-    .reduce((total, probability) => total + probability, 0);
-}
-
 function completeRankings(
   snapshot: PreparedSnapshot,
   scores: Map<string, number>,
@@ -592,7 +571,7 @@ export const eloEngine = ratingEngine(
 
 function opponentModelScores(
   snapshot: PreparedSnapshot,
-  strategy: "opponent-value" | "wins-above-expectation" | "strength-of-record",
+  strategy: "opponent-value" | "wins-above-expectation",
   options?: CandidateCalculationOptions,
 ) {
   const ratings = bradleyTerryRatings(snapshot, 0.5, options);
@@ -629,25 +608,14 @@ function opponentModelScores(
           (1 + Math.exp(opponentRating - referenceRating))
         );
       });
-      if (strategy === "wins-above-expectation") {
-        const actual = record.wins + record.ties * 0.5;
-        const expected = probabilities.reduce(
-          (total, probability) => total + probability,
-          0,
-        );
-        return [
-          team,
-          (actual - expected) / record.games.length + priorOffset,
-        ];
-      }
-      const recordWins = Math.ceil(record.wins + record.ties * 0.5);
-      const probability = poissonBinomialAtLeast(
-        probabilities,
-        recordWins,
+      const actual = record.wins + record.ties * 0.5;
+      const expected = probabilities.reduce(
+        (total, probability) => total + probability,
+        0,
       );
       return [
         team,
-        -Math.log(Math.max(1e-12, probability)) + priorOffset,
+        (actual - expected) / record.games.length + priorOffset,
       ];
     }),
   );
@@ -688,24 +656,6 @@ export const winsAboveExpectationEngine = ratingEngine(
       "wins-above-expectation",
       options,
     ),
-  true,
-);
-
-export const strengthOfRecordEngine = ratingEngine(
-  {
-    id: "StrengthOfRecord.1",
-    family: "strength-of-record",
-    purpose:
-      "Measure how unlikely the achieved record or better would be for a median FBS team.",
-    inputs: [
-      "All results",
-      "Bradley-Terry opponent strength",
-      "Median-FBS reference team",
-      "Poisson-binomial record probability",
-    ],
-  },
-  (snapshot, options) =>
-    opponentModelScores(snapshot, "strength-of-record", options),
   true,
 );
 
@@ -787,22 +737,110 @@ export const resultNetworkFamilyEngine = averageRankEngine(
   [colleyEngine, bradleyTerryEngine, binaryMasseyEngine],
 );
 
+export const EARNED_OPPONENT_LOSS_DEBIT = 0.75;
+
+export function earnedOpponentResultValue(
+  result: "win" | "loss" | "tie",
+  opponentQuality: number,
+) {
+  if (result === "win") return opponentQuality;
+  if (result === "loss") return -EARNED_OPPONENT_LOSS_DEBIT;
+  return (opponentQuality - EARNED_OPPONENT_LOSS_DEBIT) / 2;
+}
+
+function tieSafeRankMap(rankings: CandidateRanking[]) {
+  const ranks = new Map<string, number>();
+  for (let index = 0; index < rankings.length; ) {
+    let end = index + 1;
+    while (
+      end < rankings.length &&
+      rankings[end].score === rankings[index].score
+    ) {
+      end += 1;
+    }
+    const averageRank = (index + 1 + end) / 2;
+    for (let tiedIndex = index; tiedIndex < end; tiedIndex += 1) {
+      ranks.set(rankings[tiedIndex].team, averageRank);
+    }
+    index = end;
+  }
+  return ranks;
+}
+
+export const earnedOpponentValueEngine: CandidateEngine = {
+  id: "EarnedOpponentValue.1",
+  family: "record-value",
+  purpose:
+    "Reward the quality of defeated opponents while assigning every loss the same debit.",
+  inputs: [
+    "All results",
+    "Canonical Result Network opponent percentile",
+    "Fixed 0.75 loss debit",
+  ],
+  calculate(snapshot, throughWeek, options) {
+    const resultNetwork = resultNetworkFamilyEngine.calculate(
+      snapshot,
+      throughWeek,
+      options,
+    );
+    const ranks = tieSafeRankMap(resultNetwork);
+    const lastIndex = Math.max(1, resultNetwork.length - 1);
+    const quality = new Map(
+      resultNetwork.map(({ team }) => [
+        team,
+        (resultNetwork.length - (ranks.get(team) ?? resultNetwork.length)) /
+          lastIndex,
+      ]),
+    );
+    const prepared = prepareSnapshot(snapshot, throughWeek);
+    return resultNetwork
+      .map((base) => {
+        const teamGames = prepared.records.get(base.team)?.games ?? [];
+        const score =
+          teamGames.length === 0
+            ? 0
+            : teamGames.reduce(
+                (total, game) =>
+                  total +
+                  earnedOpponentResultValue(
+                    game.result === 1
+                      ? "win"
+                      : game.result === 0
+                        ? "loss"
+                        : "tie",
+                    quality.get(game.opponent) ?? 0,
+                  ),
+                0,
+              ) / teamGames.length;
+        return {
+          ...base,
+          score: score + effectivePriorOffset(base.team, options),
+        };
+      })
+      .toSorted(
+        (left, right) =>
+          right.score - left.score || left.team.localeCompare(right.team),
+      )
+      .map((ranking, index) => ({ ...ranking, rank: index + 1 }));
+  },
+};
+
 export const recordValueFamilyEngine = averageRankEngine(
   {
-    id: "RecordValueFamily.1",
+    id: "RecordValueFamily.2",
     family: "record-value",
     purpose:
-      "Represent schedule-sensitive record value through an equal average of opponent value, wins above expectation, and strength-of-record ranks.",
+      "Represent schedule-sensitive record value through an equal average of opponent value, wins above expectation, and earned-opponent-value ranks.",
     inputs: [
       "Opponent Value rank",
       "Wins Above Expectation rank",
-      "Strength of Record rank",
+      "Earned Opponent Value rank",
     ],
   },
   [
     opponentValueEngine,
     winsAboveExpectationEngine,
-    strengthOfRecordEngine,
+    earnedOpponentValueEngine,
   ],
 );
 
@@ -835,7 +873,7 @@ export const BASE_CANDIDATE_ENGINES = [
   eloEngine,
   opponentValueEngine,
   winsAboveExpectationEngine,
-  strengthOfRecordEngine,
+  earnedOpponentValueEngine,
 ] as const satisfies readonly CandidateEngine[];
 
 export const CANDIDATE_ENGINES = [

@@ -10,21 +10,22 @@ type ConsensusComponent = {
   rankings: TeamRanking[];
 };
 
-export const CONSENSUS_V5_COMPONENT_WEIGHTS = {
+export const CONSENSUS_V6_COMPONENT_WEIGHTS = {
   "ResultNetwork.1.0": 0,
-  "RecordValue.1.0": 0.4,
+  "RecordValue.2.0": 0.4,
   "CappedMarginPerformance.1.0": 0.6,
 } as const satisfies Partial<Record<RankingSystemId, number>>;
 
-export const CONSENSUS_V5_COMPONENT_SYSTEM_IDS = Object.keys(
-  CONSENSUS_V5_COMPONENT_WEIGHTS,
-) as Array<keyof typeof CONSENSUS_V5_COMPONENT_WEIGHTS>;
+export const CONSENSUS_V6_COMPONENT_SYSTEM_IDS = Object.keys(
+  CONSENSUS_V6_COMPONENT_WEIGHTS,
+) as Array<keyof typeof CONSENSUS_V6_COMPONENT_WEIGHTS>;
 
-export const CONSENSUS_V5_MAX_RESUME_PRESSURE = 8;
+export const CONSENSUS_V6_MAX_RESUME_PRESSURE = 14;
+export const CONSENSUS_V6_LOSS_RANK_EXPONENT = 12;
 
 function requiresComponents(): never {
   throw new Error(
-    "Computer Composite 5 requires all registered evidence-family rankings.",
+    "Computer Composite 6 requires all registered evidence-family rankings.",
   );
 }
 
@@ -38,6 +39,35 @@ export const consensusEngine: RankingEngine = {
 
 export function resumeMaturity(fbsGamesPlayed: number) {
   return Math.max(0, Math.min(1, (fbsGamesPlayed - 2) / 6));
+}
+
+export function lossPressureUnits(losses: number) {
+  if (losses <= 0) return 0;
+  if (losses === 1) return 1;
+  return 5 + Math.max(0, losses - 2) * 2;
+}
+
+export function rankScaledLossPressure(
+  losses: number,
+  provisionalRank: number,
+  fieldSize: number,
+  maturity: number,
+) {
+  const rankPercentile =
+    fieldSize <= 1
+      ? 1
+      : Math.max(
+          0,
+          Math.min(
+            1,
+            (fieldSize - provisionalRank) / (fieldSize - 1),
+          ),
+        );
+  return (
+    lossPressureUnits(losses) *
+    rankPercentile ** CONSENSUS_V6_LOSS_RANK_EXPONENT *
+    maturity
+  );
 }
 
 function tieSafeRanks(rankings: TeamRanking[]) {
@@ -164,14 +194,14 @@ export function combineEvidenceCompositeRankings(
       component,
     ]),
   );
-  const requiredComponents = CONSENSUS_V5_COMPONENT_SYSTEM_IDS.map(
+  const requiredComponents = CONSENSUS_V6_COMPONENT_SYSTEM_IDS.map(
     (rankingSystemId) => componentsById.get(rankingSystemId),
   );
   if (
-    components.length !== CONSENSUS_V5_COMPONENT_SYSTEM_IDS.length ||
+    components.length !== CONSENSUS_V6_COMPONENT_SYSTEM_IDS.length ||
     requiredComponents.some((component) => !component)
   ) {
-    throw new Error("Computer Composite 5 requires component rankings.");
+    throw new Error("Computer Composite 6 requires component rankings.");
   }
   const [resultNetwork, recordValue, performance] =
     requiredComponents as Array<
@@ -181,13 +211,13 @@ export function combineEvidenceCompositeRankings(
     [resultNetwork, recordValue, performance].some(
       (component) =>
         component.weight !==
-        CONSENSUS_V5_COMPONENT_WEIGHTS[
-          component.rankingSystemId as keyof typeof CONSENSUS_V5_COMPONENT_WEIGHTS
+        CONSENSUS_V6_COMPONENT_WEIGHTS[
+          component.rankingSystemId as keyof typeof CONSENSUS_V6_COMPONENT_WEIGHTS
         ],
     )
   ) {
     throw new Error(
-      "Computer Composite 5 requires its registered component weights.",
+      "Computer Composite 6 requires its registered component weights.",
     );
   }
 
@@ -207,7 +237,7 @@ export function combineEvidenceCompositeRankings(
     );
     if (missing.length > 0 || unexpected.length > 0) {
       throw new Error(
-        `${rankingSystemId} does not rank the same team field as Computer Composite 5.`,
+        `${rankingSystemId} does not rank the same team field as Computer Composite 6.`,
       );
     }
   }
@@ -231,7 +261,7 @@ export function combineEvidenceCompositeRankings(
   );
   const fieldDenominator = resultNetwork.rankings.length + 1;
   const combined = resultNetwork.rankings.map((base) => {
-    const consensusRanks = CONSENSUS_V5_COMPONENT_SYSTEM_IDS.map(
+    const consensusRanks = CONSENSUS_V6_COMPONENT_SYSTEM_IDS.map(
       (rankingSystemId) => {
         const ranking = componentMaps
           .get(rankingSystemId)
@@ -249,7 +279,7 @@ export function combineEvidenceCompositeRankings(
           rank: ranking.rank,
           tieSafeRank,
           included: true,
-          weight: CONSENSUS_V5_COMPONENT_WEIGHTS[rankingSystemId],
+          weight: CONSENSUS_V6_COMPONENT_WEIGHTS[rankingSystemId],
         };
       },
     );
@@ -264,6 +294,7 @@ export function combineEvidenceCompositeRankings(
       basePosition,
       position: basePosition,
       resumePressure: 0,
+      lossPressure: 0,
       consensusRanks,
     };
   });
@@ -272,6 +303,15 @@ export function combineEvidenceCompositeRankings(
       base.team,
       basePosition,
     ]),
+  );
+  const provisionalRanks = new Map(
+    combined
+      .toSorted(
+        (left, right) =>
+          left.basePosition - right.basePosition ||
+          left.base.team.localeCompare(right.base.team),
+      )
+      .map(({ base }, index) => [base.team, index + 1]),
   );
   const orderedTop25 = () =>
     combined
@@ -301,7 +341,7 @@ export function combineEvidenceCompositeRankings(
         fbsGamesPlayed === undefined
       ) {
         throw new Error(
-          `Missing Composite 5 résumé evidence for ${row.base.team}.`,
+          `Missing Composite 6 résumé evidence for ${row.base.team}.`,
         );
       }
       const scheduleWeakness = Math.max(
@@ -314,13 +354,23 @@ export function combineEvidenceCompositeRankings(
         Math.min(1, (topTwoWinAverageRank - 1) / 50),
       );
       const pressure = certifiedTeams.has(row.base.team)
-        ? CONSENSUS_V5_MAX_RESUME_PRESSURE *
+        ? CONSENSUS_V6_MAX_RESUME_PRESSURE *
           scheduleWeakness *
           winWeakness *
           resumeMaturity(fbsGamesPlayed)
         : 0;
+      const lossPressure = rankScaledLossPressure(
+        row.base.losses,
+        provisionalRanks.get(row.base.team) ??
+          resultNetwork.rankings.length,
+        resultNetwork.rankings.length,
+        resumeMaturity(fbsGamesPlayed),
+      );
       row.resumePressure = pressure;
-      row.position = basePosition + pressure / fieldDenominator;
+      row.lossPressure = lossPressure;
+      row.position =
+        basePosition +
+        (pressure + lossPressure) / fieldDenominator;
     }
     const entrants = orderedTop25().filter(
       (team) => !certifiedTeams.has(team),
@@ -343,6 +393,7 @@ export function combineEvidenceCompositeRankings(
         basePosition,
         position,
         resumePressure,
+        lossPressure,
         consensusRanks,
       },
       index,
@@ -370,6 +421,7 @@ export function combineEvidenceCompositeRankings(
           }),
         ),
         resumePressure: Number(resumePressure.toFixed(3)),
+        lossPressure: Number(lossPressure.toFixed(3)),
         resumeMaturity: Number(
           resumeMaturity(fbsGamesPlayed).toFixed(3),
         ),

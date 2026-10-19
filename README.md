@@ -3,22 +3,24 @@
 Gridiron Curve publishes college-football computer rankings based on outcomes,
 record value, opponent-adjusted performance, and the connected schedule graph.
 
-## Gridiron Consensus.5.0
+## Gridiron Consensus.6.0
 
-Gridiron Consensus.5.0 is the latest selectable Computer Composite. It uses
+Gridiron Consensus.6.0 is the latest selectable Computer Composite. It uses
 three prior-aware evidence families:
 
 1. **Résumé evidence:** `ResultNetwork.1.0`
-2. **40% Record Value:** `RecordValue.1.0`
+2. **40% Record Value:** `RecordValue.2.0`
 3. **60% Capped-Margin Performance:** `CappedMarginPerformance.1.0`
 
 Result Network equally averages tie-safe positions from canonical Colley,
 regularized Bradley-Terry, and binary Massey. Record Value equally averages
-Opponent Value, Wins Above Expectation, and Poisson-binomial Strength of
-Record. Performance equally averages opponent-adjusted Massey positions using
-14-, 21-, and 28-point scoring-margin caps.
+Opponent Value, Wins Above Expectation, and Earned Opponent Value. Earned
+Opponent Value credits a win by the defeated opponent's Result Network
+percentile, assigns every loss a fixed −0.75 debit, and scores a tie at the
+midpoint of those values. Performance equally averages opponent-adjusted
+Massey positions using 14-, 21-, and 28-point scoring-margin caps.
 
-Computer Composite 5 therefore starts with:
+Computer Composite 6 therefore starts with:
 
 ```text
 Base = 40% Record Value + 60% Performance
@@ -26,10 +28,17 @@ Base = 40% Record Value + 60% Performance
 
 Result Network receives no separate direct vote. It supplies schedule ranks
 and defeated-opponent ranks for recursive Top-25 résumé certification. Teams
-with below-median schedules and weak best-two wins can receive up to eight
+with below-median schedules and weak best-two wins can receive up to 14
 positions of downward pressure. That pressure is zero through two completed
 FBS games, rises linearly, and reaches full strength after eight. FCS games do
 not advance résumé maturity.
+
+Loss pressure uses the same maturity. The first loss carries one unit, the
+second adds four units, and every third-or-later loss adds two. Those units are
+multiplied by the pre-pressure provisional-rank percentile raised to the 12th
+power. The continuous curve has full effect near No. 1, falls steeply through
+the Top 25, and is nearly zero in the lower field. Fixing the provisional rank
+before résumé or loss pressure prevents feedback.
 
 Raw scores are never mixed. Exact component-score ties receive their average
 full-field position before Record Value and Performance are combined. Every
@@ -41,12 +50,12 @@ opponent estimates and stabilizes the published positions. Its influence
 fades linearly to zero after six completed weeks, at which point only
 current-season games affect the families.
 
-Consensus.5.0 is the selectable Computer Composite and the default ranking
+Consensus.6.0 is the selectable Computer Composite and the default ranking
 when a URL does not choose another system.
 
-## Gridiron Blend.5.0
+## Gridiron Blend.6.0
 
-Gridiron Blend.5.0 balances Computer Composite 5 with the AP
+Gridiron Blend.6.0 balances Computer Composite 6 with the AP
 and Coaches polls:
 
 ```text
@@ -73,16 +82,16 @@ are proportionally renormalized.
 
 ## Published ranking systems
 
-The rankings selector presents Blend.5.0 as **Computer + AP/Coaches**,
-Consensus.5.0 as **Computer Composite**, and the three Composite 5 inputs under
+The rankings selector presents Blend.6.0 as **Computer + AP/Coaches**,
+Consensus.6.0 as **Computer Composite**, and the three Composite 6 inputs under
 **Composite Components**:
 
 - `ResultNetwork.1.0`
-- `RecordValue.1.0`
+- `RecordValue.2.0`
 - `CappedMarginPerformance.1.0`
 
-The static publication generates only these five live systems. Consensus.5.0
-is the default when a URL does not specify a ranking, and Blend.5.0 uses it as
+The static publication generates only these five live systems. Consensus.6.0
+is the default when a URL does not specify a ranking, and Blend.6.0 uses it as
 the computer input. Removed development and standalone systems fall back to
 the current default instead of adding publication work to every season and
 week. The internal Curve calculation remains only to extend the shared
@@ -101,11 +110,11 @@ download the
 file:
 
 ```text
-/generated/v4/images/2026/week-06/Consensus.5.0.jpg
-/generated/v4/images/2026/week-06/ResultNetwork.1.0.jpg
-/generated/v4/images/2026/week-06/RecordValue.1.0.jpg
-/generated/v4/images/2026/week-06/CappedMarginPerformance.1.0.jpg
-/generated/v4/images/2026/week-06/Blend.5.0.jpg
+/generated/v5/images/2026/week-06/Consensus.6.0.jpg
+/generated/v5/images/2026/week-06/ResultNetwork.1.0.jpg
+/generated/v5/images/2026/week-06/RecordValue.2.0.jpg
+/generated/v5/images/2026/week-06/CappedMarginPerformance.1.0.jpg
+/generated/v5/images/2026/week-06/Blend.6.0.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as
@@ -216,7 +225,7 @@ ignored by Git.
 
 Gridiron Curve is published as a static site. `npm run build` first reads the
 versioned local CFBD cache and writes immutable publication data under
-`public/generated/v4/`, then Next.js exports the site to `out/`.
+`public/generated/v5/`, then Next.js exports the site to `out/`.
 
 Published ranking JSON is generated for every cached season, week, and ranking
 system.

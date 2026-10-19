@@ -1,9 +1,9 @@
 export type RankingSystemId =
   | "ResultNetwork.1.0"
-  | "RecordValue.1.0"
+  | "RecordValue.2.0"
   | "CappedMarginPerformance.1.0"
-  | "Consensus.5.0"
-  | "Blend.5.0";
+  | "Consensus.6.0"
+  | "Blend.6.0";
 
 export type RankingCategoryId =
   | "ranking"
@@ -15,10 +15,10 @@ export type RankingSystemKind =
   | "blend";
 export type RankingEngineId =
   | "ResultNetwork.1"
-  | "RecordValue.1"
+  | "RecordValue.2"
   | "CappedMarginPerformance.1"
-  | "Consensus.5"
-  | "Blend.5";
+  | "Consensus.6"
+  | "Blend.6";
 
 export type TeamBoxScore = {
   totalYards: number;
@@ -76,6 +76,7 @@ export type TeamRanking = {
     weight?: number;
   }>;
   resumePressure?: number;
+  lossPressure?: number;
   resumeMaturity?: number;
   resumeScheduleRank?: number | null;
   resumeBestTwoWinAverageRank?: number;

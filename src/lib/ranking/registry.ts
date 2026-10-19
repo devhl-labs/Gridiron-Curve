@@ -1,7 +1,7 @@
-import { blendSystems as blend5Systems } from "./systems/blend/5";
+import { blendSystems as blend6Systems } from "./systems/blend/6";
 import { cappedMarginPerformanceSystems } from "./systems/capped-margin-performance/1";
-import { consensusSystems as consensus5Systems } from "./systems/consensus/5";
-import { recordValueSystems } from "./systems/record-value/1";
+import { consensusSystems as consensus6Systems } from "./systems/consensus/6";
+import { recordValueSystems } from "./systems/record-value/2";
 import { resultNetworkSystems } from "./systems/result-network/1";
 import type {
   RankingCategoryId,
@@ -11,42 +11,42 @@ import type {
 } from "./types";
 
 export const RANKING_SYSTEMS = {
-  ...blend5Systems,
+  ...blend6Systems,
   ...resultNetworkSystems,
   ...recordValueSystems,
   ...cappedMarginPerformanceSystems,
-  ...consensus5Systems,
+  ...consensus6Systems,
 } satisfies Record<RankingSystemId, RankingSystemDefinition>;
 
 export const RANKING_SYSTEM_IDS = [
   "ResultNetwork.1.0",
-  "RecordValue.1.0",
+  "RecordValue.2.0",
   "CappedMarginPerformance.1.0",
-  "Consensus.5.0",
-  "Blend.5.0",
+  "Consensus.6.0",
+  "Blend.6.0",
 ] as const satisfies readonly RankingSystemId[];
 
 export const SELECTABLE_RANKING_SYSTEM_IDS = [
   "ResultNetwork.1.0",
-  "RecordValue.1.0",
+  "RecordValue.2.0",
   "CappedMarginPerformance.1.0",
-  "Consensus.5.0",
-  "Blend.5.0",
+  "Consensus.6.0",
+  "Blend.6.0",
 ] as const satisfies readonly RankingSystemId[];
 
 export const RANKING_SYSTEM_SELECT_GROUPS = [
   {
     label: "Composite Rankings",
     rankingSystemIds: [
-      "Blend.5.0",
-      "Consensus.5.0",
+      "Blend.6.0",
+      "Consensus.6.0",
     ],
   },
   {
     label: "Composite Components",
     rankingSystemIds: [
       "ResultNetwork.1.0",
-      "RecordValue.1.0",
+      "RecordValue.2.0",
       "CappedMarginPerformance.1.0",
     ],
   },
@@ -67,46 +67,46 @@ const RANKING_CATEGORY_LABELS: Record<RankingCategoryId, string> = {
 
 const RANKING_ENGINE_NAMES: Record<RankingEngineId, string> = {
   "ResultNetwork.1": "Canonical Result Network",
-  "RecordValue.1": "Record Value",
+  "RecordValue.2": "Record Value",
   "CappedMarginPerformance.1": "Capped-Margin Performance",
-  "Consensus.5": "Gridiron Consensus",
-  "Blend.5": "Gridiron Blend",
+  "Consensus.6": "Gridiron Consensus",
+  "Blend.6": "Gridiron Blend",
 };
 
 const RANKING_ENGINE_LABELS: Record<RankingEngineId, string> = {
   "ResultNetwork.1": "Canonical Result Network.1",
-  "RecordValue.1": "Record Value.1",
+  "RecordValue.2": "Record Value.2",
   "CappedMarginPerformance.1": "Capped-Margin Performance.1",
-  "Consensus.5": "Gridiron Consensus.5",
-  "Blend.5": "Gridiron Blend.5",
+  "Consensus.6": "Gridiron Consensus.6",
+  "Blend.6": "Gridiron Blend.6",
 };
 
 export const RANKING_ENGINE_IDS = [
   "ResultNetwork.1",
-  "RecordValue.1",
+  "RecordValue.2",
   "CappedMarginPerformance.1",
-  "Consensus.5",
-  "Blend.5",
+  "Consensus.6",
+  "Blend.6",
 ] as const satisfies readonly RankingEngineId[];
 
 export const SELECTABLE_RANKING_ENGINE_IDS = [
   "ResultNetwork.1",
-  "RecordValue.1",
+  "RecordValue.2",
   "CappedMarginPerformance.1",
-  "Consensus.5",
-  "Blend.5",
+  "Consensus.6",
+  "Blend.6",
 ] as const satisfies readonly RankingEngineId[];
 
 export const RANKING_ENGINE_SELECT_GROUPS = [
   {
     label: "Composite Rankings",
-    rankingEngineIds: ["Blend.5", "Consensus.5"],
+    rankingEngineIds: ["Blend.6", "Consensus.6"],
   },
   {
     label: "Composite Components",
     rankingEngineIds: [
       "ResultNetwork.1",
-      "RecordValue.1",
+      "RecordValue.2",
       "CappedMarginPerformance.1",
     ],
   },
@@ -117,34 +117,34 @@ export const RANKING_ENGINE_SELECT_GROUPS = [
 
 const RANKING_SYSTEM_LABELS: Record<RankingSystemId, string> = {
   "ResultNetwork.1.0": "Canonical Result Network.1.0",
-  "RecordValue.1.0": "Record Value.1.0",
+  "RecordValue.2.0": "Record Value.2.0",
   "CappedMarginPerformance.1.0": "Capped-Margin Performance.1.0",
-  "Consensus.5.0": "Gridiron Consensus.5.0",
-  "Blend.5.0": "Gridiron Blend.5.0",
+  "Consensus.6.0": "Gridiron Consensus.6.0",
+  "Blend.6.0": "Gridiron Blend.6.0",
 };
 
 const RANKING_SYSTEM_SELECT_NAMES: Partial<
   Record<RankingSystemId, string>
 > = {
   "ResultNetwork.1.0": "Result Network",
-  "RecordValue.1.0": "Record Value",
+  "RecordValue.2.0": "Record Value",
   "CappedMarginPerformance.1.0": "Performance",
-  "Consensus.5.0": "Computer Composite",
-  "Blend.5.0": "Computer + AP/Coaches",
+  "Consensus.6.0": "Computer Composite",
+  "Blend.6.0": "Computer + AP/Coaches",
 };
 
 const RANKING_ENGINE_SELECT_NAMES: Partial<
   Record<RankingEngineId, string>
 > = {
   "ResultNetwork.1": "Result Network",
-  "RecordValue.1": "Record Value",
+  "RecordValue.2": "Record Value",
   "CappedMarginPerformance.1": "Performance",
-  "Consensus.5": "Computer Composite",
-  "Blend.5": "Computer + AP/Coaches",
+  "Consensus.6": "Computer Composite",
+  "Blend.6": "Computer + AP/Coaches",
 };
 
-export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Consensus.5.0";
-export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Consensus.5";
+export const DEFAULT_RANKING_SYSTEM_ID: RankingSystemId = "Consensus.6.0";
+export const DEFAULT_RANKING_ENGINE_ID: RankingEngineId = "Consensus.6";
 
 export function isRankingSystemId(
   value: string | null | undefined,
@@ -285,13 +285,13 @@ function rankingSelectDescription(
     return "50% Computer Composite · 25% AP Poll · 25% Coaches Poll";
   }
   if (id.startsWith("Consensus.")) {
-    return "40% Record Value · 60% Performance · maturity-scaled résumé check";
+    return "40% Record Value · 60% Performance · maturity-scaled résumé and loss checks";
   }
   if (id.startsWith("ResultNetwork.")) {
     return "Averages canonical Colley, Bradley–Terry, and binary Massey result networks.";
   }
   if (id.startsWith("RecordValue.")) {
-    return "Averages Opponent Value, Wins Above Expectation, and Strength of Record.";
+    return "Averages Opponent Value, Wins Above Expectation, and Earned Opponent Value.";
   }
   if (id.startsWith("CappedMarginPerformance.")) {
     return "Averages opponent-adjusted 14-, 21-, and 28-point capped scoring margins.";

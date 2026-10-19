@@ -49,38 +49,38 @@ jobs:
       - name: Verify static export
         run: |
           test -f out/index.html
-          test -f out/generated/v4/manifest.json
-          test -f out/generated/v4/images/2099/week-02/ResultNetwork.1.0.jpg
-          test -f out/generated/v4/images/2099/week-02/RecordValue.1.0.jpg
-          test -f out/generated/v4/images/2099/week-02/CappedMarginPerformance.1.0.jpg
-          test -f out/generated/v4/images/2099/week-02/Consensus.5.0.jpg
-          test -f out/generated/v4/images/2099/week-02/Blend.5.0.jpg
+          test -f out/generated/v5/manifest.json
+          test -f out/generated/v5/images/2099/week-02/ResultNetwork.1.0.jpg
+          test -f out/generated/v5/images/2099/week-02/RecordValue.2.0.jpg
+          test -f out/generated/v5/images/2099/week-02/CappedMarginPerformance.1.0.jpg
+          test -f out/generated/v5/images/2099/week-02/Consensus.6.0.jpg
+          test -f out/generated/v5/images/2099/week-02/Blend.6.0.jpg
           node - <<'NODE'
-          const manifest = require("./out/generated/v4/manifest.json");
+          const manifest = require("./out/generated/v5/manifest.json");
           const seasons = manifest.seasons.map(({ season }) => season);
           if (seasons.join(",") !== "2098,2099") {
             throw new Error(`Unexpected fixture seasons: ${seasons.join(",")}`);
           }
           const expectedSystems = [
             "ResultNetwork.1.0",
-            "RecordValue.1.0",
+            "RecordValue.2.0",
             "CappedMarginPerformance.1.0",
-            "Consensus.5.0",
-            "Blend.5.0",
+            "Consensus.6.0",
+            "Blend.6.0",
           ];
           if (manifest.rankingSystemIds.join(",") !== expectedSystems.join(",")) {
             throw new Error(`Unexpected publication closure: ${manifest.rankingSystemIds.join(",")}`);
           }
-          const consensus = require("./out/generated/v4/rankings/2099/week-02/Consensus.5.0.json");
+          const consensus = require("./out/generated/v5/rankings/2099/week-02/Consensus.6.0.json");
           const expectedWeights = new Map([
             ["ResultNetwork.1.0", 0],
-            ["RecordValue.1.0", 0.4],
+            ["RecordValue.2.0", 0.4],
             ["CappedMarginPerformance.1.0", 0.6],
           ]);
           if (
             consensus.rankings.length === 0 ||
             consensus.rankings.some(
-              ({ consensusRanks, resumePressure, resumeMaturity }) =>
+              ({ consensusRanks, resumePressure, lossPressure, resumeMaturity }) =>
                 consensusRanks?.length !== 3 ||
                 consensusRanks.some(
                   ({ rankingSystemId, included, weight }) =>
@@ -88,12 +88,13 @@ jobs:
                     weight !== expectedWeights.get(rankingSystemId),
                 ) ||
                 resumePressure === undefined ||
+                lossPressure === undefined ||
                 resumeMaturity === undefined,
             )
           ) {
-            throw new Error("The fixture Consensus.5 does not expose weights and résumé evidence.");
+            throw new Error("The fixture Consensus.6 does not expose weights, résumé evidence, and loss pressure.");
           }
-          const blend = require("./out/generated/v4/rankings/2099/week-02/Blend.5.0.json");
+          const blend = require("./out/generated/v5/rankings/2099/week-02/Blend.6.0.json");
           const consensusRanks = new Map(
             consensus.rankings.map(({ team, rank }) => [team, rank]),
           );
@@ -107,6 +108,6 @@ jobs:
                 )?.rank !== consensusRanks.get(team),
             )
           ) {
-            throw new Error("The fixture Blend.5 does not use Consensus.5.");
+            throw new Error("The fixture Blend.6 does not use Consensus.6.");
           }
           NODE

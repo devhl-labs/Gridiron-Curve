@@ -23,10 +23,10 @@ type Methodology = {
 };
 
 const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
-  "Blend.5.0": {
+  "Blend.6.0": {
     headline: "Computer results, checked by people.",
     introduction:
-      "Computer + AP/Coaches combines Computer Composite 5 with the AP and Coaches polls. The computer result receives half the weight, while each poll receives one quarter.",
+      "Computer + AP/Coaches combines Computer Composite 6 with the AP and Coaches polls. The computer result receives half the weight, while each poll receives one quarter.",
     sections: [
       {
         kicker: "01 · COMMON POINTS",
@@ -42,7 +42,7 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
         kicker: "02 · WEIGHTING",
         title: "Balance computers and polls",
         description:
-          "Computer Composite 5 has the same total influence as the two human polls combined.",
+          "Computer Composite 6 has the same total influence as the two human polls combined.",
         formula: "B = 0.50C + 0.25A + 0.25H",
         formulaDescription:
           "B is the combined score, C is Computer Composite points, A is AP points, and H is Coaches points.",
@@ -61,10 +61,10 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
       },
     ],
   },
-  "Consensus.5.0": {
-    headline: "Performance, record value, and a maturing résumé check.",
+  "Consensus.6.0": {
+    headline: "Reward conquered schedules, then account for losses.",
     introduction:
-      "Computer Composite 5 combines Record Value and opponent-adjusted Performance, then checks every provisional Top-25 résumé against schedule strength and its two best wins.",
+      "Computer Composite 6 combines Record Value and opponent-adjusted Performance, checks provisional Top-25 résumés, and applies smooth loss pressure where the base ranking is strongest.",
     sections: [
       {
         kicker: "01 · BASE COMPOSITE",
@@ -83,9 +83,9 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
       },
       {
         kicker: "03 · MATURITY",
-        title: "Wait for the résumé to develop",
+        title: "Wait for the season to develop",
         description:
-          "The résumé check is zero through two completed FBS games, rises linearly from the third through eighth FBS game, and then reaches full strength. FCS games do not advance maturity.",
+          "Résumé and loss pressure are zero through two completed FBS games, rise linearly from the third through eighth FBS game, and then reach full strength. FCS games do not advance maturity.",
         formula: "M = clamp((G − 2) ÷ 6, 0, 1)",
         formulaDescription:
           "G is completed FBS games and M is résumé maturity.",
@@ -94,13 +94,22 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
         kicker: "04 · TOP-25 CERTIFICATION",
         title: "Apply pressure without a hard ceiling",
         description:
-          "Every provisional Top-25 team and each replacement entrant is checked recursively. Below-median schedules can add up to eight positions of pressure, scaled continuously by schedule weakness, best-two-win weakness, and résumé maturity.",
-        formula: "C = B + 8 × S × W × M",
+          "Every provisional Top-25 team and each replacement entrant is checked recursively. Below-median schedules can add up to 14 positions of pressure, scaled continuously by schedule weakness, best-two-win weakness, and maturity.",
+        formula: "R = 14 × S × W × M",
         formulaDescription:
-          "C is the certified position; S, W, and M are schedule weakness, best-two-win weakness, and résumé maturity.",
+          "R is résumé pressure; S, W, and M are schedule weakness, best-two-win weakness, and maturity.",
       },
       {
-        kicker: "05 · SHARED START",
+        kicker: "05 · LOSS PRESSURE",
+        title: "Distinguish schedule faced from schedule conquered",
+        description:
+          "The first loss carries one unit, the second adds four, and each later loss adds two. That total is multiplied by maturity and by the base provisional-rank percentile to the 12th power. The steep continuous curve is strongest near No. 1 and nearly zero in the lower field, without a Top-10 cliff. The rank is fixed before either pressure is applied, so the adjustment cannot feed back into itself.",
+        formula: "L = U(losses) × Q¹² × M",
+        formulaDescription:
+          "L is loss pressure, U is 0/1/5 then +2 per later loss, Q is the pre-pressure provisional-rank percentile, and M is maturity.",
+      },
+      {
+        kicker: "06 · SHARED START",
         title: "Stabilize sparse early schedules",
         description:
           "All three evidence families receive the same preseason AP/Coaches and prior-season Curve order. It informs early opponent estimates and positions, then fades linearly to zero after Week 6.",
@@ -144,8 +153,8 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
       },
     ],
   },
-  "RecordValue.1.0": {
-    headline: "How difficult was that record?",
+  "RecordValue.2.0": {
+    headline: "What did that record conquer?",
     introduction:
       "Record Value measures schedule-sensitive accomplishment through three related formulations and gives them one family vote.",
     sections: [
@@ -162,10 +171,10 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
           "Wins Above Expectation subtracts the record expected from a median FBS team against the same opponents.",
       },
       {
-        kicker: "03 · RECORD PROBABILITY",
-        title: "Measure how unusual the record is",
+        kicker: "03 · EARNED OPPONENT VALUE",
+        title: "Credit defeated opponents, not merely scheduled opponents",
         description:
-          "Strength of Record uses a Poisson-binomial schedule distribution to estimate how unlikely the achieved record or better would be for a median FBS team.",
+          "A win earns the defeated opponent's Result Network percentile. Every loss receives the same −0.75 debit, so merely facing an elite team does not create accomplishment credit. A tie uses the midpoint between the win credit and loss debit.",
       },
       {
         kicker: "04 · FAMILY AND PRIOR",
@@ -205,7 +214,7 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
         kicker: "04 · INTERPRETATION",
         title: "Performance is not the résumé",
         description:
-          "A close loss to an elite opponent may improve the performance estimate. Outcome and record accomplishment remain separate evidence in Computer Composite 5.",
+          "A close loss to an elite opponent may improve the performance estimate. Outcome and record accomplishment remain separate evidence in Computer Composite 6.",
       },
       {
         kicker: "05 · PRIOR",

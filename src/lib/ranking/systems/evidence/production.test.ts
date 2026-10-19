@@ -6,6 +6,8 @@ import {
 } from "./production";
 import {
   calculatePublishedEvidenceRankings,
+  earnedOpponentResultValue,
+  EARNED_OPPONENT_LOSS_DEBIT,
   resultNetworkFamilyEngine,
 } from "./engine";
 import { neutralComputerModel } from "../computer/model";
@@ -41,6 +43,17 @@ const games = [
 ];
 
 describe("production evidence families", () => {
+  it("credits only conquered opponent quality and gives every loss a fixed debit", () => {
+    expect(earnedOpponentResultValue("win", 0.9)).toBe(0.9);
+    expect(earnedOpponentResultValue("loss", 0.9)).toBe(
+      -EARNED_OPPONENT_LOSS_DEBIT,
+    );
+    expect(earnedOpponentResultValue("loss", 0.1)).toBe(
+      -EARNED_OPPONENT_LOSS_DEBIT,
+    );
+    expect(earnedOpponentResultValue("tie", 0.75)).toBe(0);
+  });
+
   it("starts from the shared prior and fades fully after Week 6", () => {
     const inactiveGames = games.map((item) => ({
       ...item,

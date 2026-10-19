@@ -1,20 +1,20 @@
-import { blendEngine } from "../engine";
+import { consensusEngine } from "./engine";
 import { neutralComputerModel } from "../../computer/model";
 import type {
   RankingSystemDefinition,
   RankingSystemId,
 } from "../../../types";
 
-export const blendSystems = {
-  "Blend.5.0": {
-    id: "Blend.5.0",
+export const consensusSystems = {
+  "Consensus.6.0": {
+    id: "Consensus.6.0",
     categoryId: "ranking",
-    kind: "blend",
-    engineId: "Blend.5",
-    engineName: "Gridiron Blend",
-    engineVersion: 5,
+    kind: "consensus",
+    engineId: "Consensus.6",
+    engineName: "Gridiron Consensus",
+    engineVersion: 6,
     modelVersion: 0,
-    engine: blendEngine,
+    engine: consensusEngine,
     model: neutralComputerModel,
     priorMode: "component",
   },

@@ -1,7 +1,7 @@
 import type { CfbdSourceCache } from "../../src/lib/cfbd/cache";
 import type { CandidateRanking } from "./candidate-engines";
 
-type CompositeV5Evidence = {
+type CompositeV6Evidence = {
   scheduleRanks: Map<string, number>;
   bestWinRanks: Map<string, number>;
   topTwoWinAverageRanks: Map<string, number>;
@@ -38,11 +38,11 @@ export function resumeMaturity(fbsGamesPlayed: number) {
   return Math.max(0, Math.min(1, (fbsGamesPlayed - 2) / 6));
 }
 
-export function combineCompositeV5Rankings(
+export function combineCompositeV6Rankings(
   resultNetwork: CandidateRanking[],
   recordValue: CandidateRanking[],
   performance: CandidateRanking[],
-  evidence: CompositeV5Evidence,
+  evidence: CompositeV6Evidence,
 ) {
   if (
     resultNetwork.length !== recordValue.length ||
@@ -74,6 +74,15 @@ export function combineCompositeV5Rankings(
       basePosition,
     ]),
   );
+  const provisionalRanks = new Map(
+    combined
+      .toSorted(
+        (left, right) =>
+          left.basePosition - right.basePosition ||
+          left.base.team.localeCompare(right.base.team),
+      )
+      .map(({ base }, index) => [base.team, index + 1]),
+  );
   const orderedTop25 = () =>
     combined
       .toSorted(
@@ -101,7 +110,7 @@ export function combineCompositeV5Rankings(
         fbsGamesPlayed === undefined
       ) {
         throw new Error(
-          `Missing Composite 5 résumé evidence for ${row.base.team}.`,
+          `Missing Composite 6 résumé evidence for ${row.base.team}.`,
         );
       }
       const scheduleWeakness = Math.max(
@@ -114,12 +123,32 @@ export function combineCompositeV5Rankings(
         Math.min(1, (topTwoWinAverageRank - 1) / 50),
       );
       const pressure = certifiedTeams.has(row.base.team)
-        ? 8 *
+        ? 14 *
           scheduleWeakness *
           winWeakness *
           resumeMaturity(fbsGamesPlayed)
         : 0;
-      row.position = basePosition + pressure / fieldDenominator;
+      const losses = row.base.losses;
+      const lossUnits =
+        losses <= 0
+          ? 0
+          : losses === 1
+            ? 1
+            : 5 + Math.max(0, losses - 2) * 2;
+      const provisionalRank =
+        provisionalRanks.get(row.base.team) ?? resultNetwork.length;
+      const rankPercentile =
+        resultNetwork.length <= 1
+          ? 1
+          : (resultNetwork.length - provisionalRank) /
+            (resultNetwork.length - 1);
+      const lossPressure =
+        lossUnits *
+        rankPercentile ** 12 *
+        resumeMaturity(fbsGamesPlayed);
+      row.position =
+        basePosition +
+        (pressure + lossPressure) / fieldDenominator;
     }
     const entrants = orderedTop25().filter(
       (team) => !certifiedTeams.has(team),

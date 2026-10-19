@@ -5,9 +5,11 @@ import type {
   TeamRanking,
 } from "../../../types";
 import {
-  CONSENSUS_V5_COMPONENT_SYSTEM_IDS,
-  CONSENSUS_V5_COMPONENT_WEIGHTS,
+  CONSENSUS_V6_COMPONENT_SYSTEM_IDS,
+  CONSENSUS_V6_COMPONENT_WEIGHTS,
   combineEvidenceCompositeRankings,
+  lossPressureUnits,
+  rankScaledLossPressure,
   resumeMaturity,
 } from "./engine";
 
@@ -44,8 +46,8 @@ function component(
     rankingSystemId,
     rankings: rankings(order, scores),
     weight:
-      CONSENSUS_V5_COMPONENT_WEIGHTS[
-        rankingSystemId as keyof typeof CONSENSUS_V5_COMPONENT_WEIGHTS
+      CONSENSUS_V6_COMPONENT_WEIGHTS[
+        rankingSystemId as keyof typeof CONSENSUS_V6_COMPONENT_WEIGHTS
       ],
   };
 }
@@ -53,7 +55,7 @@ function component(
 function components(order: string[]) {
   return [
     component("ResultNetwork.1.0", order),
-    component("RecordValue.1.0", order),
+    component("RecordValue.2.0", order),
     component("CappedMarginPerformance.1.0", order),
   ];
 }
@@ -73,16 +75,16 @@ function repeatedGames(opponent: string, count: number): Game[] {
   }));
 }
 
-describe("Consensus.5.0", () => {
+describe("Consensus.6.0", () => {
   it("uses Result Network as evidence and weights the base 40/60", () => {
-    expect(CONSENSUS_V5_COMPONENT_SYSTEM_IDS).toEqual([
+    expect(CONSENSUS_V6_COMPONENT_SYSTEM_IDS).toEqual([
       "ResultNetwork.1.0",
-      "RecordValue.1.0",
+      "RecordValue.2.0",
       "CappedMarginPerformance.1.0",
     ]);
-    expect(CONSENSUS_V5_COMPONENT_WEIGHTS).toEqual({
+    expect(CONSENSUS_V6_COMPONENT_WEIGHTS).toEqual({
       "ResultNetwork.1.0": 0,
-      "RecordValue.1.0": 0.4,
+      "RecordValue.2.0": 0.4,
       "CappedMarginPerformance.1.0": 0.6,
     });
   });
@@ -96,7 +98,7 @@ describe("Consensus.5.0", () => {
           [1, 1, 0],
         ),
         component(
-          "RecordValue.1.0",
+          "RecordValue.2.0",
           ["Bravo", "Alpha", "Charlie"],
           [1, 1, 0],
         ),
@@ -121,7 +123,7 @@ describe("Consensus.5.0", () => {
           weight: 0,
         }),
         expect.objectContaining({
-          rankingSystemId: "RecordValue.1.0",
+          rankingSystemId: "RecordValue.2.0",
           weight: 0.4,
         }),
         expect.objectContaining({
@@ -165,5 +167,39 @@ describe("Consensus.5.0", () => {
 
     expect(alpha?.resumeMaturity).toBe(0);
     expect(alpha?.resumePressure).toBe(0);
+    expect(alpha?.lossPressure).toBe(0);
+  });
+
+  it("uses one, four, and two incremental units for later losses", () => {
+    expect(
+      [0, 1, 2, 3, 4].map((losses) => lossPressureUnits(losses)),
+    ).toEqual([0, 1, 5, 7, 9]);
+  });
+
+  it("scales loss pressure smoothly by provisional rank and maturity", () => {
+    expect(rankScaledLossPressure(2, 1, 100, 1)).toBe(5);
+    expect(rankScaledLossPressure(2, 10, 100, 1)).toBeCloseTo(
+      5 * ((100 - 10) / 99) ** 12,
+    );
+    expect(rankScaledLossPressure(2, 25, 100, 1)).toBeGreaterThan(0);
+    expect(rankScaledLossPressure(2, 50, 100, 1)).toBeLessThan(0.01);
+    expect(rankScaledLossPressure(2, 1, 100, 0.5)).toBe(2.5);
+    expect(rankScaledLossPressure(2, 100, 100, 1)).toBe(0);
+  });
+
+  it("publishes loss pressure from the pre-pressure provisional rank", () => {
+    const order = [
+      "Alpha",
+      ...Array.from({ length: 29 }, (_, index) => `Team ${index + 2}`),
+    ];
+    const inputs = components(order);
+    inputs[0].rankings[0].losses = 2;
+    const alpha = combineEvidenceCompositeRankings(
+      inputs,
+      repeatedGames("Team 30", 8),
+      8,
+    ).find(({ team }) => team === "Alpha");
+
+    expect(alpha?.lossPressure).toBe(5);
   });
 });

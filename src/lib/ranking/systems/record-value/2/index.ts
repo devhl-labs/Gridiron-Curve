@@ -6,13 +6,13 @@ import type {
 } from "../../../types";
 
 export const recordValueSystems = {
-  "RecordValue.1.0": {
-    id: "RecordValue.1.0",
+  "RecordValue.2.0": {
+    id: "RecordValue.2.0",
     categoryId: "ranking",
     kind: "computer",
-    engineId: "RecordValue.1",
+    engineId: "RecordValue.2",
     engineName: "Record Value",
-    engineVersion: 1,
+    engineVersion: 2,
     modelVersion: 0,
     engine: recordValueProductionEngine,
     model: neutralComputerModel,

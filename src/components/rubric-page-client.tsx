@@ -69,7 +69,12 @@ const consensusCriteria = [
   {
     title: "Top-25 résumés are certified",
     description:
-      "Weak schedules and weak best-two wins can add up to eight positions of downward pressure.",
+      "Weak schedules and weak best-two wins can add up to 14 positions of downward pressure.",
+  },
+  {
+    title: "Losses matter most near the top",
+    description:
+      "The first, second, and later losses add maturity-scaled pressure through a steep continuous curve based on the pre-pressure provisional rank.",
   },
   {
     title: "Positions share one scale",
