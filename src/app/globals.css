@@ -203,6 +203,10 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .team-calculation-panel > .kicker, .team-poll-panel > .kicker { color: #d5a85b; display: block; margin-bottom: 20px; }
 .team-calculation-panel > div { align-items: center; border-bottom: 1px solid #38443d; display: flex; justify-content: space-between; padding: 10px 0; }
 .team-calculation-panel > div strong { font-family: var(--font-plex-mono), monospace; font-size: 13px; }
+.team-calculation-panel > .team-adjudication-result { align-items: flex-start; flex-direction: column; gap: 7px; }
+.team-calculation-panel > .team-adjudication-result strong { color: #d5a85b; font-size: 10px; letter-spacing: .04em; line-height: 1.5; text-transform: uppercase; }
+.team-calculation-panel > .team-adjudication-group { align-items: flex-start; flex-direction: column; gap: 7px; }
+.team-calculation-panel > .team-adjudication-group strong { color: #bdc5bf; font-size: 10px; font-weight: 400; line-height: 1.5; }
 .team-calculation-panel > .team-calculation-result { border-bottom: 0; padding-bottom: 0; padding-top: 18px; }
 .team-calculation-panel > .team-calculation-result span { color: var(--paper); }
 .team-calculation-panel > .team-calculation-result strong { color: #d5a85b; font-family: Georgia, serif; font-size: 28px; font-weight: 400; }

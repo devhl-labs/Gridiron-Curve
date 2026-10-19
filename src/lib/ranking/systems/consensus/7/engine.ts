@@ -1,4 +1,6 @@
 import type {
+  ConsensusAdjudication,
+  ConsensusAdjudicationCriterion,
   Game,
   RankingEngine,
   RankingSystemId,
@@ -10,22 +12,23 @@ type ConsensusComponent = {
   rankings: TeamRanking[];
 };
 
-export const CONSENSUS_V6_COMPONENT_WEIGHTS = {
+export const CONSENSUS_V7_COMPONENT_WEIGHTS = {
   "ResultNetwork.1.0": 0,
   "RecordValue.2.0": 0.4,
   "CappedMarginPerformance.1.0": 0.6,
 } as const satisfies Partial<Record<RankingSystemId, number>>;
 
-export const CONSENSUS_V6_COMPONENT_SYSTEM_IDS = Object.keys(
-  CONSENSUS_V6_COMPONENT_WEIGHTS,
-) as Array<keyof typeof CONSENSUS_V6_COMPONENT_WEIGHTS>;
+export const CONSENSUS_V7_COMPONENT_SYSTEM_IDS = Object.keys(
+  CONSENSUS_V7_COMPONENT_WEIGHTS,
+) as Array<keyof typeof CONSENSUS_V7_COMPONENT_WEIGHTS>;
 
-export const CONSENSUS_V6_MAX_RESUME_PRESSURE = 14;
-export const CONSENSUS_V6_LOSS_RANK_EXPONENT = 12;
+export const CONSENSUS_V7_MAX_RESUME_PRESSURE = 14;
+export const CONSENSUS_V7_LOSS_RANK_EXPONENT = 12;
+export const CONSENSUS_V7_ADJUDICATION_MAX_GAP = 1;
 
 function requiresComponents(): never {
   throw new Error(
-    "Computer Composite 6 requires all registered evidence-family rankings.",
+    "Computer Composite 7 requires all registered evidence-family rankings.",
   );
 }
 
@@ -65,7 +68,7 @@ export function rankScaledLossPressure(
         );
   return (
     lossPressureUnits(losses) *
-    rankPercentile ** CONSENSUS_V6_LOSS_RANK_EXPONENT *
+    rankPercentile ** CONSENSUS_V7_LOSS_RANK_EXPONENT *
     maturity
   );
 }
@@ -128,6 +131,9 @@ function resumeEvidence(
   const defeatedOpponentRanks = new Map<string, number[]>(
     resultNetwork.map(({ team }) => [team, []]),
   );
+  const bestWinRanks = new Map(
+    resultNetwork.map(({ team }) => [team, fieldSize + 1]),
+  );
   const fbsGamesPlayed = new Map(
     resultNetwork.map(({ team }) => [team, 0]),
   );
@@ -164,6 +170,13 @@ function resumeEvidence(
     const opponentRank = resultRanks.get(opponent);
     if (!teams.has(winner) || opponentRank === undefined) continue;
     defeatedOpponentRanks.get(winner)?.push(opponentRank);
+    bestWinRanks.set(
+      winner,
+      Math.min(
+        bestWinRanks.get(winner) ?? fieldSize + 1,
+        opponentRank,
+      ),
+    );
   }
 
   const topTwoWinAverageRanks = new Map(
@@ -178,9 +191,314 @@ function resumeEvidence(
 
   return {
     fbsGamesPlayed,
+    bestWinRanks,
     scheduleRanks: scheduleRanks(resultNetwork),
     topTwoWinAverageRanks,
   };
+}
+
+type ConsensusRankDetail = {
+  rankingSystemId: RankingSystemId;
+  rank: number;
+  tieSafeRank: number;
+  included: boolean;
+  weight: number;
+};
+
+type CompositeRow = {
+  base: TeamRanking;
+  basePosition: number;
+  position: number;
+  resumePressure: number;
+  lossPressure: number;
+  consensusRanks: ConsensusRankDetail[];
+};
+
+type AdjudicatedGroup = {
+  original: CompositeRow[];
+  adjudicated: CompositeRow[];
+  maximumAdjacentGap: number;
+  headToHeadResults: Array<{ winner: string; loser: string }>;
+};
+
+function headToHeadAdvantage(
+  games: Game[],
+  throughWeek: number,
+  firstTeam: string,
+  secondTeam: string,
+) {
+  let firstWins = 0;
+  let secondWins = 0;
+  for (const game of games) {
+    if (
+      !game.completed ||
+      game.seasonType === "postseason" ||
+      game.week > throughWeek ||
+      game.homePoints === null ||
+      game.awayPoints === null ||
+      game.homePoints === game.awayPoints ||
+      !(
+        (game.homeTeam === firstTeam && game.awayTeam === secondTeam) ||
+        (game.homeTeam === secondTeam && game.awayTeam === firstTeam)
+      )
+    ) {
+      continue;
+    }
+    const winner =
+      game.homePoints > game.awayPoints
+        ? game.homeTeam
+        : game.awayTeam;
+    if (winner === firstTeam) firstWins += 1;
+    if (winner === secondTeam) secondWins += 1;
+  }
+  if (firstWins > secondWins) return firstTeam;
+  if (secondWins > firstWins) return secondTeam;
+  return null;
+}
+
+function adjudicateGroup(
+  group: CompositeRow[],
+  games: Game[],
+  throughWeek: number,
+  bestWinRanks: Map<string, number>,
+  scheduleRankMap: Map<string, number>,
+) {
+  const originalIndex = new Map(
+    group.map(({ base }, index) => [base.team, index]),
+  );
+  const edges = new Map(
+    group.map(({ base }) => [base.team, new Set<string>()]),
+  );
+  const headToHeadResults: AdjudicatedGroup["headToHeadResults"] = [];
+
+  for (let left = 0; left < group.length; left += 1) {
+    for (let right = left + 1; right < group.length; right += 1) {
+      const leftTeam = group[left].base.team;
+      const rightTeam = group[right].base.team;
+      const winner = headToHeadAdvantage(
+        games,
+        throughWeek,
+        leftTeam,
+        rightTeam,
+      );
+      if (!winner) continue;
+      const loser = winner === leftTeam ? rightTeam : leftTeam;
+      edges.get(winner)!.add(loser);
+      headToHeadResults.push({ winner, loser });
+    }
+  }
+
+  const compareFallback = (left: CompositeRow, right: CompositeRow) =>
+    (bestWinRanks.get(left.base.team) ?? Number.POSITIVE_INFINITY) -
+      (bestWinRanks.get(right.base.team) ?? Number.POSITIVE_INFINITY) ||
+    (scheduleRankMap.get(left.base.team) ?? Number.POSITIVE_INFINITY) -
+      (scheduleRankMap.get(right.base.team) ?? Number.POSITIVE_INFINITY) ||
+    (originalIndex.get(left.base.team) ?? Number.POSITIVE_INFINITY) -
+      (originalIndex.get(right.base.team) ?? Number.POSITIVE_INFINITY);
+  const rowsByTeam = new Map(
+    group.map((row) => [row.base.team, row]),
+  );
+  const remaining = new Set(group.map(({ base }) => base.team));
+  const adjudicated: CompositeRow[] = [];
+
+  while (remaining.size > 0) {
+    let available = [...remaining].filter((team) =>
+      [...remaining].every(
+        (candidate) =>
+          candidate === team || !edges.get(candidate)?.has(team),
+      )
+    );
+    if (available.length === 0) {
+      available = [...remaining];
+    }
+    const selected = available
+      .map((team) => rowsByTeam.get(team)!)
+      .toSorted(compareFallback)[0];
+    if (!selected) {
+      throw new Error("Composite 7 could not adjudicate a close group.");
+    }
+    adjudicated.push(selected);
+    remaining.delete(selected.base.team);
+  }
+
+  return { adjudicated, headToHeadResults };
+}
+
+function hasHeadToHeadPath(
+  winner: string,
+  loser: string,
+  results: Array<{ winner: string; loser: string }>,
+) {
+  const opponents = Map.groupBy(results, ({ winner: team }) => team);
+  const pending = [winner];
+  const visited = new Set<string>();
+  while (pending.length > 0) {
+    const team = pending.pop()!;
+    if (team === loser) return true;
+    if (visited.has(team)) continue;
+    visited.add(team);
+    pending.push(
+      ...(opponents.get(team) ?? []).map(
+        ({ loser: defeated }) => defeated,
+      ),
+    );
+  }
+  return false;
+}
+
+function groupDecidingCriteria(
+  group: AdjudicatedGroup,
+  bestWinRanks: Map<string, number>,
+  scheduleRankMap: Map<string, number>,
+) {
+  const originalRanks = new Map(
+    group.original.map(({ base }, index) => [base.team, index]),
+  );
+  const finalRanks = new Map(
+    group.adjudicated.map(({ base }, index) => [base.team, index]),
+  );
+  const criteria = new Set<ConsensusAdjudicationCriterion>();
+
+  for (const promoted of group.adjudicated) {
+    for (const demoted of group.original) {
+      if (
+        (originalRanks.get(promoted.base.team) ?? 0) <=
+          (originalRanks.get(demoted.base.team) ?? 0) ||
+        (finalRanks.get(promoted.base.team) ?? 0) >=
+          (finalRanks.get(demoted.base.team) ?? 0)
+      ) {
+        continue;
+      }
+      if (
+        hasHeadToHeadPath(
+          promoted.base.team,
+          demoted.base.team,
+          group.headToHeadResults,
+        )
+      ) {
+        criteria.add("head-to-head");
+      } else if (
+        (bestWinRanks.get(promoted.base.team) ??
+          Number.POSITIVE_INFINITY) <
+        (bestWinRanks.get(demoted.base.team) ??
+          Number.POSITIVE_INFINITY)
+      ) {
+        criteria.add("strongest-defeated-opponent");
+      } else if (
+        (scheduleRankMap.get(promoted.base.team) ??
+          Number.POSITIVE_INFINITY) <
+        (scheduleRankMap.get(demoted.base.team) ??
+          Number.POSITIVE_INFINITY)
+      ) {
+        criteria.add("strength-of-schedule");
+      }
+    }
+  }
+  return [...criteria];
+}
+
+function adjudicateCloseGroups(
+  preliminary: CompositeRow[],
+  games: Game[],
+  throughWeek: number,
+  bestWinRanks: Map<string, number>,
+  scheduleRankMap: Map<string, number>,
+) {
+  const fieldDenominator = preliminary.length + 1;
+  const ordered: CompositeRow[] = [];
+  const groups: AdjudicatedGroup[] = [];
+  let groupStart = 0;
+
+  while (groupStart < preliminary.length) {
+    let groupEnd = groupStart + 1;
+    let maximumAdjacentGap = 0;
+    while (groupEnd < preliminary.length) {
+      const previous = preliminary[groupEnd - 1];
+      const next = preliminary[groupEnd];
+      const sameRecord =
+        previous.base.wins === next.base.wins &&
+        previous.base.losses === next.base.losses &&
+        previous.base.gamesPlayed -
+          previous.base.wins -
+          previous.base.losses ===
+          next.base.gamesPlayed - next.base.wins - next.base.losses;
+      const gap =
+        (next.position - previous.position) * fieldDenominator;
+      if (
+        !sameRecord ||
+        gap > CONSENSUS_V7_ADJUDICATION_MAX_GAP + 1e-9
+      ) {
+        break;
+      }
+      maximumAdjacentGap = Math.max(maximumAdjacentGap, gap);
+      groupEnd += 1;
+    }
+
+    const group = preliminary.slice(groupStart, groupEnd);
+    if (group.length === 1) {
+      ordered.push(group[0]);
+      groupStart = groupEnd;
+      continue;
+    }
+    const { adjudicated, headToHeadResults } = adjudicateGroup(
+      group,
+      games,
+      throughWeek,
+      bestWinRanks,
+      scheduleRankMap,
+    );
+    ordered.push(...adjudicated);
+    if (
+      group.some(
+        ({ base }, index) => base.team !== adjudicated[index]?.base.team,
+      )
+    ) {
+      groups.push({
+        original: group,
+        adjudicated,
+        maximumAdjacentGap,
+        headToHeadResults,
+      });
+    }
+    groupStart = groupEnd;
+  }
+
+  const preliminaryRanks = new Map(
+    preliminary.map(({ base }, index) => [base.team, index + 1]),
+  );
+  const finalRanks = new Map(
+    ordered.map(({ base }, index) => [base.team, index + 1]),
+  );
+  const adjudications = new Map<string, ConsensusAdjudication>();
+  for (const group of groups) {
+    const adjudication: ConsensusAdjudication = {
+      maximumAdjacentGap: Number(
+        group.maximumAdjacentGap.toFixed(3),
+      ),
+      members: group.adjudicated.map(({ base }) => ({
+        team: base.team,
+        preliminaryRank: preliminaryRanks.get(base.team)!,
+        finalRank: finalRanks.get(base.team)!,
+        strongestDefeatedOpponentRank:
+          (bestWinRanks.get(base.team) ?? preliminary.length + 1) <=
+            preliminary.length
+            ? bestWinRanks.get(base.team)!
+            : null,
+        scheduleRank: scheduleRankMap.get(base.team)!,
+      })),
+      headToHeadResults: group.headToHeadResults,
+      decidingCriteria: groupDecidingCriteria(
+        group,
+        bestWinRanks,
+        scheduleRankMap,
+      ),
+    };
+    for (const { base } of group.original) {
+      adjudications.set(base.team, adjudication);
+    }
+  }
+
+  return { ordered, preliminaryRanks, adjudications };
 }
 
 export function combineEvidenceCompositeRankings(
@@ -194,14 +512,14 @@ export function combineEvidenceCompositeRankings(
       component,
     ]),
   );
-  const requiredComponents = CONSENSUS_V6_COMPONENT_SYSTEM_IDS.map(
+  const requiredComponents = CONSENSUS_V7_COMPONENT_SYSTEM_IDS.map(
     (rankingSystemId) => componentsById.get(rankingSystemId),
   );
   if (
-    components.length !== CONSENSUS_V6_COMPONENT_SYSTEM_IDS.length ||
+    components.length !== CONSENSUS_V7_COMPONENT_SYSTEM_IDS.length ||
     requiredComponents.some((component) => !component)
   ) {
-    throw new Error("Computer Composite 6 requires component rankings.");
+    throw new Error("Computer Composite 7 requires component rankings.");
   }
   const [resultNetwork, recordValue, performance] =
     requiredComponents as Array<
@@ -211,13 +529,13 @@ export function combineEvidenceCompositeRankings(
     [resultNetwork, recordValue, performance].some(
       (component) =>
         component.weight !==
-        CONSENSUS_V6_COMPONENT_WEIGHTS[
-          component.rankingSystemId as keyof typeof CONSENSUS_V6_COMPONENT_WEIGHTS
+        CONSENSUS_V7_COMPONENT_WEIGHTS[
+          component.rankingSystemId as keyof typeof CONSENSUS_V7_COMPONENT_WEIGHTS
         ],
     )
   ) {
     throw new Error(
-      "Computer Composite 6 requires its registered component weights.",
+      "Computer Composite 7 requires its registered component weights.",
     );
   }
 
@@ -237,7 +555,7 @@ export function combineEvidenceCompositeRankings(
     );
     if (missing.length > 0 || unexpected.length > 0) {
       throw new Error(
-        `${rankingSystemId} does not rank the same team field as Computer Composite 6.`,
+        `${rankingSystemId} does not rank the same team field as Computer Composite 7.`,
       );
     }
   }
@@ -260,8 +578,8 @@ export function combineEvidenceCompositeRankings(
     resultNetwork.rankings,
   );
   const fieldDenominator = resultNetwork.rankings.length + 1;
-  const combined = resultNetwork.rankings.map((base) => {
-    const consensusRanks = CONSENSUS_V6_COMPONENT_SYSTEM_IDS.map(
+  const combined: CompositeRow[] = resultNetwork.rankings.map((base) => {
+    const consensusRanks = CONSENSUS_V7_COMPONENT_SYSTEM_IDS.map(
       (rankingSystemId) => {
         const ranking = componentMaps
           .get(rankingSystemId)
@@ -279,7 +597,7 @@ export function combineEvidenceCompositeRankings(
           rank: ranking.rank,
           tieSafeRank,
           included: true,
-          weight: CONSENSUS_V6_COMPONENT_WEIGHTS[rankingSystemId],
+          weight: CONSENSUS_V7_COMPONENT_WEIGHTS[rankingSystemId],
         };
       },
     );
@@ -341,7 +659,7 @@ export function combineEvidenceCompositeRankings(
         fbsGamesPlayed === undefined
       ) {
         throw new Error(
-          `Missing Composite 6 résumé evidence for ${row.base.team}.`,
+          `Missing Composite 7 résumé evidence for ${row.base.team}.`,
         );
       }
       const scheduleWeakness = Math.max(
@@ -354,7 +672,7 @@ export function combineEvidenceCompositeRankings(
         Math.min(1, (topTwoWinAverageRank - 1) / 50),
       );
       const pressure = certifiedTeams.has(row.base.team)
-        ? CONSENSUS_V6_MAX_RESUME_PRESSURE *
+        ? CONSENSUS_V7_MAX_RESUME_PRESSURE *
           scheduleWeakness *
           winWeakness *
           resumeMaturity(fbsGamesPlayed)
@@ -379,14 +697,25 @@ export function combineEvidenceCompositeRankings(
     entrants.forEach((team) => certifiedTeams.add(team));
   }
 
-  combined.sort(
+  const preliminary = combined.toSorted(
     (left, right) =>
       left.position - right.position ||
       left.base.team.localeCompare(right.base.team),
   );
+  const {
+    ordered: adjudicated,
+    preliminaryRanks,
+    adjudications,
+  } = adjudicateCloseGroups(
+    preliminary,
+    games,
+    throughWeek,
+    evidence.bestWinRanks,
+    evidence.scheduleRanks,
+  );
   const lastIndex = Math.max(1, combined.length - 1);
 
-  return combined.map(
+  return adjudicated.map(
     (
       {
         base,
@@ -433,6 +762,9 @@ export function combineEvidenceCompositeRankings(
             resultNetwork.rankings.length + 1
           ).toFixed(3),
         ),
+        consensusPreliminaryRank:
+          preliminaryRanks.get(base.team) ?? index + 1,
+        consensusAdjudication: adjudications.get(base.team),
       };
     },
   );

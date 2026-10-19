@@ -91,6 +91,11 @@ const consensusCriteria = [
     description:
       "The résumé check is zero through two FBS games, grows linearly, and reaches full strength after eight.",
   },
+  {
+    title: "Close groups use earned tiebreaks",
+    description:
+      "After pressure, same-record teams separated by no more than one adjacent effective position use head-to-head, strongest defeated opponent, SOS, then preliminary order.",
+  },
 ];
 
 const blendCriteria = [

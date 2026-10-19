@@ -163,6 +163,8 @@ function createPublishedView(
         resumeMaturity,
         resumeScheduleRank,
         resumeBestTwoWinAverageRank,
+        consensusPreliminaryRank,
+        consensusAdjudication,
         blendScore,
         blendComponents,
         blendHeadToHeadRecord,
@@ -187,6 +189,8 @@ function createPublishedView(
         resumeMaturity,
         resumeScheduleRank,
         resumeBestTwoWinAverageRank,
+        consensusPreliminaryRank,
+        consensusAdjudication,
         blendScore,
         blendComponents,
         blendHeadToHeadRecord,
@@ -217,7 +221,7 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
           rankingSystemId,
         );
         let rankHistories: Map<string, PublishedRankHistory> | undefined;
-        if (rankingSystemId === "Consensus.6.0") {
+        if (rankingSystemId === "Consensus.7.0") {
           for (const { team, rank } of view.rankings) {
             const observations = rankObservations.get(team) ?? [];
             observations.push(rank);
@@ -231,7 +235,7 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
           );
         }
         const pollRankHistories =
-          rankingSystemId === "Blend.6.0"
+          rankingSystemId === "Blend.7.0"
             ? new Map(
                 view.rankings.map(({ team }) => [
                   team,

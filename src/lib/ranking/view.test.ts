@@ -111,7 +111,7 @@ describe("createRankingView", () => {
     const view = createRankingView(source);
     const charlie = view.rankings.find(({ team }) => team === "Charlie");
 
-    expect(view.rankingSystemId).toBe("Consensus.6.0");
+    expect(view.rankingSystemId).toBe("Consensus.7.0");
     expect(charlie?.movement).toBeGreaterThan(0);
   });
 
@@ -257,8 +257,8 @@ describe("createRankingView", () => {
     ).toBe("L 10–40 @ Charlie");
   });
 
-  it("publishes the selected prior-aware families for Consensus.6", () => {
-    const view = createRankingView(source, [], "Consensus.6.0");
+  it("publishes the selected prior-aware families for Consensus.7", () => {
+    const view = createRankingView(source, [], "Consensus.7.0");
 
     expect(view.rankings).toHaveLength(source.teams.length);
     expect(view.priorDescription).toContain(
@@ -282,9 +282,9 @@ describe("createRankingView", () => {
     );
   });
 
-  it("uses Consensus.6 as the computer input for Blend.6", () => {
-    const view = createRankingView(source, [], "Blend.6.0");
-    const consensus = createRankingView(source, [], "Consensus.6.0");
+  it("uses Consensus.7 as the computer input for Blend.7", () => {
+    const view = createRankingView(source, [], "Blend.7.0");
+    const consensus = createRankingView(source, [], "Consensus.7.0");
     const consensusRanks = new Map(
       consensus.rankings.map(({ team, rank }) => [team, rank]),
     );
@@ -366,7 +366,7 @@ describe("createRankingView", () => {
         ],
       },
       [],
-      "Blend.6.0",
+      "Blend.7.0",
     );
 
     expect(view.priorDescription).toContain("AP Week 3 and Coaches Week 3");

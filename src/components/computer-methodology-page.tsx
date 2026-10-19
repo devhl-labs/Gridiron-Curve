@@ -23,10 +23,10 @@ type Methodology = {
 };
 
 const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
-  "Blend.6.0": {
+  "Blend.7.0": {
     headline: "Computer results, checked by people.",
     introduction:
-      "Computer + AP/Coaches combines Computer Composite 6 with the AP and Coaches polls. The computer result receives half the weight, while each poll receives one quarter.",
+      "Computer + AP/Coaches combines Computer Composite 7 with the AP and Coaches polls. The computer result receives half the weight, while each poll receives one quarter.",
     sections: [
       {
         kicker: "01 · COMMON POINTS",
@@ -42,7 +42,7 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
         kicker: "02 · WEIGHTING",
         title: "Balance computers and polls",
         description:
-          "Computer Composite 6 has the same total influence as the two human polls combined.",
+          "Computer Composite 7 has the same total influence as the two human polls combined.",
         formula: "B = 0.50C + 0.25A + 0.25H",
         formulaDescription:
           "B is the combined score, C is Computer Composite points, A is AP points, and H is Coaches points.",
@@ -61,10 +61,10 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
       },
     ],
   },
-  "Consensus.6.0": {
+  "Consensus.7.0": {
     headline: "Reward conquered schedules, then account for losses.",
     introduction:
-      "Computer Composite 6 combines Record Value and opponent-adjusted Performance, checks provisional Top-25 résumés, and applies smooth loss pressure where the base ranking is strongest.",
+      "Computer Composite 7 combines Record Value and opponent-adjusted Performance, applies maturity-scaled résumé and loss pressure, then adjudicates close same-record groups with earned résumé evidence.",
     sections: [
       {
         kicker: "01 · BASE COMPOSITE",
@@ -109,7 +109,16 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
           "L is loss pressure, U is 0/1/5 then +2 per later loss, Q is the pre-pressure provisional-rank percentile, and M is maturity.",
       },
       {
-        kicker: "06 · SHARED START",
+        kicker: "06 · CLOSE-CALL ADJUDICATION",
+        title: "Resolve only genuinely close groups",
+        description:
+          "After pressure establishes the preliminary order, consecutive teams with the same record form a close group when every adjacent gap is at most one effective rank position. Head-to-head constraints come first, followed by strongest defeated opponent, Result Network schedule rank, and the preliminary order. This can reorder a close group without turning the entire ranking into a schedule-strength sort.",
+        formula: "H2H → strongest win → SOS → preliminary order",
+        formulaDescription:
+          "The complete group is ordered deterministically. Published rows retain both the preliminary and final ranks plus the evidence used when an adjudication changes the order.",
+      },
+      {
+        kicker: "07 · SHARED START",
         title: "Stabilize sparse early schedules",
         description:
           "All three evidence families receive the same preseason AP/Coaches and prior-season Curve order. It informs early opponent estimates and positions, then fades linearly to zero after Week 6.",
@@ -214,7 +223,7 @@ const METHODOLOGIES: Record<RankingSystemId, Methodology> = {
         kicker: "04 · INTERPRETATION",
         title: "Performance is not the résumé",
         description:
-          "A close loss to an elite opponent may improve the performance estimate. Outcome and record accomplishment remain separate evidence in Computer Composite 6.",
+          "A close loss to an elite opponent may improve the performance estimate. Outcome and record accomplishment remain separate evidence in Computer Composite 7.",
       },
       {
         kicker: "05 · PRIOR",

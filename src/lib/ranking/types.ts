@@ -2,8 +2,8 @@ export type RankingSystemId =
   | "ResultNetwork.1.0"
   | "RecordValue.2.0"
   | "CappedMarginPerformance.1.0"
-  | "Consensus.6.0"
-  | "Blend.6.0";
+  | "Consensus.7.0"
+  | "Blend.7.0";
 
 export type RankingCategoryId =
   | "ranking"
@@ -17,8 +17,26 @@ export type RankingEngineId =
   | "ResultNetwork.1"
   | "RecordValue.2"
   | "CappedMarginPerformance.1"
-  | "Consensus.6"
-  | "Blend.6";
+  | "Consensus.7"
+  | "Blend.7";
+
+export type ConsensusAdjudicationCriterion =
+  | "head-to-head"
+  | "strongest-defeated-opponent"
+  | "strength-of-schedule";
+
+export type ConsensusAdjudication = {
+  maximumAdjacentGap: number;
+  members: Array<{
+    team: string;
+    preliminaryRank: number;
+    finalRank: number;
+    strongestDefeatedOpponentRank: number | null;
+    scheduleRank: number;
+  }>;
+  headToHeadResults: Array<{ winner: string; loser: string }>;
+  decidingCriteria: ConsensusAdjudicationCriterion[];
+};
 
 export type TeamBoxScore = {
   totalYards: number;
@@ -80,6 +98,8 @@ export type TeamRanking = {
   resumeMaturity?: number;
   resumeScheduleRank?: number | null;
   resumeBestTwoWinAverageRank?: number;
+  consensusPreliminaryRank?: number;
+  consensusAdjudication?: ConsensusAdjudication;
   blendScore?: number;
   blendComponents?: Array<{
     source: "Gridiron Consensus" | "AP Poll" | "Coaches Poll";

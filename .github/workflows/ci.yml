@@ -49,14 +49,14 @@ jobs:
       - name: Verify static export
         run: |
           test -f out/index.html
-          test -f out/generated/v5/manifest.json
-          test -f out/generated/v5/images/2099/week-02/ResultNetwork.1.0.jpg
-          test -f out/generated/v5/images/2099/week-02/RecordValue.2.0.jpg
-          test -f out/generated/v5/images/2099/week-02/CappedMarginPerformance.1.0.jpg
-          test -f out/generated/v5/images/2099/week-02/Consensus.6.0.jpg
-          test -f out/generated/v5/images/2099/week-02/Blend.6.0.jpg
+          test -f out/generated/v7/manifest.json
+          test -f out/generated/v7/images/2099/week-02/ResultNetwork.1.0.jpg
+          test -f out/generated/v7/images/2099/week-02/RecordValue.2.0.jpg
+          test -f out/generated/v7/images/2099/week-02/CappedMarginPerformance.1.0.jpg
+          test -f out/generated/v7/images/2099/week-02/Consensus.7.0.jpg
+          test -f out/generated/v7/images/2099/week-02/Blend.7.0.jpg
           node - <<'NODE'
-          const manifest = require("./out/generated/v5/manifest.json");
+          const manifest = require("./out/generated/v7/manifest.json");
           const seasons = manifest.seasons.map(({ season }) => season);
           if (seasons.join(",") !== "2098,2099") {
             throw new Error(`Unexpected fixture seasons: ${seasons.join(",")}`);
@@ -65,13 +65,13 @@ jobs:
             "ResultNetwork.1.0",
             "RecordValue.2.0",
             "CappedMarginPerformance.1.0",
-            "Consensus.6.0",
-            "Blend.6.0",
+            "Consensus.7.0",
+            "Blend.7.0",
           ];
           if (manifest.rankingSystemIds.join(",") !== expectedSystems.join(",")) {
             throw new Error(`Unexpected publication closure: ${manifest.rankingSystemIds.join(",")}`);
           }
-          const consensus = require("./out/generated/v5/rankings/2099/week-02/Consensus.6.0.json");
+          const consensus = require("./out/generated/v7/rankings/2099/week-02/Consensus.7.0.json");
           const expectedWeights = new Map([
             ["ResultNetwork.1.0", 0],
             ["RecordValue.2.0", 0.4],
@@ -80,7 +80,7 @@ jobs:
           if (
             consensus.rankings.length === 0 ||
             consensus.rankings.some(
-              ({ consensusRanks, resumePressure, lossPressure, resumeMaturity }) =>
+              ({ consensusRanks, resumePressure, lossPressure, resumeMaturity, consensusPreliminaryRank, consensusAdjudication }) =>
                 consensusRanks?.length !== 3 ||
                 consensusRanks.some(
                   ({ rankingSystemId, included, weight }) =>
@@ -89,12 +89,22 @@ jobs:
                 ) ||
                 resumePressure === undefined ||
                 lossPressure === undefined ||
-                resumeMaturity === undefined,
+                resumeMaturity === undefined ||
+                consensusPreliminaryRank === undefined ||
+                (
+                  consensusAdjudication !== undefined &&
+                  (
+                    consensusAdjudication.members?.length < 2 ||
+                    consensusAdjudication.maximumAdjacentGap > 1 ||
+                    !Array.isArray(consensusAdjudication.headToHeadResults) ||
+                    !Array.isArray(consensusAdjudication.decidingCriteria)
+                  )
+                ),
             )
           ) {
-            throw new Error("The fixture Consensus.6 does not expose weights, résumé evidence, and loss pressure.");
+            throw new Error("The fixture Consensus.7 does not expose weights, pressure, and adjudication evidence.");
           }
-          const blend = require("./out/generated/v5/rankings/2099/week-02/Blend.6.0.json");
+          const blend = require("./out/generated/v7/rankings/2099/week-02/Blend.7.0.json");
           const consensusRanks = new Map(
             consensus.rankings.map(({ team, rank }) => [team, rank]),
           );
@@ -108,6 +118,6 @@ jobs:
                 )?.rank !== consensusRanks.get(team),
             )
           ) {
-            throw new Error("The fixture Blend.6 does not use Consensus.6.");
+            throw new Error("The fixture Blend.7 does not use Consensus.7.");
           }
           NODE

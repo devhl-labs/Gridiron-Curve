@@ -2,7 +2,7 @@ import type { CfbdSourceCache } from "../cfbd/cache";
 import type { RankingSystemId } from "../ranking";
 import type { RankingView as SourceRankingView } from "../ranking/view";
 
-export const PUBLICATION_FORMAT_VERSION = 6 as const;
+export const PUBLICATION_FORMAT_VERSION = 7 as const;
 export const PUBLICATION_BASE_PATH = `${
   process.env.NEXT_PUBLIC_BASE_PATH ?? ""
 }/generated/v${PUBLICATION_FORMAT_VERSION}`;
@@ -45,6 +45,8 @@ export type PublishedTeamRanking = Pick<
   | "resumeMaturity"
   | "resumeScheduleRank"
   | "resumeBestTwoWinAverageRank"
+  | "consensusPreliminaryRank"
+  | "consensusAdjudication"
   | "blendScore"
   | "blendComponents"
   | "blendHeadToHeadRecord"

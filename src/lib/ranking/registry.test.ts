@@ -26,16 +26,16 @@ const expectedSystemIds = [
   "ResultNetwork.1.0",
   "RecordValue.2.0",
   "CappedMarginPerformance.1.0",
-  "Consensus.6.0",
-  "Blend.6.0",
+  "Consensus.7.0",
+  "Blend.7.0",
 ] as const;
 
 const expectedEngineIds = [
   "ResultNetwork.1",
   "RecordValue.2",
   "CappedMarginPerformance.1",
-  "Consensus.6",
-  "Blend.6",
+  "Consensus.7",
+  "Blend.7",
 ] as const;
 
 describe("ranking system registry", () => {
@@ -48,13 +48,13 @@ describe("ranking system registry", () => {
     expect(isRankingEngineId("Blend.3")).toBe(false);
   });
 
-  it("uses Computer Composite 6 as the default", () => {
-    expect(DEFAULT_RANKING_SYSTEM_ID).toBe("Consensus.6.0");
-    expect(DEFAULT_RANKING_ENGINE_ID).toBe("Consensus.6");
-    expect(parseRankingSystemId(null)).toBe("Consensus.6.0");
-    expect(parseRankingEngineId(null)).toBe("Consensus.6");
+  it("uses Computer Composite 7 as the default", () => {
+    expect(DEFAULT_RANKING_SYSTEM_ID).toBe("Consensus.7.0");
+    expect(DEFAULT_RANKING_ENGINE_ID).toBe("Consensus.7");
+    expect(parseRankingSystemId(null)).toBe("Consensus.7.0");
+    expect(parseRankingEngineId(null)).toBe("Consensus.7");
     expect(parseRankingSystemId("Consensus.3.0")).toBe(
-      "Consensus.6.0",
+      "Consensus.7.0",
     );
   });
 
@@ -72,8 +72,8 @@ describe("ranking system registry", () => {
         ({ rankingSystemIds }) => rankingSystemIds,
       ),
     ).toEqual([
-      "Blend.6.0",
-      "Consensus.6.0",
+      "Blend.7.0",
+      "Consensus.7.0",
       "ResultNetwork.1.0",
       "RecordValue.2.0",
       "CappedMarginPerformance.1.0",
@@ -84,23 +84,23 @@ describe("ranking system registry", () => {
       ),
     ).toHaveLength(expectedEngineIds.length);
 
-    expect(rankingSystemDisplayName("Blend.6.0")).toBe(
-      "Gridiron Blend.6.0",
+    expect(rankingSystemDisplayName("Blend.7.0")).toBe(
+      "Gridiron Blend.7.0",
     );
-    expect(rankingSystemSelectDisplayName("Blend.6.0")).toBe(
+    expect(rankingSystemSelectDisplayName("Blend.7.0")).toBe(
       "Computer + AP/Coaches",
     );
-    expect(rankingSystemSelectDisplayName("Consensus.6.0")).toBe(
+    expect(rankingSystemSelectDisplayName("Consensus.7.0")).toBe(
       "Computer Composite",
     );
-    expect(rankingEngineName("Blend.6")).toBe("Gridiron Blend");
-    expect(rankingEngineSelectDisplayName("Blend.6")).toBe(
+    expect(rankingEngineName("Blend.7")).toBe("Gridiron Blend");
+    expect(rankingEngineSelectDisplayName("Blend.7")).toBe(
       "Computer + AP/Coaches",
     );
-    expect(rankingEngineSelectDescription("Consensus.6")).toContain(
+    expect(rankingEngineSelectDescription("Consensus.7")).toContain(
       "60% Performance",
     );
-    expect(rankingSystemSelectDescription("Blend.6.0")).toContain(
+    expect(rankingSystemSelectDescription("Blend.7.0")).toContain(
       "50% Computer Composite",
     );
   });

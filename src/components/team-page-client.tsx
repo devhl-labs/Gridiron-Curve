@@ -82,6 +82,12 @@ function displayedRank(rank: number | null) {
   return rank === null ? "NR" : `#${rank}`;
 }
 
+const ADJUDICATION_CRITERION_LABELS = {
+  "head-to-head": "Head-to-head",
+  "strongest-defeated-opponent": "Strongest defeated opponent",
+  "strength-of-schedule": "Strength of schedule",
+} as const;
+
 function displayedHistoryRank(
   history: PublishedRankHistory | undefined,
   field: "openingRank" | "seasonHighRank" | "seasonLowRank",
@@ -144,8 +150,8 @@ export function TeamPageClient() {
           selectedSeason.throughWeek,
         );
         const supportingSystemIds = [
-          "Consensus.6.0",
-          "Blend.6.0",
+          "Consensus.7.0",
+          "Blend.7.0",
           "ResultNetwork.1.0",
         ] as const satisfies readonly RankingSystemId[];
         const viewIds = [
@@ -175,8 +181,8 @@ export function TeamPageClient() {
           ]),
         );
         const view = viewsById.get(rankingSystemId);
-        const consensusView = viewsById.get("Consensus.6.0");
-        const blendView = viewsById.get("Blend.6.0");
+        const consensusView = viewsById.get("Consensus.7.0");
+        const blendView = viewsById.get("Blend.7.0");
         const resultNetworkView = viewsById.get("ResultNetwork.1.0");
         if (!view || !consensusView || !blendView || !resultNetworkView) {
           throw new Error("Required published team evidence is unavailable.");
@@ -378,7 +384,8 @@ export function TeamPageClient() {
               </div>
               <p>
                 Component positions establish the base. Résumé and loss
-                pressure then adjust the final order.
+                pressure establish a preliminary order. Close same-record
+                groups then use earned résumé evidence.
               </p>
             </div>
 
@@ -419,8 +426,42 @@ export function TeamPageClient() {
                     +{(consensusRanking.lossPressure ?? 0).toFixed(2)}
                   </strong>
                 </div>
+                <div>
+                  <span>Post-pressure rank</span>
+                  <strong>
+                    #
+                    {consensusRanking.consensusPreliminaryRank ??
+                      computerRank}
+                  </strong>
+                </div>
+                {consensusRanking.consensusAdjudication && (
+                  <>
+                    <div className="team-adjudication-result">
+                      <span>Close-call decision</span>
+                      <strong>
+                        {consensusRanking.consensusAdjudication.decidingCriteria
+                          .map(
+                            (criterion) =>
+                              ADJUDICATION_CRITERION_LABELS[criterion],
+                          )
+                          .join(" · ")}
+                      </strong>
+                    </div>
+                    <div className="team-adjudication-group">
+                      <span>Adjudicated group</span>
+                      <strong>
+                        {consensusRanking.consensusAdjudication.members
+                          .map(
+                            ({ team, preliminaryRank, finalRank }) =>
+                              `${team} #${preliminaryRank}→#${finalRank}`,
+                          )
+                          .join(" · ")}
+                      </strong>
+                    </div>
+                  </>
+                )}
                 <div className="team-calculation-result">
-                  <span>Computer Composite</span>
+                  <span>Final Computer Composite</span>
                   <strong>#{computerRank}</strong>
                 </div>
               </article>
