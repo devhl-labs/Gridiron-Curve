@@ -2,7 +2,7 @@ import type { CfbdSourceCache } from "../cfbd/cache";
 import type { RankingSystemId } from "../ranking";
 import type { RankingView as SourceRankingView } from "../ranking/view";
 
-export const PUBLICATION_FORMAT_VERSION = 5 as const;
+export const PUBLICATION_FORMAT_VERSION = 6 as const;
 export const PUBLICATION_BASE_PATH = `${
   process.env.NEXT_PUBLIC_BASE_PATH ?? ""
 }/generated/v${PUBLICATION_FORMAT_VERSION}`;
@@ -11,6 +11,17 @@ export type PublishedSeason = Pick<
   CfbdSourceCache,
   "season" | "throughWeek" | "games" | "teams"
 >;
+
+export type PublishedRankHistory = {
+  releaseCount: number;
+  openingRank: number | null;
+  seasonHighRank: number | null;
+  seasonLowRank: number | null;
+};
+
+export type PublishedPollRankHistory = PublishedRankHistory & {
+  source: "AP Poll" | "Coaches Poll";
+};
 
 export type PublishedTeamRanking = Pick<
   SourceRankingView["rankings"][number],
@@ -37,7 +48,10 @@ export type PublishedTeamRanking = Pick<
   | "blendScore"
   | "blendComponents"
   | "blendHeadToHeadRecord"
->;
+> & {
+  rankHistory?: PublishedRankHistory;
+  pollRankHistories?: PublishedPollRankHistory[];
+};
 
 export type RankingView = Omit<SourceRankingView, "rankings"> & {
   rankings: PublishedTeamRanking[];

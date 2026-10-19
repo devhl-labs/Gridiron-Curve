@@ -110,11 +110,11 @@ download the
 file:
 
 ```text
-/generated/v5/images/2026/week-06/Consensus.6.0.jpg
-/generated/v5/images/2026/week-06/ResultNetwork.1.0.jpg
-/generated/v5/images/2026/week-06/RecordValue.2.0.jpg
-/generated/v5/images/2026/week-06/CappedMarginPerformance.1.0.jpg
-/generated/v5/images/2026/week-06/Blend.6.0.jpg
+/generated/v6/images/2026/week-06/Consensus.6.0.jpg
+/generated/v6/images/2026/week-06/ResultNetwork.1.0.jpg
+/generated/v6/images/2026/week-06/RecordValue.2.0.jpg
+/generated/v6/images/2026/week-06/CappedMarginPerformance.1.0.jpg
+/generated/v6/images/2026/week-06/Blend.6.0.jpg
 ```
 
 Share images use the same historical prior chain and active ranking system as
@@ -225,10 +225,11 @@ ignored by Git.
 
 Gridiron Curve is published as a static site. `npm run build` first reads the
 versioned local CFBD cache and writes immutable publication data under
-`public/generated/v5/`, then Next.js exports the site to `out/`.
+`public/generated/v6/`, then Next.js exports the site to `out/`.
 
 Published ranking JSON is generated for every cached season, week, and ranking
-system.
+system. Consensus and poll rows include point-in-time opening, season-high,
+and season-low rank summaries for team pages.
 Season schedule data is generated for team pages. The latest week receives
 pre-generated share JPEGs for every ranking system. The generated directory is
 ignored by Git because it is a build artifact.

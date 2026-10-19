@@ -9,8 +9,11 @@ import { SiteHeader } from "@/components/site-header";
 import {
   DEFAULT_RANKING_SYSTEM_ID,
   parseRankingSystemId,
+  type RankingSystemId,
 } from "@/lib/ranking";
-import { createTeamSchedule } from "@/lib/ranking/team-view";
+import {
+  createTeamSchedule,
+} from "@/lib/ranking/team-view";
 import {
   fetchPublicationManifest,
   fetchPublishedJson,
@@ -21,6 +24,7 @@ import {
 import {
   rankingDataPath,
   seasonDataPath,
+  type PublishedRankHistory,
 } from "@/lib/publication/types";
 
 function parseSelection(value: string | undefined) {
@@ -56,7 +60,60 @@ type TeamState = {
   manifest: PublicationManifest;
   source: PublishedSeason;
   view: RankingView;
+  consensusView: RankingView;
+  blendView: RankingView;
+  resultNetworkView: RankingView;
 };
+
+function componentDisplayName(rankingSystemId: RankingSystemId) {
+  if (rankingSystemId.startsWith("ResultNetwork.")) {
+    return "Result Network";
+  }
+  if (rankingSystemId.startsWith("RecordValue.")) {
+    return "Record Value";
+  }
+  if (rankingSystemId.startsWith("CappedMarginPerformance.")) {
+    return "Performance";
+  }
+  return rankingSystemId;
+}
+
+function displayedRank(rank: number | null) {
+  return rank === null ? "NR" : `#${rank}`;
+}
+
+function displayedHistoryRank(
+  history: PublishedRankHistory | undefined,
+  field: "openingRank" | "seasonHighRank" | "seasonLowRank",
+) {
+  if (!history || history.releaseCount === 0) return "—";
+  return displayedRank(history[field]);
+}
+
+function RankHistoryDetails({
+  history,
+  openingLabel,
+}: {
+  history: PublishedRankHistory | undefined;
+  openingLabel: string;
+}) {
+  return (
+    <dl className="team-poll-history">
+      <div>
+        <dt>{openingLabel}</dt>
+        <dd>{displayedHistoryRank(history, "openingRank")}</dd>
+      </div>
+      <div>
+        <dt>High</dt>
+        <dd>{displayedHistoryRank(history, "seasonHighRank")}</dd>
+      </div>
+      <div>
+        <dt>Low</dt>
+        <dd>{displayedHistoryRank(history, "seasonLowRank")}</dd>
+      </div>
+    </dl>
+  );
+}
 
 export function TeamPageClient() {
   const searchParams = useSearchParams();
@@ -86,17 +143,52 @@ export function TeamPageClient() {
           requestedWeek ?? selectedSeason.throughWeek,
           selectedSeason.throughWeek,
         );
-        const [source, view] = await Promise.all([
+        const supportingSystemIds = [
+          "Consensus.6.0",
+          "Blend.6.0",
+          "ResultNetwork.1.0",
+        ] as const satisfies readonly RankingSystemId[];
+        const viewIds = [
+          ...new Set<RankingSystemId>([
+            rankingSystemId,
+            ...supportingSystemIds,
+          ]),
+        ];
+        const [source, loadedViews] = await Promise.all([
           fetchPublishedJson<PublishedSeason>(
             seasonDataPath(selectedSeason.season),
             controller.signal,
           ),
-          fetchPublishedJson<RankingView>(
-            rankingDataPath(selectedSeason.season, week, rankingSystemId),
-            controller.signal,
+          Promise.all(
+            viewIds.map((viewId) =>
+              fetchPublishedJson<RankingView>(
+                rankingDataPath(selectedSeason.season, week, viewId),
+                controller.signal,
+              ),
+            ),
           ),
         ]);
-        setPublication({ manifest, source, view });
+        const viewsById = new Map(
+          loadedViews.map((loadedView) => [
+            loadedView.rankingSystemId,
+            loadedView,
+          ]),
+        );
+        const view = viewsById.get(rankingSystemId);
+        const consensusView = viewsById.get("Consensus.6.0");
+        const blendView = viewsById.get("Blend.6.0");
+        const resultNetworkView = viewsById.get("ResultNetwork.1.0");
+        if (!view || !consensusView || !blendView || !resultNetworkView) {
+          throw new Error("Required published team evidence is unavailable.");
+        }
+        setPublication({
+          manifest,
+          source,
+          view,
+          consensusView,
+          blendView,
+          resultNetworkView,
+        });
       } catch (loadError) {
         if (loadError instanceof DOMException && loadError.name === "AbortError") {
           return;
@@ -124,7 +216,13 @@ export function TeamPageClient() {
     );
   }
 
-  const { source, view } = publication;
+  const {
+    source,
+    view,
+    consensusView,
+    blendView,
+    resultNetworkView,
+  } = publication;
   const ranking = view.rankings.find(({ team }) => team === teamName);
   if (!ranking) {
     return (
@@ -139,6 +237,66 @@ export function TeamPageClient() {
   }
 
   const games = createTeamSchedule(source.games, teamName);
+  const blendRanking = blendView.rankings.find(
+    ({ team }) => team === teamName,
+  );
+  const consensusRanking = consensusView.rankings.find(
+    ({ team }) => team === teamName,
+  );
+  const blendComponents = new Map(
+    blendRanking?.blendComponents?.map((component) => [
+      component.source,
+      component,
+    ]) ?? [],
+  );
+  const computerRank = consensusRanking?.rank ?? null;
+  const apRank = blendComponents.get("AP Poll")?.rank ?? null;
+  const coachesRank = blendComponents.get("Coaches Poll")?.rank ?? null;
+  const pollRankHistories = new Map(
+    blendRanking?.pollRankHistories?.map((history) => [
+      history.source,
+      history,
+    ]) ?? [],
+  );
+  const resultNetworkRanks = new Map(
+    resultNetworkView.rankings.map(({ team, rank }) => [team, rank]),
+  );
+  const strongestWin = source.games
+    .flatMap((game) => {
+      if (
+        !game.completed ||
+        game.seasonType === "postseason" ||
+        game.week > view.week ||
+        game.homePoints === null ||
+        game.awayPoints === null ||
+        (game.homeTeam !== teamName && game.awayTeam !== teamName)
+      ) {
+        return [];
+      }
+      const isHome = game.homeTeam === teamName;
+      const teamScore = isHome ? game.homePoints : game.awayPoints;
+      const opponentScore = isHome ? game.awayPoints : game.homePoints;
+      if (teamScore <= opponentScore) return [];
+      const opponent = isHome ? game.awayTeam : game.homeTeam;
+      const opponentRank = resultNetworkRanks.get(opponent);
+      return opponentRank === undefined
+        ? []
+        : [{ opponent, rank: opponentRank }];
+    })
+    .toSorted(
+      (left, right) =>
+        left.rank - right.rank ||
+        left.opponent.localeCompare(right.opponent),
+    )[0];
+  const completedFbsGames = source.games.filter(
+    (game) =>
+      game.completed &&
+      game.seasonType !== "postseason" &&
+      game.week <= view.week &&
+      resultNetworkRanks.has(game.homeTeam) &&
+      resultNetworkRanks.has(game.awayTeam) &&
+      (game.homeTeam === teamName || game.awayTeam === teamName),
+  ).length;
   const teamsBySchool = new Map(
     source.teams.map((team) => [team.school, team]),
   );
@@ -207,6 +365,132 @@ export function TeamPageClient() {
             </strong>
           </div>
         </div>
+
+        {consensusRanking && computerRank !== null && (
+          <section
+            className="team-ranking-explanation"
+            aria-label="Computer Composite ranking explanation"
+          >
+            <div className="team-explanation-heading">
+              <div>
+                <span className="kicker">RANKING BREAKDOWN</span>
+                <h2>Why Computer #{computerRank}?</h2>
+              </div>
+              <p>
+                Component positions establish the base. Résumé and loss
+                pressure then adjust the final order.
+              </p>
+            </div>
+
+            <div className="team-component-grid">
+              {consensusRanking.consensusRanks?.map(
+                ({ rankingSystemId: componentId, rank, weight }) => (
+                  <article key={componentId}>
+                    <span>{componentDisplayName(componentId)}</span>
+                    <strong>#{rank}</strong>
+                    <small>
+                      {weight === 0
+                        ? "Résumé evidence"
+                        : `${((weight ?? 0) * 100).toFixed(0)}% of base`}
+                    </small>
+                  </article>
+                ),
+              )}
+            </div>
+
+            <div className="team-explanation-panels">
+              <article className="team-calculation-panel">
+                <span className="kicker">THE CALCULATION</span>
+                <div>
+                  <span>Weighted base position</span>
+                  <strong>
+                    {consensusRanking.consensusAverageRank?.toFixed(2) ?? "—"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Weak-schedule pressure</span>
+                  <strong>
+                    +{(consensusRanking.resumePressure ?? 0).toFixed(2)}
+                  </strong>
+                </div>
+                <div>
+                  <span>Loss pressure</span>
+                  <strong>
+                    +{(consensusRanking.lossPressure ?? 0).toFixed(2)}
+                  </strong>
+                </div>
+                <div className="team-calculation-result">
+                  <span>Computer Composite</span>
+                  <strong>#{computerRank}</strong>
+                </div>
+              </article>
+
+              <article className="team-poll-panel">
+                <span className="kicker">POLL COMPARISON</span>
+                <div className="team-poll-ranks">
+                  <div>
+                    <span>Computer</span>
+                    <strong>#{computerRank}</strong>
+                    <RankHistoryDetails
+                      history={consensusRanking.rankHistory}
+                      openingLabel="Week 1"
+                    />
+                  </div>
+                  <div>
+                    <span>AP</span>
+                    <strong>{displayedRank(apRank)}</strong>
+                    <RankHistoryDetails
+                      history={pollRankHistories.get("AP Poll")}
+                      openingLabel="Preseason"
+                    />
+                  </div>
+                  <div>
+                    <span>Coaches</span>
+                    <strong>{displayedRank(coachesRank)}</strong>
+                    <RankHistoryDetails
+                      history={pollRankHistories.get("Coaches Poll")}
+                      openingLabel="Preseason"
+                    />
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <div className="team-resume-evidence">
+              <div>
+                <span>Schedule played</span>
+                <strong>
+                  {consensusRanking.resumeScheduleRank
+                    ? `#${consensusRanking.resumeScheduleRank}`
+                    : "—"}
+                </strong>
+              </div>
+              <div>
+                <span>Best-two-win average</span>
+                <strong>
+                  {consensusRanking.resumeBestTwoWinAverageRank === undefined
+                    ? "—"
+                    : `#${consensusRanking.resumeBestTwoWinAverageRank.toFixed(1)}`}
+                </strong>
+              </div>
+              <div>
+                <span>Strongest win</span>
+                <strong>
+                  {strongestWin
+                    ? `#${strongestWin.rank} ${strongestWin.opponent}`
+                    : "None yet"}
+                </strong>
+              </div>
+              <div>
+                <span>FBS games / maturity</span>
+                <strong>
+                  {completedFbsGames} /{" "}
+                  {((consensusRanking.resumeMaturity ?? 0) * 100).toFixed(0)}%
+                </strong>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="team-games" aria-label="Regular-season schedule">
           <div className="game-table-head">

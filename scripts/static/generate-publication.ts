@@ -24,8 +24,14 @@ import {
   seasonDataPath,
   shareImagePath,
   type PublicationManifest,
+  type PublishedPollRankHistory,
+  type PublishedRankHistory,
   type PublishedSeason,
 } from "../../src/lib/publication/types";
+import {
+  summarizePollRankHistories,
+  summarizeRankHistory,
+} from "../../src/lib/publication/rank-history";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const generatedRoot = path.join(
@@ -124,7 +130,15 @@ async function writeSource(source: CfbdSourceCache) {
   await writeJson(outputRelativePath(seasonDataPath(source.season)), published);
 }
 
-function createPublishedView(view: RankingView) {
+type PublishedHistory = {
+  rankHistories?: ReadonlyMap<string, PublishedRankHistory>;
+  pollRankHistories?: ReadonlyMap<string, PublishedPollRankHistory[]>;
+};
+
+function createPublishedView(
+  view: RankingView,
+  history: PublishedHistory = {},
+) {
   return {
     ...view,
     rankings: view.rankings.map(
@@ -176,6 +190,8 @@ function createPublishedView(view: RankingView) {
         blendScore,
         blendComponents,
         blendHeadToHeadRecord,
+        rankHistory: history.rankHistories?.get(team),
+        pollRankHistories: history.pollRankHistories?.get(team),
       }),
     ),
   };
@@ -193,17 +209,48 @@ async function generateFromSources(sources: CfbdSourceCache[]) {
       const historicalSources = sources.filter(
         ({ season }) => season < source.season,
       );
+      const rankObservations = new Map<string, number[]>();
       for (let week = 1; week <= source.throughWeek; week += 1) {
         const view = createRankingView(
           { ...source, throughWeek: week },
           historicalSources,
           rankingSystemId,
         );
+        let rankHistories: Map<string, PublishedRankHistory> | undefined;
+        if (rankingSystemId === "Consensus.6.0") {
+          for (const { team, rank } of view.rankings) {
+            const observations = rankObservations.get(team) ?? [];
+            observations.push(rank);
+            rankObservations.set(team, observations);
+          }
+          rankHistories = new Map(
+            [...rankObservations].map(([team, ranks]) => [
+              team,
+              summarizeRankHistory(ranks),
+            ]),
+          );
+        }
+        const pollRankHistories =
+          rankingSystemId === "Blend.6.0"
+            ? new Map(
+                view.rankings.map(({ team }) => [
+                  team,
+                  summarizePollRankHistories(
+                    source.pollWeeks,
+                    week,
+                    team,
+                  ),
+                ]),
+              )
+            : undefined;
         await writeJson(
           outputRelativePath(
             rankingDataPath(source.season, week, rankingSystemId),
           ),
-          createPublishedView(view),
+          createPublishedView(view, {
+            rankHistories,
+            pollRankHistories,
+          }),
         );
 
         if (
