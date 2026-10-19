@@ -198,6 +198,9 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .game-result.l { color: #d89581; }
 .game-result.scheduled { color: #d5a85b; font-size: 8px; }
 .game-row.upcoming { background: #1a271f; }
+.game-row.idle { color: #7f8b82; }
+.game-row.selected-week { box-shadow: inset 3px 0 #d5a85b; }
+.game-result.idle { color: #929c94; font-size: 9px; letter-spacing: .08em; }
 .game-opponent { align-items: center; display: flex; font-family: Georgia, serif; font-size: 20px; gap: 12px; min-width: 0; }
 .game-opponent > span { min-width: 0; }
 .opponent-logo { align-items: center; background: var(--paper); border: 1px solid #536057; border-radius: 50%; color: var(--ink); display: flex; flex: 0 0 auto; font-family: var(--font-plex-mono), monospace; font-size: 7px; font-weight: 700; height: 34px; justify-content: center; overflow: hidden; padding: 4px; width: 34px; }

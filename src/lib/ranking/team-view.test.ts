@@ -38,7 +38,7 @@ const games: Game[] = [
   },
   {
     id: 4,
-    week: 4,
+    week: 5,
     startDate: "2026-10-24T19:30:00.000Z",
     seasonType: "regular",
     completed: false,
@@ -65,6 +65,7 @@ describe("createTeamSchedule", () => {
   it("returns the full regular-season schedule", () => {
     expect(createTeamSchedule(games, "Alpha")).toEqual([
       {
+        kind: "game",
         id: 1,
         week: 1,
         startDate: null,
@@ -75,6 +76,7 @@ describe("createTeamSchedule", () => {
         opponentScore: 14,
       },
       {
+        kind: "game",
         id: 2,
         week: 2,
         startDate: null,
@@ -85,6 +87,7 @@ describe("createTeamSchedule", () => {
         opponentScore: 24,
       },
       {
+        kind: "game",
         id: 3,
         week: 3,
         startDate: null,
@@ -95,8 +98,14 @@ describe("createTeamSchedule", () => {
         opponentScore: 20,
       },
       {
-        id: 4,
+        kind: "idle",
+        id: "idle-4",
         week: 4,
+      },
+      {
+        kind: "game",
+        id: 4,
+        week: 5,
         startDate: "2026-10-24T19:30:00.000Z",
         opponent: "Echo",
         location: "Home",

@@ -217,6 +217,25 @@ export function TeamPageClient() {
             <span>Score / Time</span>
           </div>
           {games.map((game) => {
+            const isSelectedWeek = game.week === view.week;
+            if (game.kind === "idle") {
+              return (
+                <article
+                  className={`game-row idle${
+                    isSelectedWeek ? " selected-week" : ""
+                  }`}
+                  key={game.id}
+                >
+                  <span className="game-week">{game.week}</span>
+                  <strong className="game-result idle">BYE</strong>
+                  <div className="game-opponent">
+                    <span>—</span>
+                  </div>
+                  <span className="game-location">—</span>
+                  <span className="game-score">—</span>
+                </article>
+              );
+            }
             const opponent = teamsBySchool.get(game.opponent);
             const opponentLogo =
               opponent?.logos.find((logo) => logo.includes("/logos/96/")) ??
@@ -224,7 +243,9 @@ export function TeamPageClient() {
 
             return (
               <article
-                className={`game-row ${game.result === null ? "upcoming" : ""}`}
+                className={`game-row${
+                  game.result === null ? " upcoming" : ""
+                }${isSelectedWeek ? " selected-week" : ""}`}
                 key={game.id}
               >
               <span className="game-week">{game.week}</span>
