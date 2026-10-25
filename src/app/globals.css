@@ -238,7 +238,9 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .game-row.selected-week { box-shadow: inset 3px 0 #d5a85b; }
 .game-result.idle { color: #929c94; font-size: 9px; letter-spacing: .08em; }
 .game-opponent { align-items: center; display: flex; font-family: Georgia, serif; font-size: 20px; gap: 12px; min-width: 0; }
-.game-opponent > span { min-width: 0; }
+.game-opponent > span, .game-opponent-link { min-width: 0; }
+.game-opponent-link:hover { color: #9fd0af; }
+.game-opponent-link:focus-visible { outline: 2px solid var(--orange); outline-offset: 4px; }
 .opponent-logo { align-items: center; background: var(--paper); border: 1px solid #536057; border-radius: 50%; color: var(--ink); display: flex; flex: 0 0 auto; font-family: var(--font-plex-mono), monospace; font-size: 7px; font-weight: 700; height: 34px; justify-content: center; overflow: hidden; padding: 4px; width: 34px; }
 .opponent-logo img { height: 100%; object-fit: contain; width: 100%; }
 .game-score { font-size: 13px; }
@@ -329,7 +331,7 @@ footer > span { font-family: var(--font-plex-mono), monospace; }
   .team-resume-evidence > div:last-child { border-bottom: 0; }
   .game-table-head, .game-row { column-gap: 6px; grid-template-columns: 30px 42px minmax(0, 1fr) 92px; padding-left: 6px; padding-right: 6px; }
   .game-opponent { font-size: 17px; gap: 8px; overflow-wrap: anywhere; }
-  .game-opponent > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .game-opponent > span, .game-opponent-link { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .opponent-logo { height: 30px; width: 30px; }
   .case-heading { flex-direction: column; gap: 18px; }
   .case-verdict { align-items: flex-start; flex-direction: column; gap: 8px; }

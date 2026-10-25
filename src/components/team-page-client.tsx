@@ -306,11 +306,20 @@ export function TeamPageClient() {
   const teamsBySchool = new Map(
     source.teams.map((team) => [team.school, team]),
   );
+  const rankedTeams = new Set(
+    view.rankings.map(({ team }) => team),
+  );
   const rankingsHref = `/?season=${source.season}&week=${view.week}${
     rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
       ? ""
       : `&ranking=${rankingSystemId}`
   }#ranking-row-${ranking.rank}`;
+  const teamHref = (selectedTeam: string) =>
+    `/team?team=${encodeURIComponent(selectedTeam)}&season=${source.season}&week=${view.week}${
+      rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
+        ? ""
+        : `&ranking=${rankingSystemId}`
+    }`;
 
   return (
     <main>
@@ -600,7 +609,16 @@ export function TeamPageClient() {
                     game.opponent.slice(0, 2).toUpperCase()
                   )}
                 </div>
-                <span>{game.opponent}</span>
+                {rankedTeams.has(game.opponent) ? (
+                  <Link
+                    className="game-opponent-link"
+                    href={teamHref(game.opponent)}
+                  >
+                    {game.opponent}
+                  </Link>
+                ) : (
+                  <span>{game.opponent}</span>
+                )}
               </div>
               <span className="game-location">{game.location}</span>
               <span className="game-score">
