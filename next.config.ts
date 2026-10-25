@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   basePath,
   output: "export",
   trailingSlash: true,
+  experimental: {
+    agentUpgrade: "security",
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
