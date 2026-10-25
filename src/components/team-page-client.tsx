@@ -310,7 +310,7 @@ export function TeamPageClient() {
     rankingSystemId === DEFAULT_RANKING_SYSTEM_ID
       ? ""
       : `&ranking=${rankingSystemId}`
-  }`;
+  }#ranking-row-${ranking.rank}`;
 
   return (
     <main>

@@ -24,6 +24,16 @@ function parseSelection(value: string | undefined) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function rankingRowId(rank: number) {
+  return `ranking-row-${rank}`;
+}
+
+function preserveRankingLocation(rank: number) {
+  const url = new URL(window.location.href);
+  url.hash = rankingRowId(rank);
+  window.history.replaceState(window.history.state, "", url);
+}
+
 function ConsensusSummary({
   ranking,
 }: {
@@ -174,6 +184,24 @@ export function RankingsPageClient() {
     return () => controller.abort();
   }, [rankingSystemId, searchParams]);
 
+  useEffect(() => {
+    if (!publication || !window.location.hash) return;
+    const target = document.getElementById(
+      window.location.hash.slice(1),
+    );
+    if (!target) return;
+    let restoreFrame = 0;
+    const renderFrame = window.requestAnimationFrame(() => {
+      restoreFrame = window.requestAnimationFrame(() => {
+        target.scrollIntoView({ block: "center" });
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(renderFrame);
+      window.cancelAnimationFrame(restoreFrame);
+    };
+  }, [publication]);
+
   if (!publication) {
     return (
       <main className="publication-loading-page">
@@ -271,6 +299,7 @@ export function RankingsPageClient() {
               className={`team-row ${
                 index > 0 && index % 25 === 0 ? "ranking-break" : ""
               }`}
+              id={rankingRowId(team.rank)}
               key={team.team}
             >
               <div className="rank">{team.rank}</div>
@@ -326,6 +355,7 @@ export function RankingsPageClient() {
                       ? ""
                       : `&ranking=${rankingSystemId}`
                   }`}
+                  onClick={() => preserveRankingLocation(team.rank)}
                 >
                   <div
                     className="team-glyph"
