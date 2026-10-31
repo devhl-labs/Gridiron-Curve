@@ -266,8 +266,7 @@ footer > span { font-family: var(--font-plex-mono), monospace; }
   .ranking-history-control, .history-controls { min-width: 100%; width: 100%; }
   .table-head { display: none; }
   .team-row { grid-template-columns: 38px 42px 1fr 68px; min-height: 78px; }
-  .record, .last-result { display: none; }
-  .sos::before { color: #718077; content: "SOS "; font-size: 8px; }
+  .sos, .last-result { display: none; }
   .methodology { gap: 45px; grid-template-columns: 1fr; }
   .method-section { grid-template-columns: 1fr; }
   .method-section > .kicker { grid-column: 1; grid-row: auto; }
@@ -314,6 +313,7 @@ footer > span { font-family: var(--font-plex-mono), monospace; }
   .team { gap: 8px; }
   .team-glyph { height: 34px; padding: 4px; width: 34px; }
   .team strong { font-size: 16px; overflow-wrap: anywhere; }
+  .team small { display: none; }
   .team-page { padding-top: 34px; }
   .back-link { margin-bottom: 36px; }
   .team-page-heading { align-items: flex-start; gap: 16px; }
