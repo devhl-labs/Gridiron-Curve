@@ -81,12 +81,12 @@ $action = New-ScheduledTaskAction `
     -WorkingDirectory $resolvedRepository
 
 $triggers = @(
-    New-ScheduledTaskTrigger -Daily -At "1:00 AM"
-    New-ScheduledTaskTrigger -Daily -At "6:00 AM"
-    New-ScheduledTaskTrigger -Daily -At "3:00 PM"
-    New-ScheduledTaskTrigger -Daily -At "4:00 PM"
-    New-ScheduledTaskTrigger -Daily -At "8:00 PM"
-    New-ScheduledTaskTrigger -Daily -At "11:59 PM"
+    New-ScheduledTaskTrigger -Daily -At "10:00 AM"
+    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Saturday -At "3:00 PM"
+    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Saturday -At "6:00 PM"
+    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Saturday -At "9:00 PM"
+    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Saturday -At "11:59 PM"
+    New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Sunday -At "4:00 PM"
 )
 $settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
@@ -139,4 +139,4 @@ if ($TaskPath -ne "\") {
 $task = Get-ScheduledTask -TaskName $TaskName -TaskPath $TaskPath
 Write-Host "Registered scheduled task '$TaskPath$TaskName' with automatic season selection."
 Write-Host "Run account: $($task.Principal.UserId)"
-Write-Host "Schedule: Daily at 1 AM, 6 AM, 3 PM, 4 PM, 8 PM, and 11:59 PM Eastern."
+Write-Host "Schedule: Daily at 10 AM; Saturday at 3 PM, 6 PM, 9 PM, and 11:59 PM; Sunday at 4 PM Eastern."

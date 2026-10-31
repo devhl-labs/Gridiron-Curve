@@ -294,8 +294,9 @@ To replace or repair only the unattended scheduled task later:
 
 The installer prompts for the Windows account that will run while logged out.
 It creates a `CFBD` folder in Task Scheduler, replaces any task with the same
-name inside that folder, and schedules six daily pulls at 1 AM, 6 AM, 3 PM,
-4 PM, 8 PM, and 11:59 PM Eastern. The Windows host must use the
+name inside that folder, and schedules a daily pull at 10 AM Eastern.
+Saturday adds pulls at 3 PM, 6 PM, 9 PM, and 11:59 PM; Sunday adds a 4 PM
+pull. The Windows host must use the
 `Eastern Standard Time` time zone so Task Scheduler follows Eastern daylight
 saving changes. Automatic season selection allows the same task to remain
 installed across calendar years. Pass `-TaskPath` to the setup or installer
@@ -309,10 +310,12 @@ ranking calculations, or generates images at request time.
 GitHub Pages hosts the exported site at
 `https://devhl-labs.github.io/Gridiron-Curve/`. The scheduled workflow in
 `.github/workflows/pages.yml` rebuilds ten minutes after each scheduled data
-pull using the native `America/New_York` timezone. Daily publication times are
-12:09 AM, 1:10 AM, 6:10 AM, 3:10 PM, 4:10 PM, and 8:10 PM Eastern; the
-12:09 AM publication follows the prior day's 11:59 PM pull. Scheduled runs follow the updater's active-season window: January and August
-15 through December. The workflow can also be started manually at any time.
+pull using the native `America/New_York` timezone. The daily publication runs
+at 10:10 AM. Saturday adds 3:10 PM, 6:10 PM, and 9:10 PM builds; the Saturday
+11:59 PM pull is published Sunday at 12:09 AM. Sunday also adds a 4:10 PM
+build. Scheduled runs follow the updater's active-season window: January and
+August 15 through December. The workflow can also be started manually at any
+time.
 
 Each publication:
 
