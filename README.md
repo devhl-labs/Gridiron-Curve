@@ -274,9 +274,9 @@ After setup, test an update manually with:
 .\scripts\windows\update-cfbd-cache.ps1
 ```
 
-The updater selects the season automatically: January and February use the
-previous calendar year, and August 15 through December use the current year.
-From March 1 through August 14, the scheduled process exits successfully
+The updater selects the season automatically: January uses the previous
+calendar year, and August 15 through December use the current year.
+From February 1 through August 14, the scheduled process exits successfully
 before accessing the repository, npm, CFBD, Azure, or update logs. Pass
 `-Season` only when manually backfilling a specific season. During the active
 season, it detects the latest completed week, creates a new immutable local
@@ -311,10 +311,8 @@ GitHub Pages hosts the exported site at
 `.github/workflows/pages.yml` rebuilds ten minutes after each scheduled data
 pull using the native `America/New_York` timezone. Daily publication times are
 12:09 AM, 1:10 AM, 6:10 AM, 3:10 PM, 4:10 PM, and 8:10 PM Eastern; the
-12:09 AM publication follows the prior day's 11:59 PM pull. Scheduled runs
-follow the updater's active-season window: January through February and
-August 15 through December. The workflow can also be started manually at any
-time.
+12:09 AM publication follows the prior day's 11:59 PM pull. Scheduled runs follow the updater's active-season window: January and August
+15 through December. The workflow can also be started manually at any time.
 
 Each publication:
 

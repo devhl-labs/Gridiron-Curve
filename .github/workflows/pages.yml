@@ -36,7 +36,7 @@ jobs:
           month="$(TZ=America/New_York date +%m)"
           day="$(TZ=America/New_York date +%d)"
           if [[ "${EVENT_NAME}" == "workflow_dispatch" ||
-                $((10#${month})) -le 2 ||
+                "${month}" == "01" ||
                 $((10#${month})) -ge 9 ||
                 ("${month}" == "08" && $((10#${day})) -ge 15) ]]; then
             echo "publish=true" >> "${GITHUB_OUTPUT}"

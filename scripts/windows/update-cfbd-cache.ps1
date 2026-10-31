@@ -63,12 +63,12 @@ try {
 
     $today = Get-Date
     if (-not $PSBoundParameters.ContainsKey("Season")) {
-        $isOffseason = $today.Month -ge 3 -and ($today.Month -lt 8 -or ($today.Month -eq 8 -and $today.Day -lt 15))
+        $isOffseason = $today.Month -ge 2 -and ($today.Month -lt 8 -or ($today.Month -eq 8 -and $today.Day -lt 15))
         if ($isOffseason) {
             Write-Host "No active college-football season; no update is needed."
             exit 0
         }
-        $Season = if ($today.Month -le 2) {
+        $Season = if ($today.Month -eq 1) {
             $today.Year - 1
         }
         else {
