@@ -64,7 +64,7 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .history-controls { align-items: end; display: grid; gap: 8px; grid-template-columns: 44px minmax(92px, .7fr) minmax(76px, .55fr) minmax(210px, 1.55fr) 44px; width: 100%; }
 .history-step { align-items: center; border: 1px solid #465149; color: var(--paper); display: flex; font-size: 19px; height: 43px; justify-content: center; transition: .15s; }
 .history-step:hover { background: #243229; border-color: #869188; }
-.history-step.disabled { color: #526057; }
+.history-step.disabled { border-color: #344139; color: #526057; opacity: .45; user-select: none; }
 .history-select { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .history-select > span { color: #7f8b82; font-family: var(--font-plex-mono), monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
 .history-select select { appearance: none; background: #1a271f; border: 1px solid #465149; border-radius: 0; color: var(--paper); cursor: pointer; font-family: var(--font-plex-mono), monospace; font-size: 11px; height: 43px; min-width: 0; padding: 0 34px 0 12px; width: 100%; }

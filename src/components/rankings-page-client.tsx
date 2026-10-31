@@ -218,22 +218,16 @@ export function RankingsPageClient() {
   const manifests = manifest.seasons;
   const rankings = view.rankings;
   const isSample = view.source === "sample";
-  const history = manifests
-    .toReversed()
-    .flatMap(({ season, throughWeek }) =>
-      Array.from({ length: throughWeek }, (_, index) => ({
-        season,
-        week: index + 1,
-      })),
-    );
-  const historyIndex = history.findIndex(
-    ({ season, week }) => season === view.season && week === view.week,
+  const selectedSeason = manifests.find(
+    ({ season }) => season === view.season,
   );
   const previousRanking =
-    historyIndex > 0 ? history[historyIndex - 1] : undefined;
+    view.week > 1
+      ? { season: view.season, week: view.week - 1 }
+      : undefined;
   const nextRanking =
-    historyIndex >= 0 && historyIndex < history.length - 1
-      ? history[historyIndex + 1]
+    selectedSeason && view.week < selectedSeason.throughWeek
+      ? { season: view.season, week: view.week + 1 }
       : undefined;
   const shareImage = manifest.shareImages.find(
     (candidate) =>
