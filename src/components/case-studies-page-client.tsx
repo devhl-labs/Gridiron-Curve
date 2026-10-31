@@ -363,7 +363,7 @@ export function CaseStudiesPageClient() {
           </article>
         ))}
       </section>
-      <SiteFooter rankingSystemId={rankingSystemId} />
+      <SiteFooter />
     </main>
   );
 }

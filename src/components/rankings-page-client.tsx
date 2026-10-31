@@ -402,7 +402,9 @@ export function RankingsPageClient() {
         </div>
       </section>
 
-      <SiteFooter rankingSystemId={rankingSystemId} />
+      <SiteFooter
+        dataSyncedAt={view.generatedAt}
+      />
     </main>
   );
 }

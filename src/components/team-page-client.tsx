@@ -17,7 +17,6 @@ import {
 import {
   fetchPublicationManifest,
   fetchPublishedJson,
-  type PublicationManifest,
   type PublishedSeason,
   type RankingView,
 } from "@/lib/publication/client";
@@ -57,7 +56,6 @@ function formatKickoff(startDate: string | null) {
 }
 
 type TeamState = {
-  manifest: PublicationManifest;
   source: PublishedSeason;
   view: RankingView;
   consensusView: RankingView;
@@ -188,7 +186,6 @@ export function TeamPageClient() {
           throw new Error("Required published team evidence is unavailable.");
         }
         setPublication({
-          manifest,
           source,
           view,
           consensusView,
@@ -632,7 +629,9 @@ export function TeamPageClient() {
         </section>
       </section>
 
-      <SiteFooter rankingSystemId={rankingSystemId} />
+      <SiteFooter
+        dataSyncedAt={view.generatedAt}
+      />
     </main>
   );
 }

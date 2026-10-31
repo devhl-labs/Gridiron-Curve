@@ -247,6 +247,11 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 footer { align-items: center; border-top: 1px solid rgba(23,34,28,.2); display: flex; justify-content: space-between; margin: 0 clamp(24px, 5vw, 80px); padding: 30px 0; }
 footer p, footer > span { color: var(--muted); font-size: 11px; }
 footer > span { font-family: var(--font-plex-mono), monospace; }
+.footer-center { text-align: center; }
+.footer-center p { margin: 0; }
+.footer-attribution { color: var(--muted); font-family: var(--font-plex-mono), monospace; font-size: 9px; text-align: right; }
+.footer-attribution:hover { color: var(--green); }
+.footer-attribution:focus-visible { outline: 2px solid var(--orange); outline-offset: 4px; }
 
 @media (max-width: 800px) {
   .site-header { display: flex; justify-content: space-between; padding-bottom: 16px; padding-top: 16px; }
@@ -285,7 +290,7 @@ footer > span { font-family: var(--font-plex-mono), monospace; }
   .game-table-head, .game-row { grid-template-columns: 50px 55px minmax(130px, 1fr) 80px; }
   .game-location { display: none; }
   .game-table-head span:nth-child(4) { display: none; }
-  footer p { display: none; }
+  .footer-tagline { display: none; }
 }
 
 @media (max-width: 520px) {

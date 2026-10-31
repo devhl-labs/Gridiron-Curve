@@ -293,7 +293,7 @@ export function ComputerMethodologyPage({
           </p>
         </div>
       </section>
-      <SiteFooter rankingSystemId={rankingSystemId} />
+      <SiteFooter />
     </main>
   );
 }
