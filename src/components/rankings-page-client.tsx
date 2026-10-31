@@ -254,9 +254,7 @@ export function RankingsPageClient() {
       <section className="rankings-section rankings-page" id="rankings">
         <div className="rankings-masthead">
           <div>
-            <span className="kicker">CURRENT TABLE</span>
             <h1>{isSample ? "Gridiron Curve" : `${view.season} Rankings`}</h1>
-            <p>All FBS teams through Week {view.week}</p>
           </div>
           {!isSample && (
             <RankingHistoryControls
