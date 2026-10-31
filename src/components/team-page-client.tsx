@@ -13,6 +13,7 @@ import {
 } from "@/lib/ranking";
 import {
   createTeamSchedule,
+  selectStrongestWin,
 } from "@/lib/ranking/team-view";
 import {
   fetchPublicationManifest,
@@ -61,6 +62,7 @@ type TeamState = {
   consensusView: RankingView;
   blendView: RankingView;
   resultNetworkView: RankingView;
+  historicalConsensusViews: RankingView[];
 };
 
 function componentDisplayName(rankingSystemId: RankingSystemId) {
@@ -185,12 +187,37 @@ export function TeamPageClient() {
         if (!view || !consensusView || !blendView || !resultNetworkView) {
           throw new Error("Required published team evidence is unavailable.");
         }
+        const historicalConsensusWeeks = [
+          ...new Set(
+            createTeamSchedule(source.games, teamName).flatMap((game) =>
+              game.kind === "game" &&
+              game.result === "W" &&
+              game.week > 1 &&
+              game.week <= week
+                ? [game.week - 1]
+                : [],
+            ),
+          ),
+        ].toSorted((left, right) => left - right);
+        const historicalConsensusViews = await Promise.all(
+          historicalConsensusWeeks.map((historicalWeek) =>
+            fetchPublishedJson<RankingView>(
+              rankingDataPath(
+                selectedSeason.season,
+                historicalWeek,
+                "Consensus.7.0",
+              ),
+              controller.signal,
+            ),
+          ),
+        );
         setPublication({
           source,
           view,
           consensusView,
           blendView,
           resultNetworkView,
+          historicalConsensusViews,
         });
       } catch (loadError) {
         if (loadError instanceof DOMException && loadError.name === "AbortError") {
@@ -225,6 +252,7 @@ export function TeamPageClient() {
     consensusView,
     blendView,
     resultNetworkView,
+    historicalConsensusViews,
   } = publication;
   const ranking = view.rankings.find(({ team }) => team === teamName);
   if (!ranking) {
@@ -264,33 +292,30 @@ export function TeamPageClient() {
   const resultNetworkRanks = new Map(
     resultNetworkView.rankings.map(({ team, rank }) => [team, rank]),
   );
-  const strongestWin = source.games
-    .flatMap((game) => {
-      if (
-        !game.completed ||
-        game.seasonType === "postseason" ||
-        game.week > view.week ||
-        game.homePoints === null ||
-        game.awayPoints === null ||
-        (game.homeTeam !== teamName && game.awayTeam !== teamName)
-      ) {
-        return [];
-      }
-      const isHome = game.homeTeam === teamName;
-      const teamScore = isHome ? game.homePoints : game.awayPoints;
-      const opponentScore = isHome ? game.awayPoints : game.homePoints;
-      if (teamScore <= opponentScore) return [];
-      const opponent = isHome ? game.awayTeam : game.homeTeam;
-      const opponentRank = resultNetworkRanks.get(opponent);
-      return opponentRank === undefined
-        ? []
-        : [{ opponent, rank: opponentRank }];
-    })
-    .toSorted(
-      (left, right) =>
-        left.rank - right.rank ||
-        left.opponent.localeCompare(right.opponent),
-    )[0];
+  const currentCompositeRanks = new Map(
+    consensusView.rankings.map(({ team, rank }) => [team, rank]),
+  );
+  const preseasonApRanks = new Map(
+    blendView.rankings.map((opponentRanking) => [
+      opponentRanking.team,
+      opponentRanking.pollRankHistories?.find(
+        ({ source: pollSource }) => pollSource === "AP Poll",
+      )?.openingRank ?? null,
+    ]),
+  );
+  const compositeRanksByWeek = new Map(
+    historicalConsensusViews.map((historicalView) => [
+      historicalView.week,
+      new Map(
+        historicalView.rankings.map(({ team, rank }) => [team, rank]),
+      ),
+    ]),
+  );
+  const strongestWin = selectStrongestWin(games, view.week, {
+    preseasonAp: preseasonApRanks,
+    compositeByWeek: compositeRanksByWeek,
+    currentComposite: currentCompositeRanks,
+  });
   const completedFbsGames = source.games.filter(
     (game) =>
       game.completed &&
@@ -522,11 +547,19 @@ export function TeamPageClient() {
               </div>
               <div>
                 <span>Strongest win</span>
-                <strong>
-                  {strongestWin
-                    ? `#${strongestWin.rank} ${strongestWin.opponent}`
-                    : "None yet"}
-                </strong>
+                {strongestWin ? (
+                  <>
+                    <strong>
+                      {displayedRank(strongestWin.atGameRank)}{" "}
+                      {strongestWin.opponent}
+                    </strong>
+                    <small>
+                      Currently #{strongestWin.currentRank}
+                    </small>
+                  </>
+                ) : (
+                  <strong>None yet</strong>
+                )}
               </div>
               <div>
                 <span>FBS games / maturity</span>

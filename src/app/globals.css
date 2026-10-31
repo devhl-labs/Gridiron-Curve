@@ -223,6 +223,7 @@ nav .external-link svg { height: 11px; stroke: currentColor; stroke-linecap: rou
 .team-resume-evidence > div { border-right: 1px solid #465149; padding: 18px 20px; }
 .team-resume-evidence > div:last-child { border-right: 0; }
 .team-resume-evidence strong { display: block; font-family: Georgia, serif; font-size: 18px; font-weight: 400; margin-top: 8px; }
+.team-resume-evidence small { color: #7f8b82; display: block; font-family: var(--font-plex-mono), monospace; font-size: 8px; letter-spacing: .04em; line-height: 1.5; margin-top: 6px; text-transform: uppercase; }
 .team-games { margin: auto; max-width: 1180px; }
 .game-table-head, .game-row { align-items: center; display: grid; grid-template-columns: 70px 80px minmax(180px, 1fr) 120px 100px; }
 .game-table-head { border-bottom: 1px solid #536057; color: #7f8b82; font-family: var(--font-plex-mono), monospace; font-size: 9px; letter-spacing: .12em; padding: 14px 18px; text-transform: uppercase; }

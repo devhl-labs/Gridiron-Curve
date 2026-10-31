@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Game } from ".";
-import { createTeamSchedule } from "./team-view";
+import {
+  createTeamSchedule,
+  selectStrongestWin,
+} from "./team-view";
 
 const games: Game[] = [
   {
@@ -114,5 +117,48 @@ describe("createTeamSchedule", () => {
         opponentScore: null,
       },
     ]);
+  });
+});
+
+describe("selectStrongestWin", () => {
+  const schedule = createTeamSchedule(games, "Alpha");
+  const currentComposite = new Map([
+    ["Bravo", 15],
+    ["Charlie", 9],
+    ["Delta", 4],
+    ["Echo", 30],
+  ]);
+
+  it("selects the best opponent rank entering the game", () => {
+    expect(
+      selectStrongestWin(schedule, 3, {
+        preseasonAp: new Map([["Bravo", 8]]),
+        compositeByWeek: new Map([
+          [1, new Map([["Charlie", 4]])],
+          [2, new Map([["Delta", 7]])],
+        ]),
+        currentComposite,
+      }),
+    ).toEqual({
+      opponent: "Charlie",
+      gameWeek: 2,
+      atGameRank: 4,
+      currentRank: 9,
+    });
+  });
+
+  it("uses the preseason AP rank for a Week 1 win", () => {
+    expect(
+      selectStrongestWin(schedule, 1, {
+        preseasonAp: new Map([["Bravo", 8]]),
+        compositeByWeek: new Map(),
+        currentComposite,
+      }),
+    ).toEqual({
+      opponent: "Bravo",
+      gameWeek: 1,
+      atGameRank: 8,
+      currentRank: 15,
+    });
   });
 });

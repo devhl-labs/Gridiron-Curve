@@ -20,6 +20,13 @@ export type TeamIdleWeek = {
 
 export type TeamScheduleEntry = TeamGame | TeamIdleWeek;
 
+export type StrongestWin = {
+  opponent: string;
+  gameWeek: number;
+  atGameRank: number | null;
+  currentRank: number;
+};
+
 export function createTeamSchedule(
   games: Game[],
   team: string,
@@ -81,4 +88,52 @@ export function createTeamSchedule(
       },
     ];
   });
+}
+
+export function selectStrongestWin(
+  schedule: TeamScheduleEntry[],
+  throughWeek: number,
+  ranks: {
+    preseasonAp: ReadonlyMap<string, number | null>;
+    compositeByWeek: ReadonlyMap<
+      number,
+      ReadonlyMap<string, number>
+    >;
+    currentComposite: ReadonlyMap<string, number>;
+  },
+): StrongestWin | undefined {
+  return schedule
+    .flatMap((game): StrongestWin[] => {
+      if (
+        game.kind !== "game" ||
+        game.result !== "W" ||
+        game.week > throughWeek
+      ) {
+        return [];
+      }
+      const currentRank = ranks.currentComposite.get(game.opponent);
+      if (currentRank === undefined) return [];
+      const atGameRank =
+        game.week === 1
+          ? (ranks.preseasonAp.get(game.opponent) ?? null)
+          : (ranks.compositeByWeek
+              .get(game.week - 1)
+              ?.get(game.opponent) ?? null);
+      return [
+        {
+          opponent: game.opponent,
+          gameWeek: game.week,
+          atGameRank,
+          currentRank,
+        },
+      ];
+    })
+    .toSorted(
+      (left, right) =>
+        (left.atGameRank ?? Number.POSITIVE_INFINITY) -
+          (right.atGameRank ?? Number.POSITIVE_INFINITY) ||
+        left.currentRank - right.currentRank ||
+        left.gameWeek - right.gameWeek ||
+        left.opponent.localeCompare(right.opponent),
+    )[0];
 }
