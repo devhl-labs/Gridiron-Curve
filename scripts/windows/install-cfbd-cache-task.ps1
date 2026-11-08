@@ -88,6 +88,18 @@ $triggers = @(
     New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Saturday -At "11:59 PM"
     New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Sunday -At "4:00 PM"
 )
+# Remove the installation-time UTC offset so recurring triggers keep their
+# Eastern wall-clock times when daylight saving time changes.
+foreach ($trigger in $triggers) {
+    $startBoundary = [DateTimeOffset]::Parse(
+        $trigger.StartBoundary,
+        [Globalization.CultureInfo]::InvariantCulture
+    )
+    $trigger.StartBoundary = $startBoundary.LocalDateTime.ToString(
+        "s",
+        [Globalization.CultureInfo]::InvariantCulture
+    )
+}
 $settings = New-ScheduledTaskSettingsSet `
     -StartWhenAvailable `
     -MultipleInstances IgnoreNew `
@@ -137,6 +149,12 @@ if ($TaskPath -ne "\") {
 }
 
 $task = Get-ScheduledTask -TaskName $TaskName -TaskPath $TaskPath
+$fixedOffsetTriggers = $task.Triggers | Where-Object {
+    $_.StartBoundary -match "(?:Z|[+-]\d{2}:\d{2})$"
+}
+if ($fixedOffsetTriggers) {
+    throw "Registered task contains a fixed-offset trigger and will not follow Eastern daylight saving time."
+}
 Write-Host "Registered scheduled task '$TaskPath$TaskName' with automatic season selection."
 Write-Host "Run account: $($task.Principal.UserId)"
 Write-Host "Schedule: Daily at 10 AM; Saturday at 3 PM, 6 PM, 9 PM, and 11:59 PM; Sunday at 4 PM Eastern."
